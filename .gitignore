@@ -8,5 +8,6 @@ dist/
 build/
 coverage/
 .superpowers/
+next-env.d.ts
 payload-types.ts
 *.tsbuildinfo
