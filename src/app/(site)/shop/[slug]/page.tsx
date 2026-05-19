@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { AddToCartForm } from '@/components/AddToCartForm'
 import { StatusPill } from '@/components/StatusPill'
 import { getProductBySlug, getPublishedProducts } from '@/data/products'
+import { productAssurances } from '@/data/retail'
 import { formatRubles } from '@/domain/formatting'
 import { getDisplayPrice } from '@/domain/products'
 
@@ -37,6 +38,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
           <p>{product.description}</p>
           {product.preorderNote ? <p className="preorderNote">{product.preorderNote}</p> : null}
+          <ul className="productAssurances">
+            {productAssurances.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
           <AddToCartForm product={product} />
         </div>
       </section>

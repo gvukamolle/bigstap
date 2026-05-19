@@ -17,6 +17,7 @@ type OrderItemData = {
 type OrderData = {
   amount?: number | null
   currency?: string | null
+  deliveryTotal?: number | null
   items?: OrderItemData[] | null
 }
 
@@ -34,6 +35,11 @@ const validateOrderInvariants = (order: OrderData) => {
 
   if (!Array.isArray(order.items) || order.items.length === 0) {
     throw new Error('Заказ должен содержать минимум одну позицию.')
+  }
+
+  const deliveryTotal = order.deliveryTotal ?? 0
+  if (!isSafeIntegerInRange(deliveryTotal, MAX_RUB_AMOUNT)) {
+    throw new Error('Доставка должна быть целым числом в рублях.')
   }
 
   const itemsTotal = order.items.reduce((total, item) => {
@@ -67,8 +73,8 @@ const validateOrderInvariants = (order: OrderData) => {
     return total + expectedLineTotal
   }, 0)
 
-  if (itemsTotal !== order.amount) {
-    throw new Error('Сумма заказа должна совпадать с суммой позиций.')
+  if (itemsTotal + deliveryTotal !== order.amount) {
+    throw new Error('Сумма заказа должна совпадать с суммой позиций и доставки.')
   }
 }
 
@@ -79,7 +85,8 @@ export const Orders: CollectionConfig = {
     plural: 'Заказы'
   },
   admin: {
-    useAsTitle: 'orderNumber'
+    useAsTitle: 'orderNumber',
+    defaultColumns: ['orderNumber', 'status', 'customerName', 'amount']
   },
   access: {
     create: admins,
@@ -175,9 +182,38 @@ export const Orders: CollectionConfig = {
       required: true
     },
     {
+      name: 'customerCity',
+      type: 'text',
+      label: 'Город клиента',
+      required: true
+    },
+    {
+      name: 'deliveryMethod',
+      type: 'select',
+      label: 'Способ доставки',
+      required: true,
+      defaultValue: 'cdek_pickup',
+      options: [
+        {
+          label: 'СДЭК ПВЗ',
+          value: 'cdek_pickup'
+        }
+      ]
+    },
+    {
       name: 'cdekPickupCode',
       type: 'text',
       label: 'Код пункта СДЭК'
+    },
+    {
+      name: 'cdekPickupName',
+      type: 'text',
+      label: 'Название пункта СДЭК'
+    },
+    {
+      name: 'cdekPickupCity',
+      type: 'text',
+      label: 'Город пункта СДЭК'
     },
     {
       name: 'cdekPickupAddress',
@@ -189,6 +225,18 @@ export const Orders: CollectionConfig = {
       type: 'text',
       label: 'ID платежа',
       unique: true
+    },
+    {
+      name: 'deliveryTotal',
+      type: 'number',
+      label: 'Доставка',
+      required: true,
+      defaultValue: 0,
+      min: 0,
+      max: MAX_RUB_AMOUNT,
+      admin: {
+        step: 1
+      }
     },
     {
       name: 'amount',

@@ -10,7 +10,8 @@ export const BlogPosts: CollectionConfig = {
     plural: 'Статьи'
   },
   admin: {
-    useAsTitle: 'title'
+    useAsTitle: 'title',
+    defaultColumns: ['title', 'category', 'published']
   },
   access: {
     create: adminsAndEditors,
@@ -42,6 +43,12 @@ export const BlogPosts: CollectionConfig = {
       name: 'category',
       type: 'text',
       label: 'Категория'
+    },
+    {
+      name: 'image',
+      type: 'relationship',
+      label: 'Обложка',
+      relationTo: 'media'
     },
     {
       name: 'content',

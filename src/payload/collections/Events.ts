@@ -9,7 +9,8 @@ export const Events: CollectionConfig = {
     plural: 'Ивенты'
   },
   admin: {
-    useAsTitle: 'title'
+    useAsTitle: 'title',
+    defaultColumns: ['title', 'dateLabel', 'location', 'published']
   },
   access: {
     create: adminsAndEditors,
@@ -42,6 +43,12 @@ export const Events: CollectionConfig = {
       type: 'text',
       label: 'Место',
       required: true
+    },
+    {
+      name: 'image',
+      type: 'relationship',
+      label: 'Обложка',
+      relationTo: 'media'
     },
     {
       name: 'description',

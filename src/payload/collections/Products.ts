@@ -69,7 +69,8 @@ export const Products: CollectionConfig = {
     plural: 'Товары'
   },
   admin: {
-    useAsTitle: 'title'
+    useAsTitle: 'title',
+    defaultColumns: ['title', 'saleStatus', 'productType', 'price', 'published']
   },
   access: {
     create: admins,
@@ -108,6 +109,12 @@ export const Products: CollectionConfig = {
       type: 'text',
       label: 'Категория',
       required: true
+    },
+    {
+      name: 'image',
+      type: 'relationship',
+      label: 'Главное фото',
+      relationTo: 'media'
     },
     {
       name: 'price',

@@ -475,6 +475,57 @@ textarea:focus-visible {
   overflow-wrap: anywhere;
 }
 
+.serviceGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.serviceItem {
+  display: grid;
+  min-width: 0;
+  min-height: 220px;
+  align-content: space-between;
+  gap: 18px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px;
+}
+
+.serviceItem span,
+.serviceItem p {
+  color: var(--muted);
+}
+
+.serviceItem span {
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.serviceItem h3,
+.serviceItem p {
+  margin: 0;
+}
+
+.serviceItem h3 {
+  font-size: 30px;
+  font-weight: 760;
+  line-height: 0.98;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.serviceItem p {
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .contentList {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
@@ -762,6 +813,21 @@ textarea:focus-visible {
   color: var(--muted);
 }
 
+.productAssurances,
+.summaryNotes {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 0 0 0 18px;
+}
+
+.productAssurances {
+  max-width: 480px;
+}
+
 .formNote,
 .formError {
   margin: 0;
@@ -896,6 +962,7 @@ textarea:focus-visible {
 }
 
 .cartLineMeta h2,
+.checkoutPanel h1,
 .checkoutPanel h2,
 .cartSummary h2 {
   margin: 0;
@@ -903,6 +970,7 @@ textarea:focus-visible {
   font-weight: 740;
   line-height: 1.1;
   letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
 .cartLineMeta h2 {
@@ -996,10 +1064,17 @@ textarea:focus-visible {
   display: flex;
   min-width: 0;
   align-items: baseline;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 16px;
   border-top: 1px solid var(--line);
   padding-top: 16px;
+}
+
+.checkoutPanelHeader h1,
+.checkoutPanelHeader h2 {
+  flex: 1 1 220px;
+  min-width: 0;
 }
 
 .checkoutPanelHeader:first-child {
@@ -1015,6 +1090,11 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 14px;
+}
+
+.pickupList {
+  display: grid;
+  gap: 10px;
 }
 
 .pickupBox > div,
@@ -1079,6 +1159,47 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
+.quantityControl {
+  display: grid;
+  grid-template-columns: 44px minmax(68px, 1fr) 44px;
+  width: 100%;
+  min-width: 0;
+}
+
+.quantityControl button,
+.quantityControl input {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.quantityControl button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  font-size: 18px;
+  font-weight: 760;
+}
+
+.quantityControl button:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.quantityControl button:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.quantityControl input {
+  min-width: 0;
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  padding: 0 8px;
+  text-align: center;
+}
+
 .cartLayout .button,
 .cartLayout .buttonSecondary,
 .checkoutLayout .button,
@@ -1101,6 +1222,10 @@ textarea:focus-visible {
   }
 
   .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .serviceGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1300,6 +1425,19 @@ textarea:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .serviceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .serviceItem {
+    min-height: 180px;
+    padding: 16px;
+  }
+
+  .serviceItem h3 {
+    font-size: 24px;
+  }
+
   .productCard {
     grid-template-rows: auto minmax(148px, auto);
   }
@@ -1437,6 +1575,18 @@ textarea:focus-visible {
   .checkoutLayout {
     gap: 14px;
     padding-top: 22px;
+  }
+
+  .checkoutPanelHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .checkoutPanelHeader h1,
+  .checkoutPanelHeader h2 {
+    flex: none;
+    width: 100%;
   }
 
   .cartLine,

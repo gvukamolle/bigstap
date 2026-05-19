@@ -32,7 +32,8 @@
 cp .env.example .env
 ```
 
-Для локальной разработки Payload использует SQLite-файл:
+Для локальной разработки и MVP-запуска с ноутбука Payload использует SQLite-файл, если
+`DATABASE_URI` не задан:
 
 ```bash
 SQLITE_DATABASE_URL=file:payload-local.db
@@ -69,6 +70,14 @@ POSTGRES_PASSWORD=bigstep
 - Payload-админка: http://localhost:3000/admin
 - Первичная настройка админки: http://localhost:3000/bootstrap-admin
 
+Если сайт открыт через localtunnel, путь сохраняется таким же:
+
+- Главная: `https://<адрес-туннеля>.loca.lt/`
+- Админка: `https://<адрес-туннеля>.loca.lt/admin`
+- Первичная настройка: `https://<адрес-туннеля>.loca.lt/bootstrap-admin`
+
+На предупреждающей странице localtunnel нужно ввести IP, который показан на этой же странице. После этого можно открыть `/admin`. На публичном сайте ссылка "Админка" также есть в футере.
+
 ## Проверка
 
 В Codex-окружении используй явный путь к npm:
@@ -91,7 +100,7 @@ POSTGRES_PASSWORD=bigstep
 
 ## Продакшен-Заметки
 
-В продакшен-окружении обязательно задать:
+Для постоянного продакшен-хостинга обязательно задать:
 
 - `PAYLOAD_SECRET`
 - `DATABASE_URI`

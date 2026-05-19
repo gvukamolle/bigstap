@@ -13,50 +13,18 @@ import {
   updateCartItemQuantity
 } from '@/domain/cart'
 import type { ProductSaleStatus } from '@/domain/products'
-
-const storageKey = 'bigstep-cart'
-const cartUpdatedEvent = 'bigstep-cart-updated'
+import {
+  cartUpdatedEvent,
+  dispatchCartUpdated,
+  readCartStorage,
+  writeCartStorage
+} from '@/lib/cartStorage'
 
 const saleStatusLabels: Record<ProductSaleStatus, string> = {
   in_stock: 'В наличии',
   preorder: 'Предзаказ',
   sold_out: 'Нет в наличии',
   hidden: 'Недоступно'
-}
-
-function readStoredCart(): readonly unknown[] {
-  if (typeof window === 'undefined') return []
-
-  try {
-    const raw = window.localStorage.getItem(storageKey)
-    if (!raw) return []
-
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-
-    return parsed
-  } catch {
-    return []
-  }
-}
-
-function readCart(): CartItem[] {
-  return sanitizeCart(readStoredCart(), products)
-}
-
-function writeCart(cart: CartItem[]): boolean {
-  if (typeof window === 'undefined') return false
-
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify(cart))
-    return true
-  } catch {
-    return false
-  }
-}
-
-function dispatchCartUpdated() {
-  window.dispatchEvent(new Event(cartUpdatedEvent))
 }
 
 export function CartClient() {
@@ -67,10 +35,10 @@ export function CartClient() {
 
   useEffect(() => {
     function refreshCart() {
-      const sanitizedCart = readCart()
+      const sanitizedCart = readCartStorage(products)
 
       setCart(sanitizedCart)
-      writeCart(sanitizedCart)
+      writeCartStorage(sanitizedCart)
       setIsReady(true)
     }
 
@@ -90,7 +58,7 @@ export function CartClient() {
     setCart(sanitizedCart)
     setStorageError(null)
 
-    if (!writeCart(sanitizedCart)) {
+    if (!writeCartStorage(sanitizedCart)) {
       setStorageError('Не удалось сохранить корзину. Проверьте настройки браузера.')
       return
     }
@@ -103,6 +71,10 @@ export function CartClient() {
 
     const quantity = Number(value)
     persistCart(updateCartItemQuantity(cart, id, quantity))
+  }
+
+  function changeQuantity(id: string, nextQuantity: number) {
+    persistCart(updateCartItemQuantity(cart, id, nextQuantity))
   }
 
   if (!isReady) {
@@ -133,7 +105,9 @@ export function CartClient() {
         {cart.map((item) => (
           <article className="cartLine" key={item.id}>
             <div className="cartLineMeta">
-              <h2>{item.title}</h2>
+              <h2>
+                <Link href={`/shop/${item.productSlug}`}>{item.title}</Link>
+              </h2>
               <div>
                 <span>{item.size ?? 'Без размера'}</span>
                 <span>{saleStatusLabels[item.saleStatus]}</span>
@@ -142,13 +116,29 @@ export function CartClient() {
 
             <label className="cartQuantity">
               <span>Кол-во</span>
-              <input
-                inputMode="numeric"
-                min="1"
-                onChange={(event) => handleQuantityChange(item.id, event.target.value)}
-                type="number"
-                value={item.quantity}
-              />
+              <span className="quantityControl">
+                <button
+                  aria-label={`Уменьшить количество: ${item.title}`}
+                  onClick={() => changeQuantity(item.id, item.quantity - 1)}
+                  type="button"
+                >
+                  -
+                </button>
+                <input
+                  inputMode="numeric"
+                  min="1"
+                  onChange={(event) => handleQuantityChange(item.id, event.target.value)}
+                  type="number"
+                  value={item.quantity}
+                />
+                <button
+                  aria-label={`Увеличить количество: ${item.title}`}
+                  onClick={() => changeQuantity(item.id, item.quantity + 1)}
+                  type="button"
+                >
+                  +
+                </button>
+              </span>
             </label>
 
             <strong className="cartLineTotal">{formatRubles(item.price * item.quantity)}</strong>
@@ -172,6 +162,12 @@ export function CartClient() {
             В корзине есть предзаказ. Сроки отправки могут отличаться от товаров в наличии.
           </p>
         ) : null}
+
+        <ul className="summaryNotes">
+          <li>Оформление без личного кабинета.</li>
+          <li>Корзина сохраняется на этом устройстве.</li>
+          <li>Пункт СДЭК и доставка выбираются до оплаты.</li>
+        </ul>
 
         <div className="summaryRow">
           <span>Товары</span>

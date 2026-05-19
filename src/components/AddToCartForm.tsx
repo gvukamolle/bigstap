@@ -2,11 +2,10 @@
 
 import { type FormEvent, useState } from 'react'
 
-import { addCartItem, type CartError, type CartItem } from '@/domain/cart'
-import { isSelectableSize, type Product, type ProductSaleStatus } from '@/domain/products'
-
-const storageKey = 'bigstep-cart'
-const cartUpdatedEvent = 'bigstep-cart-updated'
+import { products } from '@/data/products'
+import { addCartItem, type CartError } from '@/domain/cart'
+import { isSelectableSize, type Product } from '@/domain/products'
+import { dispatchCartUpdated, readCartStorage, writeCartStorage } from '@/lib/cartStorage'
 
 const cartErrorMessages: Record<CartError, string> = {
   PRODUCT_UNAVAILABLE: 'Эту вещь сейчас нельзя добавить в корзину.',
@@ -14,61 +13,6 @@ const cartErrorMessages: Record<CartError, string> = {
   SIZE_UNAVAILABLE: 'Этот размер сейчас недоступен.',
   SIZE_NOT_ALLOWED: 'Для этой вещи размер выбирать не нужно.',
   OUT_OF_STOCK: 'В корзине уже максимальное доступное количество.'
-}
-
-const saleStatuses: readonly ProductSaleStatus[] = ['in_stock', 'preorder', 'sold_out', 'hidden']
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function isProductSaleStatus(value: unknown): value is ProductSaleStatus {
-  return typeof value === 'string' && saleStatuses.includes(value as ProductSaleStatus)
-}
-
-function isCartItem(value: unknown): value is CartItem {
-  if (!isRecord(value)) return false
-
-  return (
-    typeof value.id === 'string' &&
-    typeof value.productSlug === 'string' &&
-    typeof value.title === 'string' &&
-    typeof value.price === 'number' &&
-    Number.isFinite(value.price) &&
-    value.price >= 0 &&
-    typeof value.quantity === 'number' &&
-    Number.isSafeInteger(value.quantity) &&
-    value.quantity > 0 &&
-    (typeof value.size === 'string' || value.size === null) &&
-    isProductSaleStatus(value.saleStatus)
-  )
-}
-
-function readCart(): CartItem[] {
-  if (typeof window === 'undefined') return []
-
-  try {
-    const raw = window.localStorage.getItem(storageKey)
-    if (!raw) return []
-
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-
-    return parsed.filter(isCartItem)
-  } catch {
-    return []
-  }
-}
-
-function writeCart(cart: CartItem[]): boolean {
-  if (typeof window === 'undefined') return false
-
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify(cart))
-    return true
-  } catch {
-    return false
-  }
 }
 
 function hasFiniteStock(stock: number): boolean {
@@ -112,19 +56,19 @@ export function AddToCartForm({ product }: { product: Product }) {
       return
     }
 
-    const result = addCartItem(readCart(), product, selectedSize)
+    const result = addCartItem(readCartStorage(products), product, selectedSize)
 
     if (!result.ok) {
       setError(cartErrorMessages[result.error])
       return
     }
 
-    if (!writeCart(result.cart)) {
+    if (!writeCartStorage(result.cart)) {
       setError('Не удалось сохранить корзину. Проверьте настройки браузера.')
       return
     }
 
-    window.dispatchEvent(new Event(cartUpdatedEvent))
+    dispatchCartUpdated()
     setError(null)
     setNote('Добавлено. Корзина сохранена на этом устройстве.')
   }

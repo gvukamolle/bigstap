@@ -4,51 +4,111 @@ import Link from 'next/link'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 
 import { products } from '@/data/products'
-import { calculateCartTotals, formatRubles, sanitizeCart, type CartItem } from '@/domain/cart'
+import { calculateCartTotals, formatRubles, type CartItem } from '@/domain/cart'
 import {
   type CdekPickupPoint,
+  type CheckoutDraft,
   type CustomerDetails,
   type CheckoutValidationField,
   type ValidationResult,
   validateCheckoutDraft
 } from '@/domain/checkout'
+import { cartUpdatedEvent, readCartStorage, writeCartStorage } from '@/lib/cartStorage'
 
-const storageKey = 'bigstep-cart'
-const cartUpdatedEvent = 'bigstep-cart-updated'
+const checkoutDraftStorageKey = 'bigstep-checkout-draft'
+const checkoutDraftStorageVersion = 1
 
-const prototypePickup: CdekPickupPoint = {
-  code: 'MSK123',
-  name: 'СДЭК Тверская',
-  address: 'Москва, Тверская 1',
-  city: 'Москва',
-  price: 650
+const defaultCustomer: CustomerDetails = {
+  fullName: '',
+  phone: '',
+  email: '',
+  city: 'Москва'
 }
 
-function readStoredCart(): readonly unknown[] {
-  if (typeof window === 'undefined') return []
+const prototypePickups: readonly CdekPickupPoint[] = [
+  {
+    code: 'MSK123',
+    name: 'СДЭК Тверская',
+    address: 'Москва, Тверская 1',
+    city: 'Москва',
+    price: 650
+  },
+  {
+    code: 'SPB021',
+    name: 'СДЭК Лиговский',
+    address: 'Санкт-Петербург, Лиговский проспект 50',
+    city: 'Санкт-Петербург',
+    price: 790
+  }
+]
+
+type StoredCheckoutDraft = {
+  version: typeof checkoutDraftStorageVersion
+  updatedAt: string
+  draft: CheckoutDraft
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function isCustomerDetails(value: unknown): value is CustomerDetails {
+  return (
+    isRecord(value) &&
+    typeof value.fullName === 'string' &&
+    typeof value.phone === 'string' &&
+    typeof value.email === 'string' &&
+    typeof value.city === 'string'
+  )
+}
+
+function isCdekPickupPoint(value: unknown): value is CdekPickupPoint {
+  return (
+    isRecord(value) &&
+    typeof value.code === 'string' &&
+    typeof value.name === 'string' &&
+    typeof value.address === 'string' &&
+    typeof value.city === 'string' &&
+    typeof value.price === 'number' &&
+    Number.isFinite(value.price) &&
+    value.price >= 0
+  )
+}
+
+function readCheckoutDraft(): CheckoutDraft | null {
+  if (typeof window === 'undefined') return null
 
   try {
-    const raw = window.localStorage.getItem(storageKey)
-    if (!raw) return []
+    const raw = window.localStorage.getItem(checkoutDraftStorageKey)
+    if (!raw) return null
 
     const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
+    if (!isRecord(parsed) || parsed.version !== checkoutDraftStorageVersion) return null
+    if (!isRecord(parsed.draft) || !isCustomerDetails(parsed.draft.customer)) return null
 
-    return parsed
+    const cdekPickup = parsed.draft.cdekPickup
+    if (cdekPickup !== null && !isCdekPickupPoint(cdekPickup)) return null
+
+    return {
+      customer: parsed.draft.customer,
+      cdekPickup
+    }
   } catch {
-    return []
+    return null
   }
 }
 
-function readCart(): CartItem[] {
-  return sanitizeCart(readStoredCart(), products)
-}
-
-function writeCart(cart: CartItem[]): boolean {
+function writeCheckoutDraft(draft: CheckoutDraft): boolean {
   if (typeof window === 'undefined') return false
 
   try {
-    window.localStorage.setItem(storageKey, JSON.stringify(cart))
+    const payload: StoredCheckoutDraft = {
+      version: checkoutDraftStorageVersion,
+      updatedAt: new Date().toISOString(),
+      draft
+    }
+
+    window.localStorage.setItem(checkoutDraftStorageKey, JSON.stringify(payload))
     return true
   } catch {
     return false
@@ -81,15 +141,11 @@ function getFieldErrorId(field: CheckoutValidationField): string {
 export function CheckoutClient() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [isReady, setIsReady] = useState(false)
-  const [customer, setCustomer] = useState<CustomerDetails>({
-    fullName: '',
-    phone: '',
-    email: '',
-    city: 'Москва'
-  })
+  const [customer, setCustomer] = useState<CustomerDetails>(defaultCustomer)
   const [cdekPickup, setCdekPickup] = useState<CdekPickupPoint | null>(null)
   const [validation, setValidation] = useState<ValidationResult | null>(null)
   const [paymentPlaceholderVisible, setPaymentPlaceholderVisible] = useState(false)
+  const [draftStorageError, setDraftStorageError] = useState<string | null>(null)
 
   const totals = useMemo(() => calculateCartTotals(cart, cdekPickup?.price ?? 0), [cart, cdekPickup])
   const validationMessages = getValidationMessages(validation)
@@ -102,11 +158,17 @@ export function CheckoutClient() {
 
   useEffect(() => {
     function refreshCart() {
-      const sanitizedCart = readCart()
+      const sanitizedCart = readCartStorage(products)
 
       setCart(sanitizedCart)
-      writeCart(sanitizedCart)
+      writeCartStorage(sanitizedCart)
       setIsReady(true)
+    }
+
+    const storedDraft = readCheckoutDraft()
+    if (storedDraft) {
+      setCustomer(storedDraft.customer)
+      setCdekPickup(storedDraft.cdekPickup)
     }
 
     refreshCart()
@@ -119,14 +181,25 @@ export function CheckoutClient() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!isReady) return
+
+    const saved = writeCheckoutDraft({
+      customer,
+      cdekPickup
+    })
+
+    setDraftStorageError(saved ? null : 'Не удалось сохранить черновик оформления.')
+  }, [cdekPickup, customer, isReady])
+
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }))
     setValidation(null)
     setPaymentPlaceholderVisible(false)
   }
 
-  function selectPrototypePickup() {
-    setCdekPickup(prototypePickup)
+  function selectPrototypePickup(pickup: CdekPickupPoint) {
+    setCdekPickup(pickup)
     setValidation(null)
     setPaymentPlaceholderVisible(false)
   }
@@ -181,6 +254,10 @@ export function CheckoutClient() {
           <span className="eyebrow">01</span>
           <h2>Контакты</h2>
         </div>
+        <p className="formNote">
+          Личный кабинет не нужен. Контакты и выбранный пункт СДЭК сохраняются на этом устройстве
+          как черновик оформления.
+        </p>
 
         <label className="checkoutField">
           <span>Имя и фамилия</span>
@@ -258,22 +335,28 @@ export function CheckoutClient() {
           <h2>СДЭК</h2>
         </div>
 
-        <div className="pickupBox">
-          <div>
-            <strong>{prototypePickup.name}</strong>
-            <span>{prototypePickup.address}</span>
-            <span>{formatRubles(prototypePickup.price)}</span>
-          </div>
-          <button
-            aria-describedby={pickupError ? getFieldErrorId('cdekPickup') : undefined}
-            aria-invalid={pickupError ? true : undefined}
-            aria-pressed={cdekPickup?.code === prototypePickup.code}
-            className="buttonSecondary"
-            onClick={selectPrototypePickup}
-            type="button"
-          >
-            Выбрать пункт
-          </button>
+        <div className="pickupList">
+          {prototypePickups.map((pickup) => (
+            <div className="pickupBox" key={pickup.code}>
+              <div>
+                <strong>{pickup.name}</strong>
+                <span>{pickup.address}</span>
+                <span>
+                  {formatRubles(pickup.price)} / ориентир 2-5 дней после передачи в СДЭК
+                </span>
+              </div>
+              <button
+                aria-describedby={pickupError ? getFieldErrorId('cdekPickup') : undefined}
+                aria-invalid={pickupError ? true : undefined}
+                aria-pressed={cdekPickup?.code === pickup.code}
+                className="buttonSecondary"
+                onClick={() => selectPrototypePickup(pickup)}
+                type="button"
+              >
+                {cdekPickup?.code === pickup.code ? 'Выбрано' : 'Выбрать'}
+              </button>
+            </div>
+          ))}
         </div>
 
         {pickupError ? (
@@ -294,6 +377,12 @@ export function CheckoutClient() {
               <li key={`${message}-${index}`}>{message}</li>
             ))}
           </ul>
+        ) : null}
+
+        {draftStorageError ? (
+          <p className="formError" role="alert">
+            {draftStorageError}
+          </p>
         ) : null}
 
         {paymentPlaceholderVisible ? (
@@ -326,6 +415,12 @@ export function CheckoutClient() {
             В заказе есть предзаказ. Доставка может начаться после готовности всей партии.
           </p>
         ) : null}
+
+        <ul className="summaryNotes">
+          <li>В наличии и предзаказы оформляются одним заказом.</li>
+          <li>Оплата будет через ЮKassa после проверки формы.</li>
+          <li>Возврат дистанционной покупки: памятка и адрес будут в заказе.</li>
+        </ul>
 
         <div className="summaryRow">
           <span>Товары</span>
