@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   addCartItem,
   calculateCartTotals,
+  sanitizeCart,
   updateCartItemQuantity,
   type CartItem,
   type CartResult
@@ -252,5 +253,111 @@ describe('cart domain', () => {
       ;(overshirt as { title: string }).title = 'Mutated title'
     }).toThrow(TypeError)
     expect(overshirt.title).toBe('Овершерт 01')
+  })
+
+  it('sanitizes stored cart lines against canonical product data', () => {
+    const overshirt = productBySlug('overshirt-01')
+    const tee = productBySlug('tee-preorder')
+    const bag = productBySlug('bag-one-size')
+    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
+    if (tee.type !== 'sized') throw new Error('Expected sized fixture')
+    if (bag.type !== 'one_size') throw new Error('Expected one-size fixture')
+
+    const sanitized = sanitizeCart(
+      [
+        {
+          id: 'tampered-id',
+          productSlug: overshirt.slug,
+          title: 'Tampered',
+          price: Number.MAX_SAFE_INTEGER,
+          quantity: 999,
+          size: 'M',
+          saleStatus: 'hidden'
+        },
+        {
+          id: 'tampered-preorder',
+          productSlug: tee.slug,
+          title: 'Tampered preorder',
+          price: -1,
+          quantity: 2,
+          size: 'S',
+          saleStatus: 'in_stock'
+        },
+        {
+          id: 'tampered-one-size',
+          productSlug: bag.slug,
+          title: 'Tampered one size',
+          price: 0,
+          quantity: 100,
+          size: null,
+          saleStatus: 'preorder'
+        }
+      ],
+      products
+    )
+
+    expect(sanitized).toEqual([
+      {
+        id: 'overshirt-01:M',
+        productSlug: 'overshirt-01',
+        title: 'Овершерт 01',
+        price: 12900,
+        quantity: 5,
+        size: 'M',
+        saleStatus: 'in_stock'
+      },
+      {
+        id: 'tee-preorder:S',
+        productSlug: 'tee-preorder',
+        title: 'Футболка Preorder',
+        price: 7900,
+        quantity: 2,
+        size: 'S',
+        saleStatus: 'preorder'
+      },
+      {
+        id: 'bag-one-size:one-size',
+        productSlug: 'bag-one-size',
+        title: 'Сумка One Size',
+        price: 6900,
+        quantity: 8,
+        size: null,
+        saleStatus: 'in_stock'
+      }
+    ])
+  })
+
+  it('drops unavailable, missing, and invalid stored cart lines', () => {
+    const overshirt = productBySlug('overshirt-01')
+    const bag = productBySlug('bag-one-size')
+    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
+    if (bag.type !== 'one_size') throw new Error('Expected one-size fixture')
+
+    const unavailableProducts: Product[] = [
+      { ...overshirt, slug: 'sold-out-product', saleStatus: 'sold_out' },
+      { ...overshirt, slug: 'hidden-product', saleStatus: 'hidden' },
+      { ...overshirt, slug: 'unpublished-product', published: false }
+    ]
+
+    const sanitized = sanitizeCart(
+      [
+        { productSlug: 'missing-product', quantity: 1, size: 'M' },
+        { productSlug: 'sold-out-product', quantity: 1, size: 'M' },
+        { productSlug: 'hidden-product', quantity: 1, size: 'M' },
+        { productSlug: 'unpublished-product', quantity: 1, size: 'M' },
+        { productSlug: overshirt.slug, quantity: 1, size: 'XL' },
+        { productSlug: bag.slug, quantity: 1, size: 'M' },
+        { productSlug: overshirt.slug, quantity: 0, size: 'M' },
+        { productSlug: overshirt.slug, quantity: -1, size: 'M' },
+        { productSlug: overshirt.slug, quantity: 1.5, size: 'M' },
+        { productSlug: overshirt.slug, quantity: Number.NaN, size: 'M' },
+        { productSlug: overshirt.slug, quantity: Number.POSITIVE_INFINITY, size: 'M' },
+        { productSlug: overshirt.slug, quantity: '2', size: 'M' },
+        null
+      ],
+      [...products, ...unavailableProducts]
+    )
+
+    expect(sanitized).toEqual([])
   })
 })

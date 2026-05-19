@@ -3,10 +3,12 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
+import { products } from '@/data/products'
 import {
   calculateCartTotals,
   formatRubles,
   removeCartItem,
+  sanitizeCart,
   type CartItem,
   updateCartItemQuantity
 } from '@/domain/cart'
@@ -15,8 +17,6 @@ import type { ProductSaleStatus } from '@/domain/products'
 const storageKey = 'bigstep-cart'
 const cartUpdatedEvent = 'bigstep-cart-updated'
 
-const saleStatuses: readonly ProductSaleStatus[] = ['in_stock', 'preorder', 'sold_out', 'hidden']
-
 const saleStatusLabels: Record<ProductSaleStatus, string> = {
   in_stock: 'В наличии',
   preorder: 'Предзаказ',
@@ -24,33 +24,7 @@ const saleStatusLabels: Record<ProductSaleStatus, string> = {
   hidden: 'Недоступно'
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function isProductSaleStatus(value: unknown): value is ProductSaleStatus {
-  return typeof value === 'string' && saleStatuses.includes(value as ProductSaleStatus)
-}
-
-function isCartItem(value: unknown): value is CartItem {
-  if (!isRecord(value)) return false
-
-  return (
-    typeof value.id === 'string' &&
-    typeof value.productSlug === 'string' &&
-    typeof value.title === 'string' &&
-    typeof value.price === 'number' &&
-    Number.isFinite(value.price) &&
-    value.price >= 0 &&
-    typeof value.quantity === 'number' &&
-    Number.isSafeInteger(value.quantity) &&
-    value.quantity > 0 &&
-    (typeof value.size === 'string' || value.size === null) &&
-    isProductSaleStatus(value.saleStatus)
-  )
-}
-
-function readCart(): CartItem[] {
+function readStoredCart(): readonly unknown[] {
   if (typeof window === 'undefined') return []
 
   try {
@@ -60,10 +34,14 @@ function readCart(): CartItem[] {
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
 
-    return parsed.filter(isCartItem)
+    return parsed
   } catch {
     return []
   }
+}
+
+function readCart(): CartItem[] {
+  return sanitizeCart(readStoredCart(), products)
 }
 
 function writeCart(cart: CartItem[]): boolean {
@@ -89,7 +67,10 @@ export function CartClient() {
 
   useEffect(() => {
     function refreshCart() {
-      setCart(readCart())
+      const sanitizedCart = readCart()
+
+      setCart(sanitizedCart)
+      writeCart(sanitizedCart)
       setIsReady(true)
     }
 
@@ -104,10 +85,12 @@ export function CartClient() {
   }, [])
 
   function persistCart(nextCart: CartItem[]) {
-    setCart(nextCart)
+    const sanitizedCart = sanitizeCart(nextCart, products)
+
+    setCart(sanitizedCart)
     setStorageError(null)
 
-    if (!writeCart(nextCart)) {
+    if (!writeCart(sanitizedCart)) {
       setStorageError('Не удалось сохранить корзину. Проверьте настройки браузера.')
       return
     }

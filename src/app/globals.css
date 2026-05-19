@@ -808,6 +808,15 @@ textarea:focus-visible {
   padding: 12px 12px 12px 28px;
 }
 
+.fieldError {
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .paymentPlaceholder {
   border: 1px solid rgba(47, 93, 69, 0.28);
   border-radius: var(--radius);

@@ -3,14 +3,15 @@
 import Link from 'next/link'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 
-import { calculateCartTotals, formatRubles, type CartItem } from '@/domain/cart'
+import { products } from '@/data/products'
+import { calculateCartTotals, formatRubles, sanitizeCart, type CartItem } from '@/domain/cart'
 import {
   type CdekPickupPoint,
   type CustomerDetails,
+  type CheckoutValidationField,
   type ValidationResult,
   validateCheckoutDraft
 } from '@/domain/checkout'
-import type { ProductSaleStatus } from '@/domain/products'
 
 const storageKey = 'bigstep-cart'
 const cartUpdatedEvent = 'bigstep-cart-updated'
@@ -23,35 +24,7 @@ const prototypePickup: CdekPickupPoint = {
   price: 650
 }
 
-const saleStatuses: readonly ProductSaleStatus[] = ['in_stock', 'preorder', 'sold_out', 'hidden']
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function isProductSaleStatus(value: unknown): value is ProductSaleStatus {
-  return typeof value === 'string' && saleStatuses.includes(value as ProductSaleStatus)
-}
-
-function isCartItem(value: unknown): value is CartItem {
-  if (!isRecord(value)) return false
-
-  return (
-    typeof value.id === 'string' &&
-    typeof value.productSlug === 'string' &&
-    typeof value.title === 'string' &&
-    typeof value.price === 'number' &&
-    Number.isFinite(value.price) &&
-    value.price >= 0 &&
-    typeof value.quantity === 'number' &&
-    Number.isSafeInteger(value.quantity) &&
-    value.quantity > 0 &&
-    (typeof value.size === 'string' || value.size === null) &&
-    isProductSaleStatus(value.saleStatus)
-  )
-}
-
-function readCart(): CartItem[] {
+function readStoredCart(): readonly unknown[] {
   if (typeof window === 'undefined') return []
 
   try {
@@ -61,9 +34,24 @@ function readCart(): CartItem[] {
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
 
-    return parsed.filter(isCartItem)
+    return parsed
   } catch {
     return []
+  }
+}
+
+function readCart(): CartItem[] {
+  return sanitizeCart(readStoredCart(), products)
+}
+
+function writeCart(cart: CartItem[]): boolean {
+  if (typeof window === 'undefined') return false
+
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(cart))
+    return true
+  } catch {
+    return false
   }
 }
 
@@ -72,6 +60,22 @@ function getValidationMessages(validation: ValidationResult | null): string[] {
   if (validation.errors.length > 0) return validation.errors.map((error) => error.message)
 
   return validation.messages
+}
+
+function getErrorsByField(
+  validation: ValidationResult | null
+): Partial<Record<CheckoutValidationField, string[]>> {
+  const errorsByField: Partial<Record<CheckoutValidationField, string[]>> = {}
+
+  for (const error of validation?.errors ?? []) {
+    errorsByField[error.field] = [...(errorsByField[error.field] ?? []), error.message]
+  }
+
+  return errorsByField
+}
+
+function getFieldErrorId(field: CheckoutValidationField): string {
+  return `checkout-${field}-error`
 }
 
 export function CheckoutClient() {
@@ -89,10 +93,19 @@ export function CheckoutClient() {
 
   const totals = useMemo(() => calculateCartTotals(cart, cdekPickup?.price ?? 0), [cart, cdekPickup])
   const validationMessages = getValidationMessages(validation)
+  const errorsByField = useMemo(() => getErrorsByField(validation), [validation])
+  const fullNameError = errorsByField.fullName?.[0] ?? null
+  const phoneError = errorsByField.phone?.[0] ?? null
+  const emailError = errorsByField.email?.[0] ?? null
+  const cityError = errorsByField.city?.[0] ?? null
+  const pickupError = errorsByField.cdekPickup?.[0] ?? null
 
   useEffect(() => {
     function refreshCart() {
-      setCart(readCart())
+      const sanitizedCart = readCart()
+
+      setCart(sanitizedCart)
+      writeCart(sanitizedCart)
       setIsReady(true)
     }
 
@@ -172,16 +185,25 @@ export function CheckoutClient() {
         <label className="checkoutField">
           <span>Имя и фамилия</span>
           <input
+            aria-describedby={fullNameError ? getFieldErrorId('fullName') : undefined}
+            aria-invalid={fullNameError ? true : undefined}
             autoComplete="name"
             name="fullName"
             onChange={(event) => updateCustomer('fullName', event.target.value)}
             value={customer.fullName}
           />
+          {fullNameError ? (
+            <span className="fieldError" id={getFieldErrorId('fullName')}>
+              {fullNameError}
+            </span>
+          ) : null}
         </label>
 
         <label className="checkoutField">
           <span>Телефон</span>
           <input
+            aria-describedby={phoneError ? getFieldErrorId('phone') : undefined}
+            aria-invalid={phoneError ? true : undefined}
             autoComplete="tel"
             inputMode="tel"
             name="phone"
@@ -189,27 +211,46 @@ export function CheckoutClient() {
             type="tel"
             value={customer.phone}
           />
+          {phoneError ? (
+            <span className="fieldError" id={getFieldErrorId('phone')}>
+              {phoneError}
+            </span>
+          ) : null}
         </label>
 
         <label className="checkoutField">
           <span>Email</span>
           <input
+            aria-describedby={emailError ? getFieldErrorId('email') : undefined}
+            aria-invalid={emailError ? true : undefined}
             autoComplete="email"
             name="email"
             onChange={(event) => updateCustomer('email', event.target.value)}
             type="email"
             value={customer.email}
           />
+          {emailError ? (
+            <span className="fieldError" id={getFieldErrorId('email')}>
+              {emailError}
+            </span>
+          ) : null}
         </label>
 
         <label className="checkoutField">
           <span>Город</span>
           <input
+            aria-describedby={cityError ? getFieldErrorId('city') : undefined}
+            aria-invalid={cityError ? true : undefined}
             autoComplete="address-level2"
             name="city"
             onChange={(event) => updateCustomer('city', event.target.value)}
             value={customer.city}
           />
+          {cityError ? (
+            <span className="fieldError" id={getFieldErrorId('city')}>
+              {cityError}
+            </span>
+          ) : null}
         </label>
 
         <div className="checkoutPanelHeader">
@@ -224,6 +265,8 @@ export function CheckoutClient() {
             <span>{formatRubles(prototypePickup.price)}</span>
           </div>
           <button
+            aria-describedby={pickupError ? getFieldErrorId('cdekPickup') : undefined}
+            aria-invalid={pickupError ? true : undefined}
             aria-pressed={cdekPickup?.code === prototypePickup.code}
             className="buttonSecondary"
             onClick={selectPrototypePickup}
@@ -232,6 +275,12 @@ export function CheckoutClient() {
             Выбрать пункт
           </button>
         </div>
+
+        {pickupError ? (
+          <p className="fieldError" id={getFieldErrorId('cdekPickup')}>
+            {pickupError}
+          </p>
+        ) : null}
 
         {cdekPickup ? (
           <p className="formNote" role="status">

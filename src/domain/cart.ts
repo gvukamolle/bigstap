@@ -32,6 +32,10 @@ export function createCartItemId(productSlug: string, size: string | null): stri
   return `${productSlug}:${size ?? 'one-size'}`
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
 function getCartValidationError(product: Product, size: string | null): CartError | null {
   if (!product.published || product.saleStatus === 'sold_out' || product.saleStatus === 'hidden') {
     return 'PRODUCT_UNAVAILABLE'
@@ -62,6 +66,55 @@ function getAvailableStock(product: Product, size: string | null): number {
 
 function isPositiveSafeInteger(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0
+}
+
+export function sanitizeCart(
+  storedCart: readonly unknown[],
+  canonicalProducts: readonly Product[]
+): CartItem[] {
+  const productsBySlug = new Map(canonicalProducts.map((product) => [product.slug, product]))
+  const sanitizedById = new Map<string, CartItem>()
+
+  for (const storedItem of storedCart) {
+    if (!isRecord(storedItem)) continue
+    if (typeof storedItem.productSlug !== 'string') continue
+    if (typeof storedItem.quantity !== 'number' || !isPositiveSafeInteger(storedItem.quantity)) continue
+    if (!(typeof storedItem.size === 'string' || storedItem.size === null)) continue
+
+    const product = productsBySlug.get(storedItem.productSlug)
+    if (!product) continue
+    if (getCartValidationError(product, storedItem.size)) continue
+
+    const availableStock = getAvailableStock(product, storedItem.size)
+    if (!isPositiveSafeInteger(availableStock)) continue
+
+    const price = getDisplayPrice(product)
+    if (!Number.isFinite(price) || price < 0) continue
+
+    const id = createCartItemId(product.slug, storedItem.size)
+    const quantity = Math.min(storedItem.quantity, availableStock)
+    const existing = sanitizedById.get(id)
+
+    if (existing) {
+      sanitizedById.set(id, {
+        ...existing,
+        quantity: Math.min(existing.quantity + quantity, availableStock)
+      })
+      continue
+    }
+
+    sanitizedById.set(id, {
+      id,
+      productSlug: product.slug,
+      title: product.title,
+      price,
+      quantity,
+      size: storedItem.size,
+      saleStatus: product.saleStatus
+    })
+  }
+
+  return [...sanitizedById.values()]
 }
 
 export function addCartItem(cart: CartItem[], product: Product, size: string | null): CartResult {
