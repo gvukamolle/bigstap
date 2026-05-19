@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { adminsAndEditors, anyone } from '../access'
+import { adminsAndEditors, staffOrPublished } from '../access'
 
 export const Events: CollectionConfig = {
   slug: 'events',
@@ -9,7 +9,7 @@ export const Events: CollectionConfig = {
   },
   access: {
     create: adminsAndEditors,
-    read: anyone,
+    read: staffOrPublished,
     update: adminsAndEditors,
     delete: adminsAndEditors
   },

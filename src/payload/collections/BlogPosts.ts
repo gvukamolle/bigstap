@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 
-import { adminsAndEditors, anyone } from '../access'
+import { adminsAndEditors, staffOrPublished } from '../access'
 
 export const BlogPosts: CollectionConfig = {
   slug: 'blog-posts',
@@ -10,7 +10,7 @@ export const BlogPosts: CollectionConfig = {
   },
   access: {
     create: adminsAndEditors,
-    read: anyone,
+    read: staffOrPublished,
     update: adminsAndEditors,
     delete: adminsAndEditors
   },

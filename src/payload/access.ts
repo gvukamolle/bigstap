@@ -1,4 +1,4 @@
-import type { Access } from 'payload'
+import type { Access, Where } from 'payload'
 
 type Role = 'admin' | 'editor'
 
@@ -18,7 +18,27 @@ const hasRole = (user: unknown, roles: Role[]) => {
 
 export const anyone: Access = () => true
 
+export const isStaff = (user: unknown) => hasRole(user, ['admin', 'editor'])
+
 export const admins: Access = ({ req: { user } }) => hasRole(user, ['admin'])
 
 export const adminsAndEditors: Access = ({ req: { user } }) =>
-  hasRole(user, ['admin', 'editor'])
+  isStaff(user)
+
+export const staffOrPublished: Access = ({ req: { user } }) =>
+  isStaff(user) ? true : { published: { equals: true } }
+
+export const staffOrPublishedProduct: Access = ({ req: { user } }) => {
+  if (isStaff(user)) {
+    return true
+  }
+
+  const publicProductFilter: Where = {
+    and: [
+      { published: { equals: true } },
+      { saleStatus: { not_equals: 'hidden' } }
+    ]
+  }
+
+  return publicProductFilter
+}

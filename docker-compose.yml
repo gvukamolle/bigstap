@@ -6,9 +6,9 @@ services:
     environment:
       POSTGRES_DB: bigstep
       POSTGRES_USER: bigstep
-      POSTGRES_PASSWORD: bigstep
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bigstep}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - bigstep-postgres-data:/var/lib/postgresql/data
 

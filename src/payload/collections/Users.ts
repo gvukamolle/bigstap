@@ -14,6 +14,26 @@ export const Users: CollectionConfig = {
     update: admins,
     delete: admins
   },
+  hooks: {
+    beforeValidate: [
+      async ({ data, operation, req }) => {
+        if (operation !== 'create') {
+          return data
+        }
+
+        const userCount = await req.payload.count({
+          collection: 'users',
+          req,
+          overrideAccess: true
+        })
+
+        return {
+          ...data,
+          role: userCount.totalDocs === 0 ? 'admin' : (data?.role ?? 'editor')
+        }
+      }
+    ]
+  },
   fields: [
     {
       name: 'role',

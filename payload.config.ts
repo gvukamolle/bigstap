@@ -14,6 +14,20 @@ import { SiteSettings } from './src/payload/globals/SiteSettings'
 const databaseUri =
   process.env.DATABASE_URI ?? 'postgres://bigstep:bigstep@localhost:5432/bigstep'
 
+const getPayloadSecret = () => {
+  if (process.env.PAYLOAD_SECRET) {
+    return process.env.PAYLOAD_SECRET
+  }
+
+  const isNextProductionBuild = process.env.NEXT_PHASE === 'phase-production-build'
+
+  if (process.env.NODE_ENV === 'production' && !isNextProductionBuild) {
+    throw new Error('PAYLOAD_SECRET is required in production')
+  }
+
+  return 'bigstep-local-development-secret'
+}
+
 export default buildConfig({
   admin: {
     user: Users.slug
@@ -26,6 +40,6 @@ export default buildConfig({
     }
   }),
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET ?? 'bigstep-local-development-secret',
+  secret: getPayloadSecret(),
   sharp
 })

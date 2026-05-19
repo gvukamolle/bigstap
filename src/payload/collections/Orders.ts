@@ -17,7 +17,8 @@ export const Orders: CollectionConfig = {
     {
       name: 'orderNumber',
       type: 'text',
-      required: true
+      required: true,
+      unique: true
     },
     {
       name: 'status',
@@ -62,7 +63,20 @@ export const Orders: CollectionConfig = {
     },
     {
       name: 'paymentId',
-      type: 'text'
+      type: 'text',
+      unique: true
+    },
+    {
+      name: 'amount',
+      type: 'number',
+      required: true,
+      min: 0
+    },
+    {
+      name: 'currency',
+      type: 'text',
+      required: true,
+      defaultValue: 'RUB'
     },
     {
       name: 'trackingNumber',
