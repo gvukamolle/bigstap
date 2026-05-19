@@ -7,7 +7,7 @@ import {
   type CartResult
 } from '../../src/domain/cart'
 import { products } from '../../src/data/products'
-import type { Product } from '../../src/domain/products'
+import { isSelectableSize, type Product } from '../../src/domain/products'
 
 function productBySlug(slug: string): Product {
   const product = products.find((item) => item.slug === slug)
@@ -75,6 +75,38 @@ describe('cart domain', () => {
     if (!second.ok) throw new Error(second.error)
     expect(second.cart).toHaveLength(1)
     expect(second.cart[0]?.quantity).toBe(2)
+  })
+
+  it('rejects adding a sized product beyond available stock', () => {
+    const overshirt = productBySlug('overshirt-01')
+    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
+
+    let cart: CartItem[] = []
+    for (let count = 0; count < 5; count += 1) {
+      cart = cartFrom(addCartItem(cart, overshirt, 'M'))
+    }
+
+    const beforeLimitAdd = [...cart]
+    const limitResult = addCartItem(cart, overshirt, 'M')
+
+    expect(cart).toEqual(beforeLimitAdd)
+    expect(limitResult).toEqual({ ok: false, error: 'OUT_OF_STOCK' })
+  })
+
+  it('rejects adding a one-size product beyond available stock', () => {
+    const bag = productBySlug('bag-one-size')
+    if (bag.type !== 'one_size') throw new Error('Expected one-size fixture')
+
+    let cart: CartItem[] = []
+    for (let count = 0; count < bag.stock; count += 1) {
+      cart = cartFrom(addCartItem(cart, bag, null))
+    }
+
+    const beforeLimitAdd = [...cart]
+    const limitResult = addCartItem(cart, bag, null)
+
+    expect(cart).toEqual(beforeLimitAdd)
+    expect(limitResult).toEqual({ ok: false, error: 'OUT_OF_STOCK' })
   })
 
   it('calculates preorder presence and totals', () => {
@@ -194,5 +226,31 @@ describe('cart domain', () => {
     })
     expect(calculateCartTotals(cart, -650).deliveryTotal).toBe(0)
     expect(calculateCartTotals(cart, Number.POSITIVE_INFINITY).deliveryTotal).toBe(0)
+  })
+
+  it('requires finite stock for selectable sized products', () => {
+    const overshirt = productBySlug('overshirt-01')
+    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
+
+    const infiniteStockProduct: Product = {
+      ...overshirt,
+      sizes: [{ label: 'M', stock: Number.POSITIVE_INFINITY }]
+    }
+
+    expect(isSelectableSize(infiniteStockProduct, 'M')).toBe(false)
+  })
+
+  it('exports frozen fixtures so consumers cannot mutate shared products', () => {
+    const overshirt = productBySlug('overshirt-01')
+    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
+
+    expect(Object.isFrozen(products)).toBe(true)
+    expect(Object.isFrozen(overshirt)).toBe(true)
+    expect(Object.isFrozen(overshirt.sizes)).toBe(true)
+    expect(Object.isFrozen(overshirt.sizes[0])).toBe(true)
+    expect(() => {
+      ;(overshirt as { title: string }).title = 'Mutated title'
+    }).toThrow(TypeError)
+    expect(overshirt.title).toBe('Овершерт 01')
   })
 })

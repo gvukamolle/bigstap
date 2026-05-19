@@ -65,6 +65,61 @@ describe('checkout domain', () => {
     expect(result.messages).toEqual(['Укажите телефон', 'Укажите email'])
   })
 
+  it('rejects phone values with invalid characters even when digit count is valid', () => {
+    const result = validateCheckoutDraft({
+      customer: {
+        fullName: 'Иван Иванов',
+        phone: 'abc+79990000000<script>',
+        email: 'client@example.com',
+        city: 'Москва'
+      },
+      cdekPickup: {
+        code: 'MSK123',
+        name: 'СДЭК Тверская',
+        address: 'Москва, Тверская 1',
+        city: 'Москва',
+        price: 650
+      }
+    })
+
+    expect(result.valid).toBe(false)
+    expect(result.errors).toEqual([
+      {
+        field: 'phone',
+        code: 'invalid_phone',
+        message: 'Укажите телефон'
+      }
+    ])
+  })
+
+  it('rejects incomplete CDEK pickup details', () => {
+    const result = validateCheckoutDraft({
+      customer: {
+        fullName: 'Иван Иванов',
+        phone: '+79990000000',
+        email: 'client@example.com',
+        city: 'Москва'
+      },
+      cdekPickup: {
+        code: '',
+        name: ' ',
+        address: '',
+        city: '',
+        price: Number.POSITIVE_INFINITY
+      }
+    })
+
+    expect(result.valid).toBe(false)
+    expect(result.errors).toEqual([
+      {
+        field: 'cdekPickup',
+        code: 'invalid_cdek_pickup',
+        message: 'Проверьте пункт выдачи СДЭК'
+      }
+    ])
+    expect(result.messages).toEqual(['Проверьте пункт выдачи СДЭК'])
+  })
+
   it('accepts complete checkout draft', () => {
     const result = validateCheckoutDraft({
       customer: {

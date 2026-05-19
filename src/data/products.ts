@@ -64,7 +64,19 @@ const productFixtures = [
   }
 ] as const satisfies readonly Product[]
 
-export const products: readonly Product[] = productFixtures
+function deepFreezeProduct(product: Product): Product {
+  if (product.type === 'sized') {
+    for (const size of product.sizes) {
+      Object.freeze(size)
+    }
+
+    Object.freeze(product.sizes)
+  }
+
+  return Object.freeze(product)
+}
+
+export const products: readonly Product[] = Object.freeze(productFixtures.map((product) => deepFreezeProduct(product)))
 
 function cloneProduct(product: Product): Product {
   if (product.type === 'sized') {

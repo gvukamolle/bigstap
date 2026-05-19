@@ -52,6 +52,12 @@ function getCartValidationError(product: Product, size: string | null): CartErro
   return null
 }
 
+function getAvailableStock(product: Product, size: string | null): number {
+  if (product.type === 'one_size') return product.stock
+
+  return product.sizes.find((item) => item.label === size)?.stock ?? 0
+}
+
 function isPositiveSafeInteger(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0
 }
@@ -64,6 +70,11 @@ export function addCartItem(cart: CartItem[], product: Product, size: string | n
   const existing = cart.find((item) => item.id === id)
 
   if (existing) {
+    const availableStock = getAvailableStock(product, size)
+    if (!Number.isSafeInteger(existing.quantity) || existing.quantity >= availableStock) {
+      return { ok: false, error: 'OUT_OF_STOCK' }
+    }
+
     return {
       ok: true,
       cart: cart.map((item) => (item.id === id ? { ...item, quantity: item.quantity + 1 } : item))

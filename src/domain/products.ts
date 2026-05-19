@@ -38,5 +38,5 @@ export function getDisplayPrice(product: Product): number {
 export function isSelectableSize(product: Product, size: string | null): boolean {
   if (product.type === 'one_size') return size === null && Number.isFinite(product.stock) && product.stock > 0
 
-  return product.sizes.some((item) => item.label === size && item.stock > 0)
+  return product.sizes.some((item) => item.label === size && Number.isFinite(item.stock) && item.stock > 0)
 }

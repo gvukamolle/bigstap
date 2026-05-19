@@ -32,6 +32,30 @@ export type ValidationResult = {
   messages: string[]
 }
 
+function isValidPhone(phone: string): boolean {
+  const trimmedPhone = phone.trim()
+  const digits = trimmedPhone.replace(/\D/g, '')
+  const plusCount = (trimmedPhone.match(/\+/g) ?? []).length
+
+  return (
+    digits.length >= 10 &&
+    /^[+\d\s()-]+$/.test(trimmedPhone) &&
+    plusCount <= 1 &&
+    (plusCount === 0 || trimmedPhone.startsWith('+'))
+  )
+}
+
+function isValidPickupPoint(pickup: CdekPickupPoint): boolean {
+  return (
+    pickup.code.trim().length > 0 &&
+    pickup.name.trim().length > 0 &&
+    pickup.address.trim().length > 0 &&
+    pickup.city.trim().length > 0 &&
+    Number.isFinite(pickup.price) &&
+    pickup.price >= 0
+  )
+}
+
 export function validateCheckoutDraft(draft: CheckoutDraft): ValidationResult {
   const errors: CheckoutValidationError[] = []
 
@@ -42,7 +66,7 @@ export function validateCheckoutDraft(draft: CheckoutDraft): ValidationResult {
       message: 'Укажите имя и фамилию'
     })
   }
-  if (draft.customer.phone.replace(/\D/g, '').length < 10) {
+  if (!isValidPhone(draft.customer.phone)) {
     errors.push({
       field: 'phone',
       code: 'invalid_phone',
@@ -68,6 +92,12 @@ export function validateCheckoutDraft(draft: CheckoutDraft): ValidationResult {
       field: 'cdekPickup',
       code: 'required_cdek_pickup',
       message: 'Выберите пункт выдачи СДЭК'
+    })
+  } else if (!isValidPickupPoint(draft.cdekPickup)) {
+    errors.push({
+      field: 'cdekPickup',
+      code: 'invalid_cdek_pickup',
+      message: 'Проверьте пункт выдачи СДЭК'
     })
   }
 
