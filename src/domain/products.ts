@@ -14,12 +14,14 @@ export type ProductBase = {
   published: boolean
 }
 
+export type ProductSize = {
+  label: string
+  stock: number
+}
+
 export type SizedProduct = ProductBase & {
   type: 'sized'
-  sizes: Array<{
-    label: string
-    stock: number
-  }>
+  sizes: ReadonlyArray<ProductSize>
 }
 
 export type OneSizeProduct = ProductBase & {
@@ -34,7 +36,7 @@ export function getDisplayPrice(product: Product): number {
 }
 
 export function isSelectableSize(product: Product, size: string | null): boolean {
-  if (product.type === 'one_size') return size === null
+  if (product.type === 'one_size') return size === null && Number.isFinite(product.stock) && product.stock > 0
 
   return product.sizes.some((item) => item.label === size && item.stock > 0)
 }

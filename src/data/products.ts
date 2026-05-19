@@ -1,6 +1,6 @@
-import type { Product } from '../domain/products'
+import type { OneSizeProduct, Product, SizedProduct } from '../domain/products'
 
-export const products: Product[] = [
+const productFixtures = [
   {
     slug: 'overshirt-01',
     title: 'Овершерт 01',
@@ -62,10 +62,29 @@ export const products: Product[] = [
     imageTone: 'cream',
     published: true
   }
-]
+] as const satisfies readonly Product[]
+
+export const products: readonly Product[] = productFixtures
+
+function cloneProduct(product: Product): Product {
+  if (product.type === 'sized') {
+    const sizedProduct: SizedProduct = {
+      ...product,
+      sizes: product.sizes.map((size) => ({ ...size }))
+    }
+
+    return sizedProduct
+  }
+
+  const oneSizeProduct: OneSizeProduct = { ...product }
+
+  return oneSizeProduct
+}
 
 export function getPublishedProducts(): Product[] {
-  return products.filter((product) => product.published && product.saleStatus !== 'hidden')
+  return products
+    .filter((product) => product.published && product.saleStatus !== 'hidden')
+    .map((product) => cloneProduct(product))
 }
 
 export function getProductBySlug(slug: string): Product | undefined {
