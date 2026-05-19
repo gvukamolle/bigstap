@@ -777,3 +777,31 @@ textarea:focus-visible {
     flex-direction: column;
   }
 }
+
+@media (max-width: 360px) {
+  .productDetailImage {
+    min-height: clamp(112px, 36vw, 130px);
+  }
+
+  .productDetailInfo {
+    gap: 10px;
+    padding-top: 14px;
+  }
+
+  .productDetailInfo h1 {
+    font-size: 32px;
+  }
+
+  .productDetailInfo p {
+    font-size: 14px;
+    line-height: 1.36;
+  }
+
+  .productDetailMeta {
+    gap: 6px;
+  }
+
+  .addToCart {
+    gap: 8px;
+  }
+}
