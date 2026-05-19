@@ -1,6 +1,8 @@
 services:
-  db:
+  postgres:
     image: postgres:16
+    container_name: bigstep-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: bigstep
       POSTGRES_USER: bigstep

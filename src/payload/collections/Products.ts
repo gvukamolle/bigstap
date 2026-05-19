@@ -111,7 +111,7 @@ export const Products: CollectionConfig = {
     },
     {
       name: 'preorderNote',
-      type: 'textarea',
+      type: 'text',
       admin: {
         condition: (data) => data.saleStatus === 'preorder'
       }
