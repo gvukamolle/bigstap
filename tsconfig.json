@@ -20,6 +20,9 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
+      "@payload-config": [
+        "./payload.config.ts"
+      ],
       "@/*": [
         "./src/*"
       ]
