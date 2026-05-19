@@ -1,0 +1,38 @@
+import Link from 'next/link'
+
+import { ProductCard } from '@/components/ProductCard'
+import { getPublishedProducts } from '@/data/products'
+
+export default function HomePage() {
+  const featuredProducts = getPublishedProducts().slice(0, 4)
+
+  return (
+    <div className="page">
+      <section className="homeHero">
+        <div className="homeCopy">
+          <h1 className="display">Own clothes. Quiet impact.</h1>
+          <p>
+            BIGSTEP делает собственный шмот для спокойного городского ритма. Вещи в наличии и
+            предзаказы можно собрать в одной корзине и оформить вместе.
+          </p>
+          <Link className="button" href="/shop">
+            Смотреть магазин
+          </Link>
+        </div>
+        <div className="homeImage" aria-hidden="true" />
+      </section>
+
+      <section className="section">
+        <div className="sectionHeader">
+          <span className="eyebrow">Drop 01</span>
+          <h2>Витрина</h2>
+        </div>
+        <div className="grid">
+          {featuredProducts.map((product) => (
+            <ProductCard product={product} key={product.slug} />
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
