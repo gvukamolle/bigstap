@@ -4,8 +4,8 @@ export default function CartPage() {
   return (
     <div className="page">
       <section className="shopIntro">
-        <span className="eyebrow">Cart</span>
-        <h1 className="display">Корзина</h1>
+        <span className="eyebrow">Корзина</span>
+        <h1 className="display">Cart</h1>
         <p>Проверьте состав заказа, количество и предзаказы перед оформлением.</p>
       </section>
 
