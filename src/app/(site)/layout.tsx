@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
 
-import './globals.css'
+import '../globals.css'
 
 export const metadata: Metadata = {
   title: 'BIGSTEP.RU',

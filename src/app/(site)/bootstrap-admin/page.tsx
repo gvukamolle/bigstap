@@ -4,17 +4,17 @@ export default function BootstrapAdminPage() {
       <section className="checkoutLayout">
         <form action="/api/admin-bootstrap" className="checkoutPanel" method="post">
           <div className="checkoutPanelHeader">
-            <span className="eyebrow">Payload</span>
+            <span className="eyebrow">Админка</span>
             <h1>Первичная настройка админки</h1>
           </div>
 
           <p className="formNote">
-            Введите bootstrap-токен из переменных окружения. После проверки откроется создание
-            первого пользователя Payload.
+            Введите первичный токен из переменных окружения. После проверки откроется создание
+            первого пользователя админки.
           </p>
 
           <label className="checkoutField">
-            <span>Bootstrap-токен</span>
+            <span>Первичный токен</span>
             <input
               autoComplete="one-time-code"
               name="token"

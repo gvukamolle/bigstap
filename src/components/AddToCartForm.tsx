@@ -154,7 +154,7 @@ export function AddToCartForm({ product }: { product: Product }) {
       ) : (
         <div className="oneSize">
           <span>Размер</span>
-          <strong>One size</strong>
+          <strong>Без размера</strong>
         </div>
       )}
 

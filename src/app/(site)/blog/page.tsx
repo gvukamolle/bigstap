@@ -7,7 +7,7 @@ export default function BlogPage() {
     <div className="page">
       <section className="shopIntro">
         <span className="eyebrow">Блог</span>
-        <h1 className="display">Journal</h1>
+        <h1 className="display">Журнал</h1>
         <p>Заметки о вещах, материалах и спокойном ритме вокруг первого дропа BIGSTEP.</p>
       </section>
 

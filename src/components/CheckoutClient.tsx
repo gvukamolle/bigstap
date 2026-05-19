@@ -150,7 +150,7 @@ export function CheckoutClient() {
   if (!isReady) {
     return (
       <section className="checkoutLayout" aria-live="polite">
-        <p className="formNote">Загружаем checkout.</p>
+        <p className="formNote">Загружаем оформление.</p>
       </section>
     )
   }
@@ -219,7 +219,7 @@ export function CheckoutClient() {
         </label>
 
         <label className="checkoutField">
-          <span>Email</span>
+          <span>Почта</span>
           <input
             aria-describedby={emailError ? getFieldErrorId('email') : undefined}
             aria-invalid={emailError ? true : undefined}
@@ -298,7 +298,7 @@ export function CheckoutClient() {
 
         {paymentPlaceholderVisible ? (
           <p className="paymentPlaceholder" role="status">
-            Прототип YooKassa: здесь будет создан платеж. Реальный заказ и оплата пока не создаются.
+            Прототип Юкасса: здесь будет создан платеж. Реальный заказ и оплата пока не создаются.
           </p>
         ) : null}
 
@@ -314,7 +314,7 @@ export function CheckoutClient() {
           {cart.map((item) => (
             <div className="checkoutItem" key={item.id}>
               <span>
-                {item.title} / {item.size ?? 'One size'} x {item.quantity}
+                {item.title} / {item.size ?? 'Без размера'} × {item.quantity}
               </span>
               <strong>{formatRubles(item.price * item.quantity)}</strong>
             </div>

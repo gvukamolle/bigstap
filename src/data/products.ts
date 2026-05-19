@@ -20,7 +20,7 @@ const productFixtures = [
   },
   {
     slug: 'tee-preorder',
-    title: 'Футболка Preorder',
+    title: 'Футболка предзаказ',
     category: 'Одежда',
     price: 7900,
     saleStatus: 'preorder',
@@ -38,7 +38,7 @@ const productFixtures = [
   },
   {
     slug: 'bag-one-size',
-    title: 'Сумка One Size',
+    title: 'Сумка без размера',
     category: 'Аксессуары',
     price: 6900,
     saleStatus: 'in_stock',
@@ -51,7 +51,7 @@ const productFixtures = [
   },
   {
     slug: 'cap-one-size',
-    title: 'Кепка One Size',
+    title: 'Кепка без размера',
     category: 'Аксессуары',
     price: 4900,
     saleStatus: 'in_stock',

@@ -4,6 +4,10 @@ import { admins } from '../access'
 
 export const Users: CollectionConfig = {
   slug: 'users',
+  labels: {
+    singular: 'Пользователь',
+    plural: 'Пользователи'
+  },
   auth: true,
   admin: {
     useAsTitle: 'email'
@@ -38,15 +42,16 @@ export const Users: CollectionConfig = {
     {
       name: 'role',
       type: 'select',
+      label: 'Роль',
       required: true,
       defaultValue: 'editor',
       options: [
         {
-          label: 'Admin',
+          label: 'Администратор',
           value: 'admin'
         },
         {
-          label: 'Editor',
+          label: 'Редактор',
           value: 'editor'
         }
       ]

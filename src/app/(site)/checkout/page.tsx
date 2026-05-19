@@ -4,9 +4,9 @@ export default function CheckoutPage() {
   return (
     <div className="page">
       <section className="shopIntro">
-        <span className="eyebrow">Checkout</span>
+        <span className="eyebrow">Оформление</span>
         <h1 className="display">Оформление</h1>
-        <p>Прототип оформления: контакты, пункт выдачи СДЭК и заглушка оплаты YooKassa.</p>
+        <p>Прототип оформления: контакты, пункт выдачи СДЭК и заглушка оплаты Юкасса.</p>
       </section>
 
       <CheckoutClient />

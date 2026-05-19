@@ -74,6 +74,10 @@ const validateOrderInvariants = (order: OrderData) => {
 
 export const Orders: CollectionConfig = {
   slug: 'orders',
+  labels: {
+    singular: 'Заказ',
+    plural: 'Заказы'
+  },
   admin: {
     useAsTitle: 'orderNumber'
   },
@@ -99,58 +103,97 @@ export const Orders: CollectionConfig = {
     {
       name: 'orderNumber',
       type: 'text',
+      label: 'Номер заказа',
       required: true,
       unique: true
     },
     {
       name: 'status',
       type: 'select',
+      label: 'Статус',
       required: true,
       defaultValue: 'pending_payment',
       options: [
-        'draft',
-        'pending_payment',
-        'paid',
-        'payment_failed',
-        'processing',
-        'ready_for_cdek',
-        'shipped',
-        'completed',
-        'cancelled',
-        'refunded'
+        {
+          label: 'Черновик',
+          value: 'draft'
+        },
+        {
+          label: 'Ожидает оплаты',
+          value: 'pending_payment'
+        },
+        {
+          label: 'Оплачен',
+          value: 'paid'
+        },
+        {
+          label: 'Ошибка оплаты',
+          value: 'payment_failed'
+        },
+        {
+          label: 'В обработке',
+          value: 'processing'
+        },
+        {
+          label: 'Готов к СДЭК',
+          value: 'ready_for_cdek'
+        },
+        {
+          label: 'Отправлен',
+          value: 'shipped'
+        },
+        {
+          label: 'Завершен',
+          value: 'completed'
+        },
+        {
+          label: 'Отменен',
+          value: 'cancelled'
+        },
+        {
+          label: 'Возврат',
+          value: 'refunded'
+        }
       ]
     },
     {
       name: 'customerName',
       type: 'text',
+      label: 'Имя клиента',
       required: true
     },
     {
       name: 'customerPhone',
       type: 'text',
+      label: 'Телефон клиента',
       required: true
     },
     {
       name: 'customerEmail',
       type: 'email',
+      label: 'Почта клиента',
       required: true
     },
     {
       name: 'cdekPickupCode',
-      type: 'text'
+      type: 'text',
+      label: 'Код пункта СДЭК'
     },
     {
       name: 'cdekPickupAddress',
-      type: 'text'
+      type: 'text',
+      label: 'Адрес пункта СДЭК'
     },
     {
       name: 'paymentId',
       type: 'text',
+      label: 'ID платежа',
       unique: true
     },
     {
       name: 'amount',
       type: 'number',
+      label: 'Сумма',
       required: true,
       min: 0,
       max: MAX_RUB_AMOUNT,
@@ -161,38 +204,49 @@ export const Orders: CollectionConfig = {
     {
       name: 'currency',
       type: 'text',
+      label: 'Валюта',
       required: true,
       defaultValue: 'RUB'
     },
     {
       name: 'items',
       type: 'array',
+      label: 'Позиции заказа',
+      labels: {
+        singular: 'Позиция',
+        plural: 'Позиции'
+      },
       required: true,
       minRows: 1,
       fields: [
         {
           name: 'product',
           type: 'relationship',
+          label: 'Товар',
           relationTo: 'products',
           required: true
         },
         {
           name: 'productTitle',
           type: 'text',
+          label: 'Название товара',
           required: true
         },
         {
           name: 'productSlug',
           type: 'text',
+          label: 'Адрес товара',
           required: true
         },
         {
           name: 'sizeLabel',
-          type: 'text'
+          type: 'text',
+          label: 'Размер'
         },
         {
           name: 'quantity',
           type: 'number',
+          label: 'Количество',
           required: true,
           min: 1,
           max: MAX_QUANTITY,
@@ -203,6 +257,7 @@ export const Orders: CollectionConfig = {
         {
           name: 'unitPrice',
           type: 'number',
+          label: 'Цена за единицу',
           required: true,
           min: 0,
           max: MAX_RUB_AMOUNT,
@@ -213,6 +268,7 @@ export const Orders: CollectionConfig = {
         {
           name: 'lineTotal',
           type: 'number',
+          label: 'Сумма позиции',
           required: true,
           min: 0,
           max: MAX_RUB_AMOUNT,
@@ -223,6 +279,7 @@ export const Orders: CollectionConfig = {
         {
           name: 'saleStatus',
           type: 'select',
+          label: 'Статус продажи',
           required: true,
           options: [
             {
@@ -239,11 +296,13 @@ export const Orders: CollectionConfig = {
     },
     {
       name: 'trackingNumber',
-      type: 'text'
+      type: 'text',
+      label: 'Трек-номер'
     },
     {
       name: 'adminNotes',
-      type: 'textarea'
+      type: 'textarea',
+      label: 'Заметки админа'
     }
   ]
 }

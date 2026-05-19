@@ -4,6 +4,10 @@ import { adminsAndEditors, staffOrPublished } from '../access'
 
 export const Events: CollectionConfig = {
   slug: 'events',
+  labels: {
+    singular: 'Ивент',
+    plural: 'Ивенты'
+  },
   admin: {
     useAsTitle: 'title'
   },
@@ -17,36 +21,43 @@ export const Events: CollectionConfig = {
     {
       name: 'title',
       type: 'text',
+      label: 'Название',
       required: true
     },
     {
       name: 'slug',
       type: 'text',
+      label: 'Адрес',
       required: true,
       unique: true
     },
     {
       name: 'dateLabel',
       type: 'text',
+      label: 'Дата для вывода',
       required: true
     },
     {
       name: 'location',
       type: 'text',
+      label: 'Место',
       required: true
     },
     {
       name: 'description',
       type: 'textarea',
+      label: 'Описание',
       required: true
     },
     {
       name: 'socialLink',
-      type: 'text'
+      type: 'text',
+      label: 'Ссылка на соцсети'
     },
     {
       name: 'published',
       type: 'checkbox',
+      label: 'Опубликовано',
       defaultValue: false
     }
   ]

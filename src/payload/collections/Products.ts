@@ -64,6 +64,10 @@ const validateProductInvariants = (product: ProductData) => {
 
 export const Products: CollectionConfig = {
   slug: 'products',
+  labels: {
+    singular: 'Товар',
+    plural: 'Товары'
+  },
   admin: {
     useAsTitle: 'title'
   },
@@ -89,22 +93,26 @@ export const Products: CollectionConfig = {
     {
       name: 'title',
       type: 'text',
+      label: 'Название',
       required: true
     },
     {
       name: 'slug',
       type: 'text',
+      label: 'Адрес',
       required: true,
       unique: true
     },
     {
       name: 'category',
       type: 'text',
+      label: 'Категория',
       required: true
     },
     {
       name: 'price',
       type: 'number',
+      label: 'Цена',
       required: true,
       min: 0,
       max: MAX_RUB_AMOUNT,
@@ -115,6 +123,7 @@ export const Products: CollectionConfig = {
     {
       name: 'salePrice',
       type: 'number',
+      label: 'Цена со скидкой',
       min: 0,
       max: MAX_RUB_AMOUNT,
       admin: {
@@ -124,15 +133,16 @@ export const Products: CollectionConfig = {
     {
       name: 'productType',
       type: 'select',
+      label: 'Тип размера',
       required: true,
       defaultValue: 'sized',
       options: [
         {
-          label: 'Sized',
+          label: 'Размерная сетка',
           value: 'sized'
         },
         {
-          label: 'One size',
+          label: 'Без размера',
           value: 'one_size'
         }
       ]
@@ -140,6 +150,11 @@ export const Products: CollectionConfig = {
     {
       name: 'sizes',
       type: 'array',
+      label: 'Размеры',
+      labels: {
+        singular: 'Размер',
+        plural: 'Размеры'
+      },
       admin: {
         condition: (_, siblingData) => siblingData.productType === 'sized'
       },
@@ -147,11 +162,13 @@ export const Products: CollectionConfig = {
         {
           name: 'label',
           type: 'text',
+          label: 'Размер',
           required: true
         },
         {
           name: 'stock',
           type: 'number',
+          label: 'Остаток',
           required: true,
           min: 0,
           max: MAX_STOCK,
@@ -164,6 +181,7 @@ export const Products: CollectionConfig = {
     {
       name: 'stock',
       type: 'number',
+      label: 'Остаток',
       min: 0,
       max: MAX_STOCK,
       admin: {
@@ -174,23 +192,24 @@ export const Products: CollectionConfig = {
     {
       name: 'saleStatus',
       type: 'select',
+      label: 'Статус продажи',
       required: true,
       defaultValue: 'in_stock',
       options: [
         {
-          label: 'In stock',
+          label: 'В наличии',
           value: 'in_stock'
         },
         {
-          label: 'Preorder',
+          label: 'Предзаказ',
           value: 'preorder'
         },
         {
-          label: 'Sold out',
+          label: 'Нет в наличии',
           value: 'sold_out'
         },
         {
-          label: 'Hidden',
+          label: 'Скрыт',
           value: 'hidden'
         }
       ]
@@ -198,6 +217,7 @@ export const Products: CollectionConfig = {
     {
       name: 'preorderNote',
       type: 'text',
+      label: 'Комментарий к предзаказу',
       admin: {
         condition: (data) => data.saleStatus === 'preorder'
       }
@@ -205,16 +225,19 @@ export const Products: CollectionConfig = {
     {
       name: 'shortDescription',
       type: 'textarea',
+      label: 'Короткое описание',
       required: true
     },
     {
       name: 'description',
       type: 'textarea',
+      label: 'Описание',
       required: true
     },
     {
       name: 'published',
       type: 'checkbox',
+      label: 'Опубликовано',
       defaultValue: false
     }
   ]

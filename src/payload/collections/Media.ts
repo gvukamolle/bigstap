@@ -4,6 +4,10 @@ import { adminsAndEditors, anyone } from '../access'
 
 export const Media: CollectionConfig = {
   slug: 'media',
+  labels: {
+    singular: 'Медиа',
+    plural: 'Медиа'
+  },
   upload: true,
   access: {
     create: adminsAndEditors,
@@ -15,6 +19,7 @@ export const Media: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
+      label: 'Описание изображения',
       required: true
     }
   ]

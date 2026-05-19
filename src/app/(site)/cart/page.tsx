@@ -5,7 +5,7 @@ export default function CartPage() {
     <div className="page">
       <section className="shopIntro">
         <span className="eyebrow">Корзина</span>
-        <h1 className="display">Cart</h1>
+        <h1 className="display">Корзина</h1>
         <p>Проверьте состав заказа, количество и предзаказы перед оформлением.</p>
       </section>
 

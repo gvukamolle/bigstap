@@ -7,7 +7,7 @@ export default function EventsPage() {
     <div className="page">
       <section className="shopIntro">
         <span className="eyebrow">Ивенты</span>
-        <h1 className="display">Events</h1>
+        <h1 className="display">Анонсы</h1>
         <p>Пока только анонсы. Запись и билеты появятся позже.</p>
       </section>
 

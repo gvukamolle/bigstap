@@ -8,7 +8,7 @@
 
 - Node.js 20.9+
 - npm
-- Docker Desktop для локального PostgreSQL и работы с Payload-админкой
+- Docker Desktop нужен только если локально проверяем PostgreSQL-режим. По умолчанию админка работает на SQLite без Docker.
 
 В окружении Codex Desktop npm доступен здесь:
 
@@ -32,16 +32,23 @@
 cp .env.example .env
 ```
 
-Проверить, что в `.env` задан `POSTGRES_PASSWORD`. Для локальной разработки подходит значение из примера:
+Для локальной разработки Payload использует SQLite-файл:
 
 ```bash
-POSTGRES_PASSWORD=bigstep
+SQLITE_DATABASE_URL=file:payload-local.db
 ```
 
-Запустить PostgreSQL для Payload:
+PostgreSQL можно поднять отдельно, если нужно проверить production-like режим:
 
 ```bash
 docker compose up -d postgres
+```
+
+Для PostgreSQL-режима нужно дополнительно задать:
+
+```bash
+DATABASE_URI=postgres://bigstep:bigstep@localhost:5432/bigstep
+POSTGRES_PASSWORD=bigstep
 ```
 
 Запустить приложение:

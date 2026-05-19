@@ -5,6 +5,10 @@ import { adminsAndEditors, staffOrPublished } from '../access'
 
 export const BlogPosts: CollectionConfig = {
   slug: 'blog-posts',
+  labels: {
+    singular: 'Статья',
+    plural: 'Статьи'
+  },
   admin: {
     useAsTitle: 'title'
   },
@@ -18,43 +22,51 @@ export const BlogPosts: CollectionConfig = {
     {
       name: 'title',
       type: 'text',
+      label: 'Название',
       required: true
     },
     {
       name: 'slug',
       type: 'text',
+      label: 'Адрес',
       required: true,
       unique: true
     },
     {
       name: 'excerpt',
       type: 'textarea',
+      label: 'Анонс',
       required: true
     },
     {
       name: 'category',
-      type: 'text'
+      type: 'text',
+      label: 'Категория'
     },
     {
       name: 'content',
       type: 'richText',
+      label: 'Текст',
       editor: lexicalEditor({})
     },
     {
       name: 'relatedProducts',
       type: 'relationship',
+      label: 'Связанные товары',
       relationTo: 'products',
       hasMany: true
     },
     {
       name: 'relatedEvents',
       type: 'relationship',
+      label: 'Связанные ивенты',
       relationTo: 'events',
       hasMany: true
     },
     {
       name: 'published',
       type: 'checkbox',
+      label: 'Опубликовано',
       defaultValue: false
     }
   ]

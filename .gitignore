@@ -10,4 +10,10 @@ coverage/
 .superpowers/
 next-env.d.ts
 payload-types.ts
+payload-local.db
+payload-local.db-*
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
 *.tsbuildinfo

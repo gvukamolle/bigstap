@@ -10,7 +10,7 @@ export default function HomePage() {
     <div className="page">
       <section className="homeHero">
         <div className="homeCopy">
-          <h1 className="display">Own clothes. Quiet impact.</h1>
+          <h1 className="display">Свой шмот. Тихая сила.</h1>
           <p>
             BIGSTEP делает собственный шмот для спокойного городского ритма. Вещи в наличии и
             предзаказы можно собрать в одной корзине и оформить вместе.
@@ -24,7 +24,7 @@ export default function HomePage() {
 
       <section className="section">
         <div className="sectionHeader">
-          <span className="eyebrow">Drop 01</span>
+          <span className="eyebrow">Дроп 01</span>
           <h2>Витрина</h2>
         </div>
         <div className="grid">

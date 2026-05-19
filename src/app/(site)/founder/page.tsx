@@ -5,7 +5,7 @@ export default function FounderPage() {
     <div className="page">
       <section className="founderHero">
         <div>
-          <span className="eyebrow">Founder</span>
+          <span className="eyebrow">Основатель</span>
           <h1 className="display">{founder.title}</h1>
         </div>
 

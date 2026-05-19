@@ -56,7 +56,7 @@ describe('cart domain', () => {
         {
           id: 'bag-one-size:one-size',
           productSlug: 'bag-one-size',
-          title: 'Сумка One Size',
+          title: 'Сумка без размера',
           price: 6900,
           quantity: 1,
           size: null,
@@ -309,7 +309,7 @@ describe('cart domain', () => {
       {
         id: 'tee-preorder:S',
         productSlug: 'tee-preorder',
-        title: 'Футболка Preorder',
+        title: 'Футболка предзаказ',
         price: 7900,
         quantity: 2,
         size: 'S',
@@ -318,7 +318,7 @@ describe('cart domain', () => {
       {
         id: 'bag-one-size:one-size',
         productSlug: 'bag-one-size',
-        title: 'Сумка One Size',
+        title: 'Сумка без размера',
         price: 6900,
         quantity: 8,
         size: null,

@@ -135,7 +135,7 @@ export function CartClient() {
             <div className="cartLineMeta">
               <h2>{item.title}</h2>
               <div>
-                <span>{item.size ?? 'One size'}</span>
+                <span>{item.size ?? 'Без размера'}</span>
                 <span>{saleStatusLabels[item.saleStatus]}</span>
               </div>
             </div>
@@ -179,7 +179,7 @@ export function CartClient() {
         </div>
         <div className="summaryRow">
           <span>Доставка</span>
-          <strong>На checkout</strong>
+          <strong>При оформлении</strong>
         </div>
         <div className="summaryRow summaryRowTotal">
           <span>К оплате</span>
