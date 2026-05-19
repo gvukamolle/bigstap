@@ -27,7 +27,8 @@ export const BlogPosts: CollectionConfig = {
     },
     {
       name: 'excerpt',
-      type: 'textarea'
+      type: 'textarea',
+      required: true
     },
     {
       name: 'category',

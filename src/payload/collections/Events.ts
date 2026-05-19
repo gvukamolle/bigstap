@@ -32,11 +32,13 @@ export const Events: CollectionConfig = {
     },
     {
       name: 'location',
-      type: 'text'
+      type: 'text',
+      required: true
     },
     {
       name: 'description',
-      type: 'textarea'
+      type: 'textarea',
+      required: true
     },
     {
       name: 'socialLink',

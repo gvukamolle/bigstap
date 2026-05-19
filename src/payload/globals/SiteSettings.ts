@@ -25,7 +25,7 @@ export const SiteSettings: GlobalConfig = {
           required: true
         },
         {
-          name: 'url',
+          name: 'href',
           type: 'text',
           required: true
         }

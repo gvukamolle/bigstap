@@ -17,95 +17,48 @@ export const Orders: CollectionConfig = {
     {
       name: 'orderNumber',
       type: 'text',
-      required: true,
-      unique: true
+      required: true
     },
     {
       name: 'status',
       type: 'select',
       required: true,
-      defaultValue: 'new',
+      defaultValue: 'pending_payment',
       options: [
-        {
-          label: 'New',
-          value: 'new'
-        },
-        {
-          label: 'Paid',
-          value: 'paid'
-        },
-        {
-          label: 'Processing',
-          value: 'processing'
-        },
-        {
-          label: 'Shipped',
-          value: 'shipped'
-        },
-        {
-          label: 'Delivered',
-          value: 'delivered'
-        },
-        {
-          label: 'Cancelled',
-          value: 'cancelled'
-        }
+        'draft',
+        'pending_payment',
+        'paid',
+        'payment_failed',
+        'processing',
+        'ready_for_cdek',
+        'shipped',
+        'completed',
+        'cancelled',
+        'refunded'
       ]
     },
     {
-      name: 'customer',
-      type: 'group',
-      fields: [
-        {
-          name: 'name',
-          type: 'text',
-          required: true
-        },
-        {
-          name: 'email',
-          type: 'email',
-          required: true
-        },
-        {
-          name: 'phone',
-          type: 'text',
-          required: true
-        },
-        {
-          name: 'city',
-          type: 'text'
-        },
-        {
-          name: 'address',
-          type: 'textarea'
-        },
-        {
-          name: 'comment',
-          type: 'textarea'
-        }
-      ]
+      name: 'customerName',
+      type: 'text',
+      required: true
     },
     {
-      name: 'cdek',
-      type: 'group',
-      fields: [
-        {
-          name: 'cityCode',
-          type: 'text'
-        },
-        {
-          name: 'deliveryPoint',
-          type: 'text'
-        },
-        {
-          name: 'tariffCode',
-          type: 'text'
-        },
-        {
-          name: 'address',
-          type: 'textarea'
-        }
-      ]
+      name: 'customerPhone',
+      type: 'text',
+      required: true
+    },
+    {
+      name: 'customerEmail',
+      type: 'email',
+      required: true
+    },
+    {
+      name: 'cdekPickupCode',
+      type: 'text'
+    },
+    {
+      name: 'cdekPickupAddress',
+      type: 'text'
     },
     {
       name: 'paymentId',

@@ -61,11 +61,11 @@ export const Products: CollectionConfig = {
       name: 'sizes',
       type: 'array',
       admin: {
-        condition: (data) => data.productType === 'sized'
+        condition: (_, siblingData) => siblingData.productType === 'sized'
       },
       fields: [
         {
-          name: 'size',
+          name: 'label',
           type: 'text',
           required: true
         },
@@ -82,7 +82,7 @@ export const Products: CollectionConfig = {
       type: 'number',
       min: 0,
       admin: {
-        condition: (data) => data.productType === 'one_size'
+        condition: (_, siblingData) => siblingData.productType === 'one_size'
       }
     },
     {
@@ -118,11 +118,13 @@ export const Products: CollectionConfig = {
     },
     {
       name: 'shortDescription',
-      type: 'textarea'
+      type: 'textarea',
+      required: true
     },
     {
       name: 'description',
-      type: 'richText'
+      type: 'textarea',
+      required: true
     },
     {
       name: 'published',

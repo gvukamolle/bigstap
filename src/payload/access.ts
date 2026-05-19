@@ -11,7 +11,9 @@ const hasRole = (user: unknown, roles: Role[]) => {
     return false
   }
 
-  return roles.includes((user as UserWithRole).role ?? 'editor')
+  const role = (user as UserWithRole).role
+
+  return role === 'admin' || role === 'editor' ? roles.includes(role) : false
 }
 
 export const anyone: Access = () => true
