@@ -11,22 +11,26 @@ import { Products } from './src/payload/collections/Products'
 import { Users } from './src/payload/collections/Users'
 import { SiteSettings } from './src/payload/globals/SiteSettings'
 
-const databaseUri =
-  process.env.DATABASE_URI ?? 'postgres://bigstep:bigstep@localhost:5432/bigstep'
+const isNextProductionBuild = () => process.env.NEXT_PHASE === 'phase-production-build'
 
-const getPayloadSecret = () => {
-  if (process.env.PAYLOAD_SECRET) {
-    return process.env.PAYLOAD_SECRET
+const getRuntimeEnv = (name: 'DATABASE_URI' | 'PAYLOAD_SECRET', localFallback: string) => {
+  const value = process.env[name]
+
+  if (value) {
+    return value
   }
 
-  const isNextProductionBuild = process.env.NEXT_PHASE === 'phase-production-build'
-
-  if (process.env.NODE_ENV === 'production' && !isNextProductionBuild) {
-    throw new Error('PAYLOAD_SECRET is required in production')
+  if (process.env.NODE_ENV === 'production' && !isNextProductionBuild()) {
+    throw new Error(`${name} is required in production`)
   }
 
-  return 'bigstep-local-development-secret'
+  return localFallback
 }
+
+const databaseUri = getRuntimeEnv(
+  'DATABASE_URI',
+  'postgres://bigstep:bigstep@localhost:5432/bigstep'
+)
 
 export default buildConfig({
   admin: {
@@ -40,6 +44,6 @@ export default buildConfig({
     }
   }),
   editor: lexicalEditor(),
-  secret: getPayloadSecret(),
+  secret: getRuntimeEnv('PAYLOAD_SECRET', 'bigstep-local-development-secret'),
   sharp
 })
