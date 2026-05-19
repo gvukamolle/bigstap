@@ -26,7 +26,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <header className="article">
           <span className="eyebrow">{post.category}</span>
           <h1 className="display">{post.title}</h1>
-          <time>{post.date}</time>
+          <time dateTime={post.dateTime}>{post.date}</time>
           <p>{post.excerpt}</p>
         </header>
 
@@ -64,7 +64,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <div className="contentList">
                 <Link className="contentCard" href={`/events/${featuredEvent.slug}`}>
                   <p>
-                    <span>{featuredEvent.date}</span>
+                    <time dateTime={featuredEvent.dateTime}>{featuredEvent.date}</time>
                     <span>{featuredEvent.location}</span>
                   </p>
                   <h2>{featuredEvent.title}</h2>

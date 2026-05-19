@@ -1135,8 +1135,19 @@ textarea:focus-visible {
 
   .siteNav,
   .footerLinks {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     justify-content: flex-start;
     row-gap: 6px;
+  }
+
+  .siteNav a,
+  .footerLinks a {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .cartLayout,
