@@ -162,7 +162,11 @@ export function AddToCartForm({ product }: { product: Product }) {
         {canSubmit ? 'Добавить в корзину' : 'Недоступно'}
       </button>
 
-      {note ? <p className="formNote">{note}</p> : null}
+      {note ? (
+        <p aria-live="polite" className="formNote" role="status">
+          {note}
+        </p>
+      ) : null}
       {error ? (
         <p className="formError" role="alert">
           {error}

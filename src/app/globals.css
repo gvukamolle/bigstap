@@ -672,13 +672,14 @@ textarea:focus-visible {
   }
 
   .productDetailImage {
-    min-height: 420px;
+    min-height: 300px;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 
   .productDetailInfo {
-    padding: 28px 0 0;
+    gap: 14px;
+    padding: 22px 0 0;
   }
 
   .siteHeader,
@@ -729,15 +730,46 @@ textarea:focus-visible {
     min-height: 380px;
   }
 
-  .homeImage,
-  .productDetailImage {
+  .homeImage {
     min-height: 320px;
+  }
+
+  .productDetailImage {
+    min-height: clamp(150px, 45vw, 188px);
+  }
+
+  .productDetailInfo {
+    gap: 12px;
+    padding-top: 18px;
+  }
+
+  .productDetailInfo h1 {
+    font-size: clamp(34px, 10vw, 42px);
+    line-height: 0.95;
+  }
+
+  .productDetailInfo p {
+    font-size: 15px;
+    line-height: 1.42;
   }
 
   .productDetailMeta,
   .oneSize {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .productDetailMeta {
+    gap: 8px;
+  }
+
+  .addToCart {
+    gap: 10px;
+    margin-top: 2px;
+  }
+
+  .addToCart label {
+    gap: 6px;
   }
 
   .productBottom {
