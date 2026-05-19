@@ -17,8 +17,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     notFound()
   }
 
-  const featuredProduct = getPublishedProducts()[0]
-  const featuredEvent = events[0]
+  const featuredProduct = post.productSlug
+    ? getPublishedProducts().find((product) => product.slug === post.productSlug)
+    : undefined
+  const featuredEvent = post.eventSlug
+    ? events.find((event) => event.slug === post.eventSlug)
+    : undefined
 
   return (
     <div className="page">

@@ -2,6 +2,9 @@ import type { CollectionConfig } from 'payload'
 
 import { admins, staffOrPublishedProduct } from '../access'
 
+const MAX_RUB_AMOUNT = 10_000_000
+const MAX_STOCK = 100_000
+
 type ProductSize = {
   label?: string | null
   stock?: number | null
@@ -15,38 +18,46 @@ type ProductData = {
   stock?: number | null
 }
 
-const isFiniteNonNegative = (value: unknown) =>
-  typeof value === 'number' && Number.isFinite(value) && value >= 0
+const isSafeIntegerInRange = (value: unknown, max: number, min = 0): value is number =>
+  typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max
 
 const validateProductInvariants = (product: ProductData) => {
   const productType = product.productType ?? 'sized'
+
+  if (!isSafeIntegerInRange(product.price, MAX_RUB_AMOUNT)) {
+    throw new Error('Цена товара должна быть целым числом в рублях.')
+  }
+
+  if (product.salePrice != null && !isSafeIntegerInRange(product.salePrice, MAX_RUB_AMOUNT)) {
+    throw new Error('Цена со скидкой должна быть целым числом в рублях.')
+  }
 
   if (
     typeof product.salePrice === 'number' &&
     typeof product.price === 'number' &&
     product.salePrice > product.price
   ) {
-    throw new Error('Sale price cannot be greater than price.')
+    throw new Error('Цена со скидкой не может быть выше основной цены.')
   }
 
-  if (productType === 'one_size' && !isFiniteNonNegative(product.stock)) {
-    throw new Error('One-size products require stock of 0 or greater.')
+  if (productType === 'one_size' && !isSafeIntegerInRange(product.stock, MAX_STOCK)) {
+    throw new Error('Безразмерные товары требуют целый остаток от 0 до 100000.')
   }
 
   if (productType === 'sized') {
     if (!Array.isArray(product.sizes) || product.sizes.length === 0) {
-      throw new Error('Sized products require at least one size.')
+      throw new Error('Товарам с размерами нужен минимум один размер.')
     }
 
     const invalidSize = product.sizes.some(
       (size) =>
         typeof size.label !== 'string' ||
         !size.label.trim() ||
-        !isFiniteNonNegative(size.stock)
+        !isSafeIntegerInRange(size.stock, MAX_STOCK)
     )
 
     if (invalidSize) {
-      throw new Error('Each size requires a label and stock of 0 or greater.')
+      throw new Error('У каждого размера должны быть название и целый остаток от 0 до 100000.')
     }
   }
 }
@@ -95,12 +106,20 @@ export const Products: CollectionConfig = {
       name: 'price',
       type: 'number',
       required: true,
-      min: 0
+      min: 0,
+      max: MAX_RUB_AMOUNT,
+      admin: {
+        step: 1
+      }
     },
     {
       name: 'salePrice',
       type: 'number',
-      min: 0
+      min: 0,
+      max: MAX_RUB_AMOUNT,
+      admin: {
+        step: 1
+      }
     },
     {
       name: 'productType',
@@ -134,7 +153,11 @@ export const Products: CollectionConfig = {
           name: 'stock',
           type: 'number',
           required: true,
-          min: 0
+          min: 0,
+          max: MAX_STOCK,
+          admin: {
+            step: 1
+          }
         }
       ]
     },
@@ -142,8 +165,10 @@ export const Products: CollectionConfig = {
       name: 'stock',
       type: 'number',
       min: 0,
+      max: MAX_STOCK,
       admin: {
-        condition: (_, siblingData) => siblingData.productType === 'one_size'
+        condition: (_, siblingData) => siblingData.productType === 'one_size',
+        step: 1
       }
     },
     {

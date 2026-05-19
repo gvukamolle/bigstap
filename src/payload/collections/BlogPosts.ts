@@ -41,6 +41,18 @@ export const BlogPosts: CollectionConfig = {
       editor: lexicalEditor({})
     },
     {
+      name: 'relatedProducts',
+      type: 'relationship',
+      relationTo: 'products',
+      hasMany: true
+    },
+    {
+      name: 'relatedEvents',
+      type: 'relationship',
+      relationTo: 'events',
+      hasMany: true
+    },
+    {
       name: 'published',
       type: 'checkbox',
       defaultValue: false

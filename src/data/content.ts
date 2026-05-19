@@ -5,7 +5,9 @@ export const blogPosts = [
     excerpt: 'Почему первая капсула начинается с простых вещей и спокойной формы.',
     category: 'Journal',
     date: '19 мая 2026',
-    dateTime: '2026-05-19'
+    dateTime: '2026-05-19',
+    productSlug: 'overshirt-01',
+    eventSlug: 'studio-open-day'
   },
   {
     slug: 'materials-and-fit',
@@ -13,7 +15,8 @@ export const blogPosts = [
     excerpt: 'Коротко о тканях, силуэте и том, как мы думаем о базовом гардеробе.',
     category: 'Process',
     date: '19 мая 2026',
-    dateTime: '2026-05-19'
+    dateTime: '2026-05-19',
+    productSlug: 'tee-preorder'
   }
 ]
 

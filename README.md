@@ -60,6 +60,7 @@ docker compose up -d postgres
 - Ивенты: http://localhost:3000/events
 - Основатель: http://localhost:3000/founder
 - Payload-админка: http://localhost:3000/admin
+- Первичная настройка админки: http://localhost:3000/bootstrap-admin
 
 ## Проверка
 
@@ -89,4 +90,4 @@ docker compose up -d postgres
 - `DATABASE_URI`
 - `PAYLOAD_BOOTSTRAP_TOKEN` для защищенного создания первого пользователя Payload
 
-В продакшене маршрут создания первого пользователя Payload защищен сценарием bootstrap-токена. Не публикуй `PAYLOAD_BOOTSTRAP_TOKEN`; после первичной настройки его нужно удалить или ротировать по продакшен-runbook.
+В продакшене маршрут создания первого пользователя Payload защищен сценарием bootstrap-токена. Для первичной настройки открой `/bootstrap-admin` и введи токен через форму; токен не передается в URL. Не публикуй `PAYLOAD_BOOTSTRAP_TOKEN`; после первичной настройки его нужно удалить или ротировать по продакшен-runbook.
