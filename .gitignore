@@ -9,3 +9,4 @@ build/
 coverage/
 .superpowers/
 payload-types.ts
+*.tsbuildinfo
