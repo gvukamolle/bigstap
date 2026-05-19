@@ -65,6 +65,32 @@ main {
   min-height: 60vh;
 }
 
+.skipLink {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
+  background: var(--text);
+  color: var(--bg);
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  transform: translateY(calc(-100% - 24px));
+  transition: transform 160ms ease;
+}
+
+.skipLink:focus-visible {
+  transform: translateY(0);
+}
+
 ::selection {
   background: var(--text);
   color: var(--bg);
@@ -198,13 +224,23 @@ textarea:focus-visible {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 18px;
+  gap: 4px;
   color: var(--muted);
 }
 
+.brand,
 .siteNav a,
 .footerLinks a {
-  transition: color 160ms ease;
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  padding: 0 10px;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
 }
 
 .siteNav a:hover,
@@ -214,10 +250,18 @@ textarea:focus-visible {
   color: var(--text);
 }
 
+.brand:focus-visible,
+.siteNav a:focus-visible,
+.footerLinks a:focus-visible {
+  background: rgba(8, 8, 8, 0.06);
+}
+
 .productCard {
   display: grid;
-  grid-template-rows: minmax(220px, 1fr) auto;
-  min-height: 380px;
+  grid-template-rows: auto minmax(156px, auto);
+  min-width: 0;
+  min-height: 100%;
+  overflow: hidden;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background: var(--panel);
@@ -236,7 +280,9 @@ textarea:focus-visible {
 }
 
 .productImage {
-  min-height: 220px;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 4 / 5;
   border-bottom: 1px solid var(--line);
 }
 
@@ -258,7 +304,10 @@ textarea:focus-visible {
 
 .productMeta {
   display: grid;
+  grid-template-rows: 1fr auto;
   gap: 24px;
+  min-width: 0;
+  min-height: 156px;
   padding: 16px;
 }
 
@@ -268,22 +317,33 @@ textarea:focus-visible {
 }
 
 .productMeta h3 {
+  display: -webkit-box;
+  overflow: hidden;
   font-size: 18px;
   font-weight: 720;
   line-height: 1.15;
   letter-spacing: 0;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .productMeta p {
+  display: -webkit-box;
+  overflow: hidden;
   margin-top: 8px;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.4;
   letter-spacing: 0;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .productBottom {
   display: flex;
+  min-width: 0;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -293,6 +353,11 @@ textarea:focus-visible {
   line-height: 1.2;
   letter-spacing: 0;
   text-transform: uppercase;
+}
+
+.productBottom > span {
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .statusPill {
@@ -359,7 +424,7 @@ textarea:focus-visible {
   .siteNav,
   .footerLinks {
     justify-content: flex-start;
-    row-gap: 12px;
+    row-gap: 6px;
   }
 }
 
@@ -383,11 +448,11 @@ textarea:focus-visible {
   }
 
   .productCard {
-    min-height: 340px;
+    grid-template-rows: auto minmax(148px, auto);
   }
 
   .productImage {
-    min-height: 200px;
+    aspect-ratio: 16 / 15;
   }
 
   .productBottom {

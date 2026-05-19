@@ -1,5 +1,7 @@
 import { getDisplayPrice, type Product, type ProductSaleStatus } from './products'
 
+export { formatRubles } from './formatting'
+
 export type CartError =
   | 'PRODUCT_UNAVAILABLE'
   | 'SIZE_REQUIRED'
@@ -125,12 +127,4 @@ export function calculateCartTotals(cart: CartItem[], deliveryTotal = 0): CartTo
     orderTotal: itemsTotal + safeDeliveryTotal,
     hasPreorder: cart.some((item) => item.saleStatus === 'preorder')
   }
-}
-
-export function formatRubles(amount: number): string {
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
-    maximumFractionDigits: 0
-  }).format(amount)
 }

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { formatRubles } from '@/domain/cart'
+import { formatRubles } from '@/domain/formatting'
 import { getDisplayPrice, type Product } from '@/domain/products'
 
 import { StatusPill } from './StatusPill'
