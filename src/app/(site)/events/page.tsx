@@ -14,7 +14,13 @@ export default function EventsPage() {
       <div className="contentList">
         {events.map((event) => (
           <Link className="contentCard" href={`/events/${event.slug}`} key={event.slug}>
-            <p>
+            <div
+              className="contentCardImage"
+              role="img"
+              aria-label={event.image.alt}
+              style={{ backgroundImage: `url(${event.image.src})` }}
+            />
+            <p className="contentCardMeta">
               <span>{event.date}</span>
               <span>{event.location}</span>
             </p>

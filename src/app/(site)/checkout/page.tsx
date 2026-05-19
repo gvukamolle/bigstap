@@ -8,6 +8,11 @@ export default function CheckoutPage() {
         <h1 className="display">Оформление</h1>
         <p>Прототип оформления: контакты, пункт выдачи СДЭК и заглушка оплаты Юкасса.</p>
       </section>
+      <div
+        className="checkoutMood"
+        role="img"
+        aria-label="Упаковка заказа BIGSTEP перед отправкой"
+      />
 
       <CheckoutClient />
     </div>

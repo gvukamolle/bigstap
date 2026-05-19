@@ -19,7 +19,11 @@ export default function HomePage() {
             Смотреть магазин
           </Link>
         </div>
-        <div className="homeImage" aria-hidden="true" />
+        <div
+          className="homeImage"
+          role="img"
+          aria-label="Студийная витрина BIGSTEP с одеждой первого дропа"
+        />
       </section>
 
       <section className="section">

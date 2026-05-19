@@ -6,6 +6,10 @@ export const blogPosts = [
     category: 'Журнал',
     date: '19 мая 2026',
     dateTime: '2026-05-19',
+    image: {
+      src: '/images/bigstep/editorial-journal.jpg',
+      alt: 'Рабочий стол редакции BIGSTEP с тканями и заметками'
+    },
     productSlug: 'overshirt-01',
     eventSlug: 'studio-open-day'
   },
@@ -16,6 +20,10 @@ export const blogPosts = [
     category: 'Процесс',
     date: '19 мая 2026',
     dateTime: '2026-05-19',
+    image: {
+      src: '/images/bigstep/journal-studio.jpg',
+      alt: 'Материалы и силуэты первого дропа BIGSTEP'
+    },
     productSlug: 'tee-preorder'
   }
 ]
@@ -27,6 +35,10 @@ export const events = [
     date: 'Июнь 2026',
     dateTime: '2026-06',
     location: 'Москва',
+    image: {
+      src: '/images/bigstep/editorial-event.jpg',
+      alt: 'Студийное пространство BIGSTEP для открытой встречи'
+    },
     description: 'Анонс открытой встречи, где можно увидеть вещи и обсудить первый дроп.'
   }
 ]
@@ -34,6 +46,10 @@ export const events = [
 export const founder = {
   title: 'Основатель BIGSTEP',
   text: 'BIGSTEP строится вокруг собственного шмота, спокойной визуальной культуры и аккуратного отношения к деталям.',
+  image: {
+    src: '/images/bigstep/editorial-founder.jpg',
+    alt: 'Студийный угол BIGSTEP с жакетом, блокнотом и чашкой'
+  },
   socialLinks: [
     { label: 'Телеграм', href: 'https://t.me/' },
     { label: 'Инстаграм', href: 'https://instagram.com/' }

@@ -15,6 +15,10 @@ const productFixtures = [
     ],
     shortDescription: 'Плотный овершерт свободного кроя.',
     description: 'Базовый слой для города: чистая линия, плотная фактура, спокойная посадка.',
+    image: {
+      src: '/images/bigstep/product-overshirt.jpg',
+      alt: 'Черный овершерт BIGSTEP на светлом студийном фоне'
+    },
     imageTone: 'black',
     published: true
   },
@@ -32,6 +36,10 @@ const productFixtures = [
     ],
     shortDescription: 'Предзаказ на базовую футболку первого дропа.',
     description: 'Мягкий хлопок, прямой силуэт, минимальная маркировка. Отправка после производства партии.',
+    image: {
+      src: '/images/bigstep/product-tee.jpg',
+      alt: 'Светлая футболка BIGSTEP с минимальной маркировкой'
+    },
     imageTone: 'stone',
     preorderNote: 'Ориентировочная отправка: через 3-4 недели после оплаты.',
     published: true
@@ -46,6 +54,10 @@ const productFixtures = [
     stock: 8,
     shortDescription: 'Лаконичная сумка без размерной сетки.',
     description: 'Аксессуар на каждый день с чистой формой и плотным материалом.',
+    image: {
+      src: '/images/bigstep/product-bag.jpg',
+      alt: 'Темная сумка BIGSTEP на нейтральном фоне'
+    },
     imageTone: 'charcoal',
     published: true
   },
@@ -59,12 +71,18 @@ const productFixtures = [
     stock: 12,
     shortDescription: 'Безразмерная кепка с регулируемой посадкой.',
     description: 'Светлая база, минимум деталей, регулируемая посадка.',
+    image: {
+      src: '/images/bigstep/product-cap.jpg',
+      alt: 'Светлая кепка BIGSTEP с регулируемой посадкой'
+    },
     imageTone: 'cream',
     published: true
   }
 ] as const satisfies readonly Product[]
 
 function deepFreezeProduct(product: Product): Product {
+  Object.freeze(product.image)
+
   if (product.type === 'sized') {
     for (const size of product.sizes) {
       Object.freeze(size)

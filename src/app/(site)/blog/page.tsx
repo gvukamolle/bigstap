@@ -14,7 +14,13 @@ export default function BlogPage() {
       <div className="contentList">
         {blogPosts.map((post) => (
           <Link className="contentCard" href={`/blog/${post.slug}`} key={post.slug}>
-            <p>
+            <div
+              className="contentCardImage"
+              role="img"
+              aria-label={post.image.alt}
+              style={{ backgroundImage: `url(${post.image.src})` }}
+            />
+            <p className="contentCardMeta">
               <span>{post.category}</span>
               <span>{post.date}</span>
             </p>

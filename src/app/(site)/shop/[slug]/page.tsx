@@ -21,7 +21,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <div className="page">
       <section className="productDetail">
-        <div className={`productDetailImage tone-${product.imageTone}`} aria-hidden="true" />
+        <div
+          className={`productDetailImage tone-${product.imageTone}`}
+          role="img"
+          aria-label={product.image.alt}
+          style={{ backgroundImage: `url(${product.image.src})` }}
+        />
 
         <div className="productDetailInfo">
           <span className="eyebrow">{product.category}</span>

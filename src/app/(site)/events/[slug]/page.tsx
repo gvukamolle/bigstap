@@ -24,6 +24,12 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           <p>{event.location}</p>
           <p>{event.description}</p>
         </header>
+        <div
+          className="articleHeroImage"
+          role="img"
+          aria-label={event.image.alt}
+          style={{ backgroundImage: `url(${event.image.src})` }}
+        />
       </article>
     </div>
   )

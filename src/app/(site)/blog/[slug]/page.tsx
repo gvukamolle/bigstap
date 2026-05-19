@@ -33,6 +33,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <time dateTime={post.dateTime}>{post.date}</time>
           <p>{post.excerpt}</p>
         </header>
+        <div
+          className="articleHeroImage"
+          role="img"
+          aria-label={post.image.alt}
+          style={{ backgroundImage: `url(${post.image.src})` }}
+        />
 
         <div className="articleBody">
           <p>
@@ -67,7 +73,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <h2>Ивент в материале</h2>
               <div className="contentList">
                 <Link className="contentCard" href={`/events/${featuredEvent.slug}`}>
-                  <p>
+                  <div
+                    className="contentCardImage"
+                    role="img"
+                    aria-label={featuredEvent.image.alt}
+                    style={{ backgroundImage: `url(${featuredEvent.image.src})` }}
+                  />
+                  <p className="contentCardMeta">
                     <time dateTime={featuredEvent.dateTime}>{featuredEvent.date}</time>
                     <span>{featuredEvent.location}</span>
                   </p>

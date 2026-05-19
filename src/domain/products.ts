@@ -9,6 +9,10 @@ export type ProductBase = {
   saleStatus: ProductSaleStatus
   shortDescription: string
   description: string
+  image: {
+    src: string
+    alt: string
+  }
   imageTone: 'black' | 'stone' | 'charcoal' | 'cream'
   preorderNote?: string
   published: boolean

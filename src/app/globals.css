@@ -287,22 +287,25 @@ textarea:focus-visible {
   min-height: 0;
   aspect-ratio: 4 / 5;
   border-bottom: 1px solid var(--line);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .tone-black {
-  background: #111111;
+  background-color: #111111;
 }
 
 .tone-stone {
-  background: #d8d3c8;
+  background-color: #d8d3c8;
 }
 
 .tone-charcoal {
-  background: #3f3c38;
+  background-color: #3f3c38;
 }
 
 .tone-cream {
-  background: #f3efe5;
+  background-color: #f3efe5;
 }
 
 .productMeta {
@@ -432,8 +435,8 @@ textarea:focus-visible {
   min-height: 520px;
   border-left: 1px solid var(--line);
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(8, 8, 8, 0.14)),
-    repeating-linear-gradient(90deg, #25231f 0 1px, #34312c 1px 24px);
+    url("/images/bigstep/hero-studio.jpg") center / cover no-repeat,
+    #d8d3c8;
 }
 
 .sectionHeader {
@@ -481,14 +484,14 @@ textarea:focus-visible {
 
 .contentCard {
   display: grid;
+  grid-template-rows: auto auto 1fr;
   min-width: 0;
-  min-height: 220px;
-  align-content: space-between;
-  gap: 18px;
+  min-height: 420px;
+  align-content: stretch;
+  gap: 0;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background: var(--panel);
-  padding: 20px;
   transition:
     background-color 160ms ease,
     transform 160ms ease;
@@ -510,6 +513,7 @@ textarea:focus-visible {
 
 .contentCard h2 {
   max-width: 100%;
+  padding: 12px 20px 0;
   font-size: 42px;
   font-weight: 740;
   line-height: 1;
@@ -519,10 +523,20 @@ textarea:focus-visible {
   word-break: break-word;
 }
 
-.contentCard > p:first-child {
+.contentCardImage {
+  min-height: 240px;
+  border-bottom: 1px solid var(--line);
+  background-color: #d8d3c8;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.contentCardMeta {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 14px;
+  padding: 18px 20px 0;
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
@@ -533,6 +547,7 @@ textarea:focus-visible {
 
 .contentCard > p:last-child {
   max-width: 560px;
+  padding: 10px 20px 20px;
   color: var(--muted);
   font-size: 15px;
   line-height: 1.45;
@@ -602,7 +617,16 @@ textarea:focus-visible {
 }
 
 .articleBody .contentCard {
-  min-height: 200px;
+  min-height: 360px;
+}
+
+.articleHeroImage {
+  min-height: 520px;
+  border-bottom: 1px solid var(--line);
+  background-color: #d8d3c8;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .founderHero {
@@ -617,11 +641,30 @@ textarea:focus-visible {
 
 .founderHero .display {
   max-width: 10ch;
-  overflow-wrap: anywhere;
+  font-size: 104px;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .founderHero > div {
   min-width: 0;
+}
+
+.founderStory {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+  align-self: end;
+}
+
+.founderMedia {
+  min-height: 390px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background-color: #d8d3c8;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .founderText {
@@ -663,6 +706,9 @@ textarea:focus-visible {
   min-width: 0;
   min-height: 620px;
   border-right: 1px solid var(--line);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .productDetailInfo {
@@ -811,6 +857,14 @@ textarea:focus-visible {
 
 .checkoutLayout {
   align-items: start;
+}
+
+.checkoutMood {
+  min-height: 340px;
+  border-bottom: 1px solid var(--line);
+  background:
+    url("/images/bigstep/editorial-packaging.jpg") center / cover no-repeat,
+    #d8d3c8;
 }
 
 .cartLines,
@@ -1082,8 +1136,11 @@ textarea:focus-visible {
   }
 
   .contentCard {
-    min-height: 190px;
-    padding: 18px;
+    min-height: 360px;
+  }
+
+  .contentCardImage {
+    min-height: 210px;
   }
 
   .article {
@@ -1100,6 +1157,10 @@ textarea:focus-visible {
     padding-top: 28px;
   }
 
+  .articleHeroImage {
+    min-height: 360px;
+  }
+
   .founderHero {
     grid-template-columns: 1fr;
     gap: 30px;
@@ -1111,6 +1172,19 @@ textarea:focus-visible {
   .founderText {
     align-self: start;
     padding-bottom: 0;
+  }
+
+  .founderHero .display {
+    max-width: 100%;
+    font-size: 72px;
+  }
+
+  .founderStory {
+    align-self: start;
+  }
+
+  .founderMedia {
+    min-height: 360px;
   }
 
   .productDetail {
@@ -1244,13 +1318,25 @@ textarea:focus-visible {
 
   .contentCard {
     min-height: 180px;
-    gap: 14px;
-    padding: 16px;
+    gap: 0;
+  }
+
+  .contentCardImage {
+    min-height: 180px;
   }
 
   .contentCard h2 {
+    padding: 10px 16px 0;
     font-size: 24px;
     line-height: 1.05;
+  }
+
+  .contentCardMeta {
+    padding: 14px 16px 0;
+  }
+
+  .contentCard > p:last-child {
+    padding: 8px 16px 16px;
   }
 
   .article {
@@ -1273,6 +1359,10 @@ textarea:focus-visible {
     padding-top: 24px;
   }
 
+  .articleHeroImage {
+    min-height: 260px;
+  }
+
   .articleBody h2 {
     font-size: 34px;
     line-height: 1.04;
@@ -1285,6 +1375,15 @@ textarea:focus-visible {
   .founderText p {
     font-size: 16px;
     line-height: 1.5;
+  }
+
+  .founderHero .display {
+    font-size: 42px;
+  }
+
+  .founderMedia,
+  .checkoutMood {
+    min-height: 260px;
   }
 
   .socialLinks .buttonSecondary {
@@ -1392,6 +1491,10 @@ textarea:focus-visible {
   .contentCard h2,
   .articleBody h2 {
     font-size: 26px;
+  }
+
+  .founderHero .display {
+    font-size: 38px;
   }
 
   .display {

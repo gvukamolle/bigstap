@@ -9,22 +9,30 @@ export default function FounderPage() {
           <h1 className="display">{founder.title}</h1>
         </div>
 
-        <div className="founderText">
-          <p>{founder.text}</p>
-          <nav className="socialLinks" aria-label="Социальные ссылки основателя">
-            {founder.socialLinks.map((link) => (
-              <a
-                className="buttonSecondary"
-                href={link.href}
-                key={link.label}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Открыть ${link.label}`}
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
+        <div className="founderStory">
+          <div
+            className="founderMedia"
+            role="img"
+            aria-label={founder.image.alt}
+            style={{ backgroundImage: `url(${founder.image.src})` }}
+          />
+          <div className="founderText">
+            <p>{founder.text}</p>
+            <nav className="socialLinks" aria-label="Социальные ссылки основателя">
+              {founder.socialLinks.map((link) => (
+                <a
+                  className="buttonSecondary"
+                  href={link.href}
+                  key={link.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Открыть ${link.label}`}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+          </div>
         </div>
       </section>
     </div>

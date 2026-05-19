@@ -8,7 +8,14 @@ import '../globals.css'
 
 export const metadata: Metadata = {
   title: 'BIGSTEP.RU',
-  description: 'Магазин одежды и аксессуаров BIGSTEP.'
+  description: 'Магазин одежды и аксессуаров BIGSTEP.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png' }
+    ],
+    apple: '/icon.png'
+  }
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

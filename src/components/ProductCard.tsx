@@ -8,7 +8,12 @@ import { StatusPill } from './StatusPill'
 export function ProductCard({ product }: { product: Product }) {
   return (
     <Link className="productCard" href={`/shop/${product.slug}`}>
-      <div className={`productImage tone-${product.imageTone}`} aria-hidden="true" />
+      <div
+        className={`productImage tone-${product.imageTone}`}
+        role="img"
+        aria-label={product.image.alt}
+        style={{ backgroundImage: `url(${product.image.src})` }}
+      />
       <div className="productMeta">
         <div>
           <h3>{product.title}</h3>
