@@ -8,10 +8,10 @@ export default function ShopPage() {
     <div className="page">
       <section className="shopIntro">
         <span className="eyebrow">Магазин</span>
-        <h1 className="display">Дроп 01</h1>
+        <h1 className="display">Дропы</h1>
         <p>
-          Собственная одежда с размерной сеткой и безразмерные аксессуары. Вещи в наличии и
-          предзаказ можно оформить вместе.
+          Сейчас на витрине два отдельных дропа: ТЕСТ 00 и ТЕСТ 01. В каждом дропе — одна
+          футболка с видом спереди и со спины.
         </p>
       </section>
 

@@ -2,86 +2,82 @@ import type { OneSizeProduct, Product, SizedProduct } from '../domain/products'
 
 const productFixtures = [
   {
-    slug: 'overshirt-01',
-    title: 'Овершерт 01',
-    category: 'Одежда',
-    price: 12900,
-    saleStatus: 'in_stock',
-    type: 'sized',
-    sizes: [
-      { label: 'S', stock: 3 },
-      { label: 'M', stock: 5 },
-      { label: 'L', stock: 2 }
-    ],
-    shortDescription: 'Плотный овершерт свободного кроя.',
-    description: 'Базовый слой для города: чистая линия, плотная фактура, спокойная посадка.',
-    image: {
-      src: '/images/bigstep/product-overshirt.jpg',
-      alt: 'Черный овершерт BIGSTEP на светлом студийном фоне'
-    },
-    imageTone: 'black',
-    published: true
-  },
-  {
-    slug: 'tee-preorder',
-    title: 'Футболка предзаказ',
-    category: 'Одежда',
+    slug: 'test-00',
+    title: 'ТЕСТ 00',
+    dropName: 'ТЕСТ 00',
+    category: 'Футболка',
     price: 7900,
-    saleStatus: 'preorder',
+    saleStatus: 'in_stock',
     type: 'sized',
     sizes: [
-      { label: 'S', stock: 99 },
-      { label: 'M', stock: 99 },
-      { label: 'L', stock: 99 }
+      { label: '3', stock: 20 }
     ],
-    shortDescription: 'Предзаказ на базовую футболку первого дропа.',
-    description: 'Мягкий хлопок, прямой силуэт, минимальная маркировка. Отправка после производства партии.',
+    shortDescription: 'Футболка дропа ТЕСТ 00: белая база, золотой принт, номер на спине.',
+    description:
+      'Дроп ТЕСТ 00 построен вокруг светлой футболки свободного силуэта. Спереди — золотой знак с двумя фигурами и фразой Try Explore Create Try again, сзади — крупный номер 00 и подпись Grushko Stepan.',
     image: {
-      src: '/images/bigstep/product-tee.jpg',
-      alt: 'Светлая футболка BIGSTEP с минимальной маркировкой'
+      src: '/images/bigstep/test-00-front.jpg',
+      alt: 'Белая футболка ТЕСТ 00, вид спереди'
     },
-    imageTone: 'stone',
-    preorderNote: 'Ориентировочная отправка: через 3-4 недели после оплаты.',
-    published: true
-  },
-  {
-    slug: 'bag-one-size',
-    title: 'Сумка без размера',
-    category: 'Аксессуары',
-    price: 6900,
-    saleStatus: 'in_stock',
-    type: 'one_size',
-    stock: 8,
-    shortDescription: 'Лаконичная сумка без размерной сетки.',
-    description: 'Аксессуар на каждый день с чистой формой и плотным материалом.',
-    image: {
-      src: '/images/bigstep/product-bag.jpg',
-      alt: 'Темная сумка BIGSTEP на нейтральном фоне'
-    },
-    imageTone: 'charcoal',
-    published: true
-  },
-  {
-    slug: 'cap-one-size',
-    title: 'Кепка без размера',
-    category: 'Аксессуары',
-    price: 4900,
-    saleStatus: 'in_stock',
-    type: 'one_size',
-    stock: 12,
-    shortDescription: 'Безразмерная кепка с регулируемой посадкой.',
-    description: 'Светлая база, минимум деталей, регулируемая посадка.',
-    image: {
-      src: '/images/bigstep/product-cap.jpg',
-      alt: 'Светлая кепка BIGSTEP с регулируемой посадкой'
-    },
+    gallery: [
+      {
+        src: '/images/bigstep/test-00-front.jpg',
+        alt: 'Белая футболка ТЕСТ 00, вид спереди',
+        label: 'Перед'
+      },
+      {
+        src: '/images/bigstep/test-00-back.jpg',
+        alt: 'Белая футболка ТЕСТ 00, вид со спины',
+        label: 'Спина'
+      }
+    ],
     imageTone: 'cream',
+    published: true
+  },
+  {
+    slug: 'test-01',
+    title: 'ТЕСТ 01',
+    dropName: 'ТЕСТ 01',
+    category: 'Футболка',
+    price: 7900,
+    saleStatus: 'in_stock',
+    type: 'sized',
+    sizes: [
+      { label: '3', stock: 20 }
+    ],
+    shortDescription: 'Футболка дропа ТЕСТ 01: камуфляж, белая маска, номер на спине.',
+    description:
+      'Дроп ТЕСТ 01 собран вокруг камуфляжной футболки свободного кроя. Спереди — белый знак-маска и фраза Try Explore Create Try again, сзади — крупный номер 01 и подпись Grushko Stepan.',
+    image: {
+      src: '/images/bigstep/test-01-front.jpg',
+      alt: 'Камуфляжная футболка ТЕСТ 01, вид спереди'
+    },
+    gallery: [
+      {
+        src: '/images/bigstep/test-01-front.jpg',
+        alt: 'Камуфляжная футболка ТЕСТ 01, вид спереди',
+        label: 'Перед'
+      },
+      {
+        src: '/images/bigstep/test-01-back.jpg',
+        alt: 'Камуфляжная футболка ТЕСТ 01, вид со спины',
+        label: 'Спина'
+      }
+    ],
+    imageTone: 'charcoal',
     published: true
   }
 ] as const satisfies readonly Product[]
 
 function deepFreezeProduct(product: Product): Product {
   Object.freeze(product.image)
+  if (product.gallery) {
+    for (const image of product.gallery) {
+      Object.freeze(image)
+    }
+
+    Object.freeze(product.gallery)
+  }
 
   if (product.type === 'sized') {
     for (const size of product.sizes) {

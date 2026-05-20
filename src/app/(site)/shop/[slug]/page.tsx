@@ -22,16 +22,23 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <div className="page">
       <section className="productDetail">
-        <div
-          className={`productDetailImage tone-${product.imageTone}`}
-          role="img"
-          aria-label={product.image.alt}
-          style={{ backgroundImage: `url(${product.image.src})` }}
-        />
+        <div className="productDetailMedia" aria-label="Фотографии товара">
+          {(product.gallery ?? [{ ...product.image, label: 'Фото' }]).map((image) => (
+            <figure className="productDetailFrame" key={image.src}>
+              <div
+                className={`productDetailImage tone-${product.imageTone}`}
+                role="img"
+                aria-label={image.alt}
+                style={{ backgroundImage: `url(${image.src})` }}
+              />
+              <figcaption>{image.label}</figcaption>
+            </figure>
+          ))}
+        </div>
 
         <div className="productDetailInfo">
-          <span className="eyebrow">{product.category}</span>
-          <h1>{product.title}</h1>
+          <span className="eyebrow">Дроп / {product.category}</span>
+          <h1>{product.dropName}</h1>
           <div className="productDetailMeta">
             <strong>{formatRubles(getDisplayPrice(product))}</strong>
             <StatusPill status={product.saleStatus} />

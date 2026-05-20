@@ -10,7 +10,7 @@ export const blogPosts = [
       src: '/images/bigstep/editorial-journal.jpg',
       alt: 'Рабочий стол редакции BIGSTEP с тканями и заметками'
     },
-    productSlug: 'overshirt-01',
+    productSlug: 'test-00',
     eventSlug: 'studio-open-day'
   },
   {
@@ -24,7 +24,7 @@ export const blogPosts = [
       src: '/images/bigstep/journal-studio.jpg',
       alt: 'Материалы и силуэты первого дропа BIGSTEP'
     },
-    productSlug: 'tee-preorder'
+    productSlug: 'test-01'
   }
 ]
 

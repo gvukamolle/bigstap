@@ -23,22 +23,43 @@ function cartFrom(result: CartResult): CartItem[] {
   return result.cart
 }
 
+function oneSizeProduct(stock = 8): Product {
+  return {
+    slug: 'test-sticker',
+    title: 'Тестовый стикер',
+    category: 'Аксессуары',
+    dropName: 'Тестовый дроп',
+    price: 900,
+    saleStatus: 'in_stock',
+    type: 'one_size',
+    stock,
+    shortDescription: 'Тестовый товар без размера.',
+    description: 'Локальная фикстура для проверки one-size логики корзины.',
+    image: {
+      src: '/images/bigstep/test-00-front.jpg',
+      alt: 'Тестовый товар'
+    },
+    imageTone: 'cream',
+    published: true
+  }
+}
+
 describe('cart domain', () => {
   it('adds sized products with selected size', () => {
-    const overshirt = productBySlug('overshirt-01')
+    const test00 = productBySlug('test-00')
 
-    const result = addCartItem([], overshirt, 'M')
+    const result = addCartItem([], test00, '3')
 
     expect(result).toEqual({
       ok: true,
       cart: [
         {
-          id: 'overshirt-01:M',
-          productSlug: 'overshirt-01',
-          title: 'Овершерт 01',
-          price: 12900,
+          id: 'test-00:3',
+          productSlug: 'test-00',
+          title: 'ТЕСТ 00',
+          price: 7900,
           quantity: 1,
-          size: 'M',
+          size: '3',
           saleStatus: 'in_stock'
         }
       ]
@@ -46,18 +67,16 @@ describe('cart domain', () => {
   })
 
   it('adds one-size products without selected size', () => {
-    const bag = productBySlug('bag-one-size')
-
-    const result = addCartItem([], bag, null)
+    const result = addCartItem([], oneSizeProduct(), null)
 
     expect(result).toEqual({
       ok: true,
       cart: [
         {
-          id: 'bag-one-size:one-size',
-          productSlug: 'bag-one-size',
-          title: 'Сумка без размера',
-          price: 6900,
+          id: 'test-sticker:one-size',
+          productSlug: 'test-sticker',
+          title: 'Тестовый стикер',
+          price: 900,
           quantity: 1,
           size: null,
           saleStatus: 'in_stock'
@@ -67,10 +86,10 @@ describe('cart domain', () => {
   })
 
   it('increments an existing cart line instead of duplicating it', () => {
-    const tee = productBySlug('tee-preorder')
+    const test01 = productBySlug('test-01')
 
-    const first = cartFrom(addCartItem([], tee, 'S'))
-    const second = addCartItem(first, tee, 'S')
+    const first = cartFrom(addCartItem([], test01, '3'))
+    const second = addCartItem(first, test01, '3')
 
     expect(second.ok).toBe(true)
     if (!second.ok) throw new Error(second.error)
@@ -79,97 +98,95 @@ describe('cart domain', () => {
   })
 
   it('rejects adding a sized product beyond available stock', () => {
-    const overshirt = productBySlug('overshirt-01')
-    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
+    const test00 = productBySlug('test-00')
+    if (test00.type !== 'sized') throw new Error('Expected sized fixture')
 
     let cart: CartItem[] = []
-    for (let count = 0; count < 5; count += 1) {
-      cart = cartFrom(addCartItem(cart, overshirt, 'M'))
+    for (let count = 0; count < 20; count += 1) {
+      cart = cartFrom(addCartItem(cart, test00, '3'))
     }
 
     const beforeLimitAdd = [...cart]
-    const limitResult = addCartItem(cart, overshirt, 'M')
+    const limitResult = addCartItem(cart, test00, '3')
 
     expect(cart).toEqual(beforeLimitAdd)
     expect(limitResult).toEqual({ ok: false, error: 'OUT_OF_STOCK' })
   })
 
   it('rejects adding a one-size product beyond available stock', () => {
-    const bag = productBySlug('bag-one-size')
-    if (bag.type !== 'one_size') throw new Error('Expected one-size fixture')
+    const sticker = oneSizeProduct(2)
+    if (sticker.type !== 'one_size') throw new Error('Expected one-size fixture')
 
     let cart: CartItem[] = []
-    for (let count = 0; count < bag.stock; count += 1) {
-      cart = cartFrom(addCartItem(cart, bag, null))
+    for (let count = 0; count < sticker.stock; count += 1) {
+      cart = cartFrom(addCartItem(cart, sticker, null))
     }
 
     const beforeLimitAdd = [...cart]
-    const limitResult = addCartItem(cart, bag, null)
+    const limitResult = addCartItem(cart, sticker, null)
 
     expect(cart).toEqual(beforeLimitAdd)
     expect(limitResult).toEqual({ ok: false, error: 'OUT_OF_STOCK' })
   })
 
   it('calculates preorder presence and totals', () => {
-    const overshirt = productBySlug('overshirt-01')
-    const tee = productBySlug('tee-preorder')
+    const test00 = productBySlug('test-00')
+    const test01 = productBySlug('test-01')
+    const preorderProduct: Product = { ...test01, saleStatus: 'preorder' }
 
-    const cart = cartFrom(addCartItem(cartFrom(addCartItem([], overshirt, 'M')), tee, 'M'))
+    const cart = cartFrom(addCartItem(cartFrom(addCartItem([], test00, '3')), preorderProduct, '3'))
     const totals = calculateCartTotals(cart, 650)
 
     expect(totals).toEqual({
-      itemsTotal: 20800,
+      itemsTotal: 15800,
       deliveryTotal: 650,
-      orderTotal: 21450,
+      orderTotal: 16450,
       hasPreorder: true
     })
   })
 
   it('rejects missing, invalid, and out-of-stock sizes for sized products', () => {
-    const overshirt = productBySlug('overshirt-01')
-    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
+    const test00 = productBySlug('test-00')
+    if (test00.type !== 'sized') throw new Error('Expected sized fixture')
 
     const withOutOfStockSize: Product = {
-      ...overshirt,
-      sizes: [...overshirt.sizes, { label: 'XL', stock: 0 }]
+      ...test00,
+      sizes: [...test00.sizes, { label: '4', stock: 0 }]
     }
 
-    expect(addCartItem([], overshirt, null)).toEqual({ ok: false, error: 'SIZE_REQUIRED' })
-    expect(addCartItem([], overshirt, 'XL')).toEqual({ ok: false, error: 'SIZE_UNAVAILABLE' })
-    expect(addCartItem([], withOutOfStockSize, 'XL')).toEqual({
+    expect(addCartItem([], test00, null)).toEqual({ ok: false, error: 'SIZE_REQUIRED' })
+    expect(addCartItem([], test00, '4')).toEqual({ ok: false, error: 'SIZE_UNAVAILABLE' })
+    expect(addCartItem([], withOutOfStockSize, '4')).toEqual({
       ok: false,
       error: 'SIZE_UNAVAILABLE'
     })
   })
 
   it('rejects sold out, hidden, and unpublished products', () => {
-    const overshirt = productBySlug('overshirt-01')
+    const test00 = productBySlug('test-00')
 
     const unavailableProducts: Product[] = [
-      { ...overshirt, saleStatus: 'sold_out' },
-      { ...overshirt, saleStatus: 'hidden' },
-      { ...overshirt, published: false }
+      { ...test00, saleStatus: 'sold_out' },
+      { ...test00, saleStatus: 'hidden' },
+      { ...test00, published: false }
     ]
 
     for (const product of unavailableProducts) {
-      expect(addCartItem([], product, 'M')).toEqual({ ok: false, error: 'PRODUCT_UNAVAILABLE' })
+      expect(addCartItem([], product, '3')).toEqual({ ok: false, error: 'PRODUCT_UNAVAILABLE' })
     }
   })
 
   it('rejects one-size products with a selected size or no stock', () => {
-    const bag = productBySlug('bag-one-size')
-    if (bag.type !== 'one_size') throw new Error('Expected one-size fixture')
+    const sticker = oneSizeProduct()
+    const outOfStockSticker = oneSizeProduct(0)
 
-    const outOfStockBag: Product = { ...bag, stock: 0 }
-
-    expect(addCartItem([], bag, 'M')).toEqual({ ok: false, error: 'SIZE_NOT_ALLOWED' })
-    expect(addCartItem([], outOfStockBag, null)).toEqual({ ok: false, error: 'OUT_OF_STOCK' })
+    expect(addCartItem([], sticker, '3')).toEqual({ ok: false, error: 'SIZE_NOT_ALLOWED' })
+    expect(addCartItem([], outOfStockSticker, null)).toEqual({ ok: false, error: 'OUT_OF_STOCK' })
   })
 
   it('removes non-positive quantities and leaves invalid quantities unchanged', () => {
-    const bag = productBySlug('bag-one-size')
-    const cart = cartFrom(addCartItem([], bag, null))
-    const id = 'bag-one-size:one-size'
+    const cart = cartFrom(addCartItem([], oneSizeProduct(), null))
+    const id = 'test-sticker:one-size'
 
     expect(updateCartItemQuantity(cart, id, 3)[0]?.quantity).toBe(3)
     expect(updateCartItemQuantity(cart, id, 0)).toEqual([])
@@ -230,67 +247,59 @@ describe('cart domain', () => {
   })
 
   it('requires finite stock for selectable sized products', () => {
-    const overshirt = productBySlug('overshirt-01')
-    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
+    const test00 = productBySlug('test-00')
+    if (test00.type !== 'sized') throw new Error('Expected sized fixture')
 
     const infiniteStockProduct: Product = {
-      ...overshirt,
-      sizes: [{ label: 'M', stock: Number.POSITIVE_INFINITY }]
+      ...test00,
+      sizes: [{ label: '3', stock: Number.POSITIVE_INFINITY }]
     }
 
-    expect(isSelectableSize(infiniteStockProduct, 'M')).toBe(false)
+    expect(isSelectableSize(infiniteStockProduct, '3')).toBe(false)
   })
 
   it('exports frozen fixtures so consumers cannot mutate shared products', () => {
-    const overshirt = productBySlug('overshirt-01')
-    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
+    const test00 = productBySlug('test-00')
+    if (test00.type !== 'sized') throw new Error('Expected sized fixture')
 
     expect(Object.isFrozen(products)).toBe(true)
-    expect(Object.isFrozen(overshirt)).toBe(true)
-    expect(Object.isFrozen(overshirt.sizes)).toBe(true)
-    expect(Object.isFrozen(overshirt.sizes[0])).toBe(true)
+    expect(Object.isFrozen(test00)).toBe(true)
+    expect(Object.isFrozen(test00.image)).toBe(true)
+    expect(Object.isFrozen(test00.gallery)).toBe(true)
+    expect(Object.isFrozen(test00.gallery?.[0])).toBe(true)
+    expect(Object.isFrozen(test00.sizes)).toBe(true)
+    expect(Object.isFrozen(test00.sizes[0])).toBe(true)
     expect(() => {
-      ;(overshirt as { title: string }).title = 'Mutated title'
+      ;(test00 as { title: string }).title = 'Mutated title'
     }).toThrow(TypeError)
-    expect(overshirt.title).toBe('Овершерт 01')
+    expect(test00.title).toBe('ТЕСТ 00')
   })
 
   it('sanitizes stored cart lines against canonical product data', () => {
-    const overshirt = productBySlug('overshirt-01')
-    const tee = productBySlug('tee-preorder')
-    const bag = productBySlug('bag-one-size')
-    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
-    if (tee.type !== 'sized') throw new Error('Expected sized fixture')
-    if (bag.type !== 'one_size') throw new Error('Expected one-size fixture')
+    const test00 = productBySlug('test-00')
+    const test01 = productBySlug('test-01')
+    if (test00.type !== 'sized') throw new Error('Expected sized fixture')
+    if (test01.type !== 'sized') throw new Error('Expected sized fixture')
 
     const sanitized = sanitizeCart(
       [
         {
           id: 'tampered-id',
-          productSlug: overshirt.slug,
+          productSlug: test00.slug,
           title: 'Tampered',
           price: Number.MAX_SAFE_INTEGER,
           quantity: 999,
-          size: 'M',
+          size: '3',
           saleStatus: 'hidden'
         },
         {
-          id: 'tampered-preorder',
-          productSlug: tee.slug,
-          title: 'Tampered preorder',
+          id: 'tampered-second',
+          productSlug: test01.slug,
+          title: 'Tampered second',
           price: -1,
           quantity: 2,
-          size: 'S',
-          saleStatus: 'in_stock'
-        },
-        {
-          id: 'tampered-one-size',
-          productSlug: bag.slug,
-          title: 'Tampered one size',
-          price: 0,
-          quantity: 100,
-          size: null,
-          saleStatus: 'preorder'
+          size: '3',
+          saleStatus: 'hidden'
         }
       ],
       products
@@ -298,64 +307,54 @@ describe('cart domain', () => {
 
     expect(sanitized).toEqual([
       {
-        id: 'overshirt-01:M',
-        productSlug: 'overshirt-01',
-        title: 'Овершерт 01',
-        price: 12900,
-        quantity: 5,
-        size: 'M',
+        id: 'test-00:3',
+        productSlug: 'test-00',
+        title: 'ТЕСТ 00',
+        price: 7900,
+        quantity: 20,
+        size: '3',
         saleStatus: 'in_stock'
       },
       {
-        id: 'tee-preorder:S',
-        productSlug: 'tee-preorder',
-        title: 'Футболка предзаказ',
+        id: 'test-01:3',
+        productSlug: 'test-01',
+        title: 'ТЕСТ 01',
         price: 7900,
         quantity: 2,
-        size: 'S',
-        saleStatus: 'preorder'
-      },
-      {
-        id: 'bag-one-size:one-size',
-        productSlug: 'bag-one-size',
-        title: 'Сумка без размера',
-        price: 6900,
-        quantity: 8,
-        size: null,
+        size: '3',
         saleStatus: 'in_stock'
       }
     ])
   })
 
   it('drops unavailable, missing, and invalid stored cart lines', () => {
-    const overshirt = productBySlug('overshirt-01')
-    const bag = productBySlug('bag-one-size')
-    if (overshirt.type !== 'sized') throw new Error('Expected sized fixture')
-    if (bag.type !== 'one_size') throw new Error('Expected one-size fixture')
+    const test00 = productBySlug('test-00')
+    const sticker = oneSizeProduct()
+    if (test00.type !== 'sized') throw new Error('Expected sized fixture')
 
     const unavailableProducts: Product[] = [
-      { ...overshirt, slug: 'sold-out-product', saleStatus: 'sold_out' },
-      { ...overshirt, slug: 'hidden-product', saleStatus: 'hidden' },
-      { ...overshirt, slug: 'unpublished-product', published: false }
+      { ...test00, slug: 'sold-out-product', saleStatus: 'sold_out' },
+      { ...test00, slug: 'hidden-product', saleStatus: 'hidden' },
+      { ...test00, slug: 'unpublished-product', published: false }
     ]
 
     const sanitized = sanitizeCart(
       [
-        { productSlug: 'missing-product', quantity: 1, size: 'M' },
-        { productSlug: 'sold-out-product', quantity: 1, size: 'M' },
-        { productSlug: 'hidden-product', quantity: 1, size: 'M' },
-        { productSlug: 'unpublished-product', quantity: 1, size: 'M' },
-        { productSlug: overshirt.slug, quantity: 1, size: 'XL' },
-        { productSlug: bag.slug, quantity: 1, size: 'M' },
-        { productSlug: overshirt.slug, quantity: 0, size: 'M' },
-        { productSlug: overshirt.slug, quantity: -1, size: 'M' },
-        { productSlug: overshirt.slug, quantity: 1.5, size: 'M' },
-        { productSlug: overshirt.slug, quantity: Number.NaN, size: 'M' },
-        { productSlug: overshirt.slug, quantity: Number.POSITIVE_INFINITY, size: 'M' },
-        { productSlug: overshirt.slug, quantity: '2', size: 'M' },
+        { productSlug: 'missing-product', quantity: 1, size: '3' },
+        { productSlug: 'sold-out-product', quantity: 1, size: '3' },
+        { productSlug: 'hidden-product', quantity: 1, size: '3' },
+        { productSlug: 'unpublished-product', quantity: 1, size: '3' },
+        { productSlug: test00.slug, quantity: 1, size: '4' },
+        { productSlug: sticker.slug, quantity: 1, size: '3' },
+        { productSlug: test00.slug, quantity: 0, size: '3' },
+        { productSlug: test00.slug, quantity: -1, size: '3' },
+        { productSlug: test00.slug, quantity: 1.5, size: '3' },
+        { productSlug: test00.slug, quantity: Number.NaN, size: '3' },
+        { productSlug: test00.slug, quantity: Number.POSITIVE_INFINITY, size: '3' },
+        { productSlug: test00.slug, quantity: '2', size: '3' },
         null
       ],
-      [...products, ...unavailableProducts]
+      [...products, sticker, ...unavailableProducts]
     )
 
     expect(sanitized).toEqual([])

@@ -13,8 +13,8 @@ export default function HomePage() {
         <div className="homeCopy">
           <h1 className="display">Свой шмот. Тихая сила.</h1>
           <p>
-            BIGSTEP делает собственный шмот для спокойного городского ритма. Вещи в наличии и
-            предзаказы можно собрать в одной корзине и оформить вместе.
+            BIGSTEP делает собственный шмот для спокойного городского ритма. Сейчас в витрине два
+            отдельных дропа: ТЕСТ 00 и ТЕСТ 01.
           </p>
           <Link className="button" href="/shop">
             Смотреть магазин
@@ -45,8 +45,8 @@ export default function HomePage() {
 
       <section className="section">
         <div className="sectionHeader">
-          <span className="eyebrow">Дроп 01</span>
-          <h2>Витрина</h2>
+          <span className="eyebrow">Витрина</span>
+          <h2>Дропы</h2>
         </div>
         <div className="grid">
           {featuredProducts.map((product) => (

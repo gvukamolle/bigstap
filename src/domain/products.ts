@@ -3,6 +3,7 @@ export type ProductSaleStatus = 'in_stock' | 'preorder' | 'sold_out' | 'hidden'
 export type ProductBase = {
   slug: string
   title: string
+  dropName: string
   category: string
   price: number
   salePrice?: number
@@ -13,6 +14,11 @@ export type ProductBase = {
     src: string
     alt: string
   }
+  gallery?: ReadonlyArray<{
+    src: string
+    alt: string
+    label: string
+  }>
   imageTone: 'black' | 'stone' | 'charcoal' | 'cream'
   preorderNote?: string
   published: boolean
