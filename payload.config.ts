@@ -13,28 +13,33 @@ import { Products } from './src/payload/collections/Products'
 import { Users } from './src/payload/collections/Users'
 import { SiteSettings } from './src/payload/globals/SiteSettings'
 
-const getRuntimeEnv = (name: 'DATABASE_URI' | 'PAYLOAD_SECRET', localFallback: string) => {
-  const value = process.env[name]
+const isProductionRuntime =
+  process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build'
 
-  if (value) {
-    return value
+const requireRuntimeEnv = (name: 'PAYLOAD_SECRET') => {
+  const value = process.env[name]
+  if (value && value.length >= 16) return value
+
+  if (isProductionRuntime) {
+    throw new Error(`Environment variable ${name} must be set to a strong value in production.`)
   }
 
-  return localFallback
+  return 'bigstep-local-development-secret'
 }
 
 const usePostgres = Boolean(process.env.DATABASE_URI)
 const payloadDb = usePostgres
   ? postgresAdapter({
       pool: {
-        connectionString: getRuntimeEnv('DATABASE_URI', '')
+        connectionString: process.env.DATABASE_URI ?? ''
       }
     })
   : sqliteAdapter({
       client: {
         url: process.env.SQLITE_DATABASE_URL ?? 'file:payload-local.db'
       },
-      push: true
+      // Auto-sync is fine in dev (no migrations workflow), but unsafe in prod: silent schema drift can lose data.
+      push: !isProductionRuntime
     })
 
 const adminRu = {
@@ -62,6 +67,6 @@ export default buildConfig({
     fallbackLanguage: 'ru',
     supportedLanguages: { ru: adminRu }
   },
-  secret: getRuntimeEnv('PAYLOAD_SECRET', 'bigstep-local-development-secret'),
+  secret: requireRuntimeEnv('PAYLOAD_SECRET'),
   sharp
 })

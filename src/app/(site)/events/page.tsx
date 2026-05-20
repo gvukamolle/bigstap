@@ -1,6 +1,12 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { events } from '@/data/content'
+
+export const metadata: Metadata = {
+  title: 'Ивенты',
+  description: 'Анонсы открытых встреч и студийных дней BIGSTEP.'
+}
 
 export default function EventsPage() {
   return (

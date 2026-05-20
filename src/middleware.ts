@@ -9,8 +9,22 @@ const isProductionRuntime = () =>
 
 const notFound = () => new NextResponse(null, { status: 404 })
 
-const hasBootstrapCookie = (request: NextRequest, token: string) =>
-  request.cookies.get(BOOTSTRAP_COOKIE)?.value === token
+// Constant-time equality. Avoids node:crypto so this works on the edge runtime where middleware runs.
+const constantTimeEqual = (a: string, b: string): boolean => {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i += 1) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return diff === 0
+}
+
+const hasBootstrapCookie = (request: NextRequest, token: string) => {
+  const cookieValue = request.cookies.get(BOOTSTRAP_COOKIE)?.value
+  if (typeof cookieValue !== 'string') return false
+
+  return constantTimeEqual(cookieValue, token)
+}
 
 const normalizePath = (path: string) => (path.length > 1 ? path.replace(/\/$/, '') : path)
 

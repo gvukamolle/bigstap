@@ -335,28 +335,37 @@ export function CheckoutClient() {
           <h2>СДЭК</h2>
         </div>
 
-        <div className="pickupList">
-          {prototypePickups.map((pickup) => (
-            <div className="pickupBox" key={pickup.code}>
-              <div>
-                <strong>{pickup.name}</strong>
-                <span>{pickup.address}</span>
-                <span>
-                  {formatRubles(pickup.price)} / ориентир 2-5 дней после передачи в СДЭК
-                </span>
+        <div
+          className="pickupList"
+          role="radiogroup"
+          aria-label="Пункты выдачи СДЭК"
+          aria-describedby={pickupError ? getFieldErrorId('cdekPickup') : undefined}
+          aria-invalid={pickupError ? true : undefined}
+        >
+          {prototypePickups.map((pickup) => {
+            const selected = cdekPickup?.code === pickup.code
+
+            return (
+              <div className="pickupBox" key={pickup.code}>
+                <div>
+                  <strong>{pickup.name}</strong>
+                  <span>{pickup.address}</span>
+                  <span>
+                    {formatRubles(pickup.price)} / ориентир 2-5 дней после передачи в СДЭК
+                  </span>
+                </div>
+                <button
+                  role="radio"
+                  aria-checked={selected}
+                  className="buttonSecondary"
+                  onClick={() => selectPrototypePickup(pickup)}
+                  type="button"
+                >
+                  {selected ? 'Выбрано' : 'Выбрать'}
+                </button>
               </div>
-              <button
-                aria-describedby={pickupError ? getFieldErrorId('cdekPickup') : undefined}
-                aria-invalid={pickupError ? true : undefined}
-                aria-pressed={cdekPickup?.code === pickup.code}
-                className="buttonSecondary"
-                onClick={() => selectPrototypePickup(pickup)}
-                type="button"
-              >
-                {cdekPickup?.code === pickup.code ? 'Выбрано' : 'Выбрать'}
-              </button>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {pickupError ? (

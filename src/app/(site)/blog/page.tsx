@@ -1,6 +1,12 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { blogPosts } from '@/data/content'
+
+export const metadata: Metadata = {
+  title: 'Журнал',
+  description: 'Заметки о вещах, материалах и спокойном ритме BIGSTEP.'
+}
 
 export default function BlogPage() {
   return (

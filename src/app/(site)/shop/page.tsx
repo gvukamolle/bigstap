@@ -1,5 +1,12 @@
+import type { Metadata } from 'next'
+
 import { ProductCard } from '@/components/ProductCard'
 import { getPublishedProducts } from '@/data/products'
+
+export const metadata: Metadata = {
+  title: 'Магазин',
+  description: 'Витрина BIGSTEP: ограниченные дропы одежды и аксессуаров.'
+}
 
 export default function ShopPage() {
   const products = getPublishedProducts()

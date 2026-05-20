@@ -57,6 +57,9 @@ export function ProductGallery({
             >
               →
             </button>
+            <span className="visuallyHidden" aria-live="polite">
+              Фото {activeIndex + 1} из {images.length}
+            </span>
           </>
         ) : null}
       </div>

@@ -73,9 +73,13 @@ Path aliases (`tsconfig.json`):
 
 **Checkout flow:** `CheckoutClient` collects `CustomerDetails` + a CDEK pickup placeholder; `domain/checkout.ts#validateCheckoutDraft` returns structured errors. ЮKassa and CDEK are currently stubs — see "Prototype limits" below.
 
-**Admin bootstrap (production):** The Payload `create-first-user` page is hidden until the operator POSTs `PAYLOAD_BOOTSTRAP_TOKEN` to `/api/admin-bootstrap`, which sets an httpOnly `payload-bootstrap` cookie. `src/middleware.ts` 404s `/admin/create-first-user` and `/api/users/first-register` without that cookie. In development the route auto-issues a `local-development` cookie. Don't weaken these checks; the production guard is `NODE_ENV === 'production' && NEXT_PHASE !== 'phase-production-build'`.
+**Admin bootstrap (production):** The Payload `create-first-user` page is hidden until the operator POSTs `PAYLOAD_BOOTSTRAP_TOKEN` to `/api/admin-bootstrap`, which sets an httpOnly `payload-bootstrap` cookie. `src/middleware.ts` 404s `/admin/create-first-user` and `/api/users/first-register` without that cookie. The cookie comparison and the form-token comparison are both constant-time. The bootstrap POST is rate-limited (5 attempts / 15 min / IP) via an in-memory `Map` — replace with Redis when scaling beyond a single instance. In development the route auto-issues a `local-development` cookie. Don't weaken these checks; the production guard is `NODE_ENV === 'production' && NEXT_PHASE !== 'phase-production-build'`.
 
-**Payload DB selection:** `payload.config.ts` picks `postgresAdapter` if `DATABASE_URI` is set, otherwise `sqliteAdapter` with `SQLITE_DATABASE_URL` (defaults to `file:payload-local.db`). The Payload secret falls back to a local-only constant — production must set `PAYLOAD_SECRET`.
+**Payload DB selection:** `payload.config.ts` picks `postgresAdapter` if `DATABASE_URI` is set, otherwise `sqliteAdapter` with `SQLITE_DATABASE_URL` (defaults to `file:payload-local.db`). SQLite `push` (auto-sync) is on in dev, off in production runtime — schema changes in prod require manual migrations. `PAYLOAD_SECRET` is required at runtime in production (`requireRuntimeEnv` throws if missing or shorter than 16 chars); the local fallback is only used outside production.
+
+**Security headers:** `next.config.ts#headers()` ships `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`, and HSTS for every path. No CSP yet — add one once Payload admin's inline script needs are inventoried.
+
+**SEO surface:** `src/app/robots.ts` and `src/app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml` at build time. Product pages emit JSON-LD `Product` schema with `priceCurrency: "RUB"` and a `schema.org` availability mapped from `ProductSaleStatus`. Cart and checkout are `robots: { index: false }`. Site URL is read from `NEXT_PUBLIC_SITE_URL` (used in `metadataBase`, sitemap, robots, and JSON-LD).
 
 ## Conventions
 
@@ -87,6 +91,10 @@ Path aliases (`tsconfig.json`):
 - **Server-only by default.** Mark Client Components explicitly (`'use client'`); the components that touch localStorage / form state already do.
 - **Fixtures stay typed.** `src/data/products.ts` must satisfy `Product` from `src/domain/products.ts`. Don't loosen the discriminated union (`type: 'sized' | 'one_size'`).
 - **Generated files are git-ignored:** `payload-types.ts`, `next-env.d.ts`, `.next/`, `*.sqlite`, `*.db`. Don't commit them; don't lint them (ESLint already ignores `payload-types.ts`).
+
+## CI
+
+`.github/workflows/ci.yml` runs typecheck + lint + test + build on push/PR to `main`. It seeds a placeholder `PAYLOAD_SECRET` for the build phase. Don't merge a PR while CI is red.
 
 ## Testing
 

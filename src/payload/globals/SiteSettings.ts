@@ -1,12 +1,14 @@
 import type { GlobalConfig } from 'payload'
 
-import { admins, anyone } from '../access'
+import { admins, adminsAndEditors } from '../access'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Настройки сайта',
+  // No public consumer reads this global yet. When the storefront starts using it, expose individual
+  // fields via a thin API route rather than reopening the whole global to anonymous traffic.
   access: {
-    read: anyone,
+    read: adminsAndEditors,
     update: admins
   },
   fields: [

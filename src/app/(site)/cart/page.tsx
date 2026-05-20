@@ -1,4 +1,12 @@
+import type { Metadata } from 'next'
+
 import { CartClient } from '@/components/CartClient'
+
+export const metadata: Metadata = {
+  title: 'Корзина',
+  description: 'Состав заказа BIGSTEP: проверьте товары и количество перед оформлением.',
+  robots: { index: false, follow: false }
+}
 
 export default function CartPage() {
   return (

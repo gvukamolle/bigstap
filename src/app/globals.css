@@ -6,9 +6,9 @@
   --line: #d8d3c8;
   --line-strong: #bfb8aa;
   --accent: #111111;
-  --danger: #9f2f22;
-  --success: #2f5d45;
-  --preorder: #6f5635;
+  --danger: #7a1d14;
+  --success: #1f4530;
+  --preorder: #594218;
   --radius: 8px;
   --page-pad: 28px;
 }
@@ -65,6 +65,18 @@ svg {
 
 main {
   min-height: 60vh;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .skipLink {
@@ -274,12 +286,16 @@ textarea:focus-visible {
 }
 
 .productCard:hover,
-.productCard:focus-visible {
+.productCard:focus-within {
   background: #fbfaf7;
 }
 
-.productCard:focus-visible {
+.productCard:focus-within {
   transform: translateY(-2px);
+}
+
+.productCardImageLink {
+  display: block;
 }
 
 .productImage {
@@ -384,18 +400,18 @@ textarea:focus-visible {
 }
 
 .status-in_stock {
-  border-color: rgba(47, 93, 69, 0.4);
+  border-color: var(--success);
   color: var(--success);
 }
 
 .status-preorder {
-  border-color: rgba(111, 86, 53, 0.48);
+  border-color: var(--preorder);
   color: var(--preorder);
 }
 
 .status-sold_out,
 .status-hidden {
-  border-color: rgba(159, 47, 34, 0.36);
+  border-color: var(--danger);
   color: var(--danger);
 }
 
@@ -1635,3 +1651,15 @@ textarea:focus-visible {
     gap: 8px;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

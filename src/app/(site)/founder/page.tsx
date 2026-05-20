@@ -1,4 +1,11 @@
+import type { Metadata } from 'next'
+
 import { founder } from '@/data/content'
+
+export const metadata: Metadata = {
+  title: 'Основатель',
+  description: 'Кто стоит за BIGSTEP и зачем мы делаем собственный шмот.'
+}
 
 export default function FounderPage() {
   return (

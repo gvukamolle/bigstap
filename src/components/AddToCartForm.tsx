@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import { products } from '@/data/products'
 import { addCartItem, type CartError } from '@/domain/cart'
@@ -30,6 +30,7 @@ function productCanBeAdded(product: Product): boolean {
 }
 
 export function AddToCartForm({ product }: { product: Product }) {
+  const sizeFieldId = useId()
   const [size, setSize] = useState<string | null>(() => getDefaultSize(product))
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -75,9 +76,11 @@ export function AddToCartForm({ product }: { product: Product }) {
   return (
     <div className="addToCart">
       {product.type === 'sized' ? (
-        <label>
+        <label htmlFor={sizeFieldId}>
           <span>Размер</span>
           <select
+            id={sizeFieldId}
+            aria-label="Выберите размер"
             disabled={!hasSelectableSize}
             onChange={(event) => setSize(event.target.value || null)}
             value={size ?? ''}

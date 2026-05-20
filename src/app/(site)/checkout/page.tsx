@@ -1,4 +1,12 @@
+import type { Metadata } from 'next'
+
 import { CheckoutClient } from '@/components/CheckoutClient'
+
+export const metadata: Metadata = {
+  title: 'Оформление',
+  description: 'Прототип оформления заказа BIGSTEP: контакты, СДЭК и оплата.',
+  robots: { index: false, follow: false }
+}
 
 export default function CheckoutPage() {
   return (

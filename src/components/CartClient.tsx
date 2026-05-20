@@ -150,6 +150,7 @@ export function CartClient() {
             <strong className="cartLineTotal">{formatRubles(item.price * item.quantity)}</strong>
 
             <button
+              aria-label={`Удалить ${item.title}`}
               className="buttonSecondary"
               onClick={() => persistCart(removeCartItem(cart, item.id))}
               type="button"
