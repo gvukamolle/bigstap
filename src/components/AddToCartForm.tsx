@@ -1,6 +1,6 @@
 'use client'
 
-import { type FormEvent, useState } from 'react'
+import { useState } from 'react'
 
 import { products } from '@/data/products'
 import { addCartItem, type CartError } from '@/domain/cart'
@@ -43,8 +43,7 @@ export function AddToCartForm({ product }: { product: Product }) {
       ? isSelectableSize(product, null)
       : isSelectableSize(product, selectedSize))
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  function handleAddToCart() {
     setNote(null)
 
     if (!canSubmit) {
@@ -74,7 +73,7 @@ export function AddToCartForm({ product }: { product: Product }) {
   }
 
   return (
-    <form className="addToCart" onSubmit={handleSubmit}>
+    <div className="addToCart">
       {product.type === 'sized' ? (
         <label>
           <span>Размер</span>
@@ -102,7 +101,7 @@ export function AddToCartForm({ product }: { product: Product }) {
         </div>
       )}
 
-      <button className="button" disabled={!canSubmit} type="submit">
+      <button className="button" disabled={!canSubmit} onClick={handleAddToCart} type="button">
         {canSubmit ? 'Добавить в корзину' : 'Недоступно'}
       </button>
 
@@ -116,6 +115,6 @@ export function AddToCartForm({ product }: { product: Product }) {
           {error}
         </p>
       ) : null}
-    </form>
+    </div>
   )
 }

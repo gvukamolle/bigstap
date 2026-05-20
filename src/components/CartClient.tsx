@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
 import { products } from '@/data/products'
+import { cartFlowNotes } from '@/data/retail'
 import {
   calculateCartTotals,
   formatRubles,
@@ -91,6 +92,11 @@ export function CartClient() {
         <div className="checkoutPanel">
           <h2>Корзина пустая</h2>
           <p>Выберите вещь из витрины, чтобы продолжить оформление.</p>
+          <ul className="summaryNotes cartFlowNotes">
+            {cartFlowNotes.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
           <Link className="button" href="/shop">
             В магазин
           </Link>
@@ -163,10 +169,10 @@ export function CartClient() {
           </p>
         ) : null}
 
-        <ul className="summaryNotes">
-          <li>Оформление без личного кабинета.</li>
-          <li>Корзина сохраняется на этом устройстве.</li>
-          <li>Пункт СДЭК и доставка выбираются до оплаты.</li>
+        <ul className="summaryNotes cartFlowNotes">
+          {cartFlowNotes.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
         </ul>
 
         <div className="summaryRow">

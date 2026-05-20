@@ -285,7 +285,7 @@ textarea:focus-visible {
 .productImage {
   width: 100%;
   min-height: 0;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1;
   border-bottom: 1px solid var(--line);
   background-position: center;
   background-repeat: no-repeat;
@@ -432,7 +432,9 @@ textarea:focus-visible {
 
 .homeImage {
   min-width: 0;
-  min-height: 520px;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  align-self: end;
   border-left: 1px solid var(--line);
   background:
     url("/images/bigstep/hero-studio.jpg") center / cover no-repeat,
@@ -472,57 +474,6 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 17px;
   line-height: 1.55;
-  overflow-wrap: anywhere;
-}
-
-.serviceGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid var(--line);
-  border-left: 1px solid var(--line);
-}
-
-.serviceItem {
-  display: grid;
-  min-width: 0;
-  min-height: 220px;
-  align-content: space-between;
-  gap: 18px;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-  padding: 18px;
-}
-
-.serviceItem span,
-.serviceItem p {
-  color: var(--muted);
-}
-
-.serviceItem span {
-  font-size: 12px;
-  font-weight: 760;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.serviceItem h3,
-.serviceItem p {
-  margin: 0;
-}
-
-.serviceItem h3 {
-  font-size: 30px;
-  font-weight: 760;
-  line-height: 0.98;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
-}
-
-.serviceItem p {
-  font-size: 14px;
-  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 
@@ -753,43 +704,108 @@ textarea:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 
-.productDetailMedia {
+.productGallery {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  width: min(100%, 720px);
   min-width: 0;
+  align-self: center;
+  justify-self: center;
   border-right: 1px solid var(--line);
 }
 
-.productDetailFrame {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  min-width: 0;
-  min-height: 620px;
-  margin: 0;
-  border-right: 1px solid var(--line);
-}
-
-.productDetailFrame:last-child {
-  border-right: 0;
-}
-
-.productDetailImage {
+.productGalleryStage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+.productGalleryImage {
+  width: 100%;
+  height: 100%;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
 }
 
-.productDetailFrame figcaption {
-  border-top: 1px solid var(--line);
-  padding: 12px 14px;
+.galleryArrow {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(8, 8, 8, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 254, 250, 0.86);
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 760;
+  line-height: 1;
+  transform: translateY(-50%);
+  backdrop-filter: blur(10px);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.galleryArrow:hover,
+.galleryArrow:focus-visible {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.galleryArrowPrev {
+  left: 14px;
+}
+
+.galleryArrowNext {
+  right: 14px;
+}
+
+.productGalleryTabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  min-width: 0;
+}
+
+.productGalleryTabs button,
+.productGalleryCaption {
+  min-height: 48px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
   color: var(--muted);
+  padding: 12px 14px;
   font-size: 12px;
   font-weight: 760;
   line-height: 1;
   letter-spacing: 0;
   text-transform: uppercase;
+}
+
+.productGalleryTabs button:last-child {
+  border-right: 0;
+}
+
+.productGalleryTabs button:hover,
+.productGalleryTabs button:focus-visible,
+.productGalleryTabs button[aria-current='true'] {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.productGalleryCaption {
+  border-right: 0;
 }
 
 .productDetailInfo {
@@ -843,7 +859,6 @@ textarea:focus-visible {
   color: var(--muted);
 }
 
-.productAssurances,
 .summaryNotes {
   display: grid;
   gap: 8px;
@@ -852,10 +867,6 @@ textarea:focus-visible {
   font-size: 13px;
   line-height: 1.45;
   padding: 0 0 0 18px;
-}
-
-.productAssurances {
-  max-width: 480px;
 }
 
 .formNote,
@@ -1255,10 +1266,6 @@ textarea:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .serviceGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .homeHero {
     grid-template-columns: 1fr;
     gap: 22px;
@@ -1271,7 +1278,8 @@ textarea:focus-visible {
   }
 
   .homeImage {
-    min-height: 360px;
+    width: min(100%, 520px);
+    min-height: 0;
     border-top: 1px solid var(--line);
     border-left: 0;
   }
@@ -1347,17 +1355,10 @@ textarea:focus-visible {
     min-height: auto;
   }
 
-  .productDetailMedia {
+  .productGallery {
+    width: min(100%, 620px);
     border-right: 0;
     border-bottom: 1px solid var(--line);
-  }
-
-  .productDetailImage {
-    min-height: 300px;
-  }
-
-  .productDetailFrame {
-    min-height: 360px;
   }
 
   .productDetailInfo {
@@ -1462,25 +1463,8 @@ textarea:focus-visible {
     grid-template-columns: 1fr;
   }
 
-  .serviceGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .serviceItem {
-    min-height: 180px;
-    padding: 16px;
-  }
-
-  .serviceItem h3 {
-    font-size: 24px;
-  }
-
   .productCard {
     grid-template-rows: auto minmax(148px, auto);
-  }
-
-  .productImage {
-    aspect-ratio: 16 / 15;
   }
 
   .homeCopy {
@@ -1488,7 +1472,8 @@ textarea:focus-visible {
   }
 
   .homeImage {
-    min-height: 320px;
+    width: 100%;
+    min-height: 0;
   }
 
   .contentCard {
@@ -1563,14 +1548,6 @@ textarea:focus-visible {
 
   .socialLinks .buttonSecondary {
     width: 100%;
-  }
-
-  .productDetailImage {
-    min-height: 184px;
-  }
-
-  .productDetailFrame {
-    min-height: 236px;
   }
 
   .productDetailInfo {
@@ -1661,14 +1638,6 @@ textarea:focus-visible {
 }
 
 @media (max-width: 360px) {
-  .productDetailImage {
-    min-height: 130px;
-  }
-
-  .productDetailFrame {
-    min-height: 184px;
-  }
-
   .productDetailInfo {
     gap: 10px;
     padding-top: 14px;
