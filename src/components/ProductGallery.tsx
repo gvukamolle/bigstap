@@ -60,23 +60,6 @@ export function ProductGallery({
           </>
         ) : null}
       </div>
-
-      {hasMultipleImages ? (
-        <div className="productGalleryTabs" aria-label="Выбор фото">
-          {images.map((image, index) => (
-            <button
-              aria-current={index === activeIndex ? 'true' : undefined}
-              key={image.src}
-              onClick={() => setActiveIndex(index)}
-              type="button"
-            >
-              {image.label}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="productGalleryCaption">{activeImage.label}</div>
-      )}
     </div>
   )
 }

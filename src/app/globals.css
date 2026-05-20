@@ -706,7 +706,6 @@ textarea:focus-visible {
 
 .productGallery {
   display: grid;
-  grid-template-rows: auto auto;
   width: min(100%, 720px);
   min-width: 0;
   align-self: center;
@@ -721,7 +720,6 @@ textarea:focus-visible {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border-bottom: 1px solid var(--line);
 }
 
 .productGalleryImage {
@@ -770,42 +768,6 @@ textarea:focus-visible {
 
 .galleryArrowNext {
   right: 14px;
-}
-
-.productGalleryTabs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  min-width: 0;
-}
-
-.productGalleryTabs button,
-.productGalleryCaption {
-  min-height: 48px;
-  border: 0;
-  border-right: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--muted);
-  padding: 12px 14px;
-  font-size: 12px;
-  font-weight: 760;
-  line-height: 1;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.productGalleryTabs button:last-child {
-  border-right: 0;
-}
-
-.productGalleryTabs button:hover,
-.productGalleryTabs button:focus-visible,
-.productGalleryTabs button[aria-current='true'] {
-  background: var(--text);
-  color: var(--bg);
-}
-
-.productGalleryCaption {
-  border-right: 0;
 }
 
 .productDetailInfo {
