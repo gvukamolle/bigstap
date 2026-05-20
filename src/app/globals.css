@@ -220,6 +220,30 @@ textarea:focus-visible {
   text-transform: uppercase;
 }
 
+.siteHeader {
+  position: relative;
+}
+
+.menuToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+}
+
+.menuToggle:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
 .siteFooter {
   min-height: 76px;
   border-top: 1px solid var(--line);
@@ -1349,7 +1373,15 @@ textarea:focus-visible {
     line-height: 0.92;
   }
 
-  .siteHeader,
+  .siteHeader {
+    min-height: 56px;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
   .siteFooter {
     min-height: auto;
     align-items: flex-start;
@@ -1359,7 +1391,42 @@ textarea:focus-visible {
     padding-bottom: 16px;
   }
 
-  .siteNav,
+  .menuToggle {
+    display: inline-flex;
+  }
+
+  .siteNav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 12px 24px rgba(8, 8, 8, 0.08);
+    padding: 8px var(--page-pad) 12px;
+    row-gap: 2px;
+  }
+
+  .siteNav.siteNavOpen {
+    display: flex;
+  }
+
+  .siteNav a {
+    justify-content: flex-start;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0 8px;
+    min-height: 48px;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
   .footerLinks {
     width: 100%;
     min-width: 0;
@@ -1368,7 +1435,6 @@ textarea:focus-visible {
     row-gap: 6px;
   }
 
-  .siteNav a,
   .footerLinks a {
     min-width: 0;
     max-width: 100%;
@@ -1420,7 +1486,6 @@ textarea:focus-visible {
     font-size: 36px;
   }
 
-  .siteNav,
   .footerLinks {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1429,7 +1494,6 @@ textarea:focus-visible {
     row-gap: 4px;
   }
 
-  .siteNav a,
   .footerLinks a {
     justify-content: flex-start;
     min-height: 38px;
