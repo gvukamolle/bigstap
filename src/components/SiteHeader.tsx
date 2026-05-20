@@ -51,6 +51,7 @@ export function SiteHeader() {
         id={menuId}
         className={open ? 'siteNav siteNavOpen' : 'siteNav'}
         aria-label="Основная навигация"
+        aria-hidden={!open}
       >
         {navItems.map((item) => (
           <Link href={item.href} key={item.href} onClick={() => setOpen(false)}>

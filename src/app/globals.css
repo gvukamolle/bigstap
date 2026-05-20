@@ -230,13 +230,29 @@ textarea:focus-visible {
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: 6px;
   background: transparent;
   color: var(--text);
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 700;
   line-height: 1;
   padding: 0;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.menuToggle:hover {
+  background: rgba(8, 8, 8, 0.06);
+  border-color: var(--text);
+}
+
+.menuToggle[aria-expanded='true'] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
 }
 
 .menuToggle:focus-visible {
@@ -1396,7 +1412,7 @@ textarea:focus-visible {
   }
 
   .siteNav {
-    display: none;
+    display: flex;
     position: absolute;
     top: 100%;
     left: 0;
@@ -1406,25 +1422,52 @@ textarea:focus-visible {
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    background: var(--panel);
-    border-bottom: 1px solid var(--line);
-    box-shadow: 0 12px 24px rgba(8, 8, 8, 0.08);
-    padding: 8px var(--page-pad) 12px;
-    row-gap: 2px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--text);
+    box-shadow: none;
+    padding: 0 var(--page-pad);
+    row-gap: 0;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-4px);
+    visibility: hidden;
+    transition:
+      max-height 220ms ease,
+      opacity 160ms ease,
+      transform 220ms ease,
+      padding 220ms ease,
+      visibility 0s linear 220ms;
   }
 
   .siteNav.siteNavOpen {
-    display: flex;
+    max-height: 60vh;
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    padding-top: 6px;
+    padding-bottom: 14px;
+    transition:
+      max-height 260ms ease,
+      opacity 200ms ease,
+      transform 260ms ease,
+      padding 260ms ease;
   }
 
   .siteNav a {
     justify-content: flex-start;
     min-width: 0;
     max-width: 100%;
-    padding: 0 8px;
+    padding: 0 4px;
     min-height: 48px;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
     overflow-wrap: anywhere;
     white-space: normal;
+  }
+
+  .siteNav a:last-child {
+    border-bottom: 0;
   }
 
   .footerLinks {
