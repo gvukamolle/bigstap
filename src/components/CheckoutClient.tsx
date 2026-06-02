@@ -13,7 +13,12 @@ import {
   validateCheckoutDraft
 } from '@/domain/checkout'
 import type { Product } from '@/domain/products'
-import { cartUpdatedEvent, readCartStorage, writeCartStorage } from '@/lib/cartStorage'
+import {
+  cartUpdatedEvent,
+  dispatchCartUpdated,
+  readCartStorage,
+  writeCartStorage
+} from '@/lib/cartStorage'
 
 const checkoutDraftStorageKey = 'bigstep-checkout-draft'
 const checkoutDraftStorageVersion = 1
@@ -144,7 +149,9 @@ export function CheckoutClient({ products }: { products: Product[] }) {
   const [customer, setCustomer] = useState<CustomerDetails>(defaultCustomer)
   const [cdekPickup, setCdekPickup] = useState<CdekPickupPoint | null>(null)
   const [validation, setValidation] = useState<ValidationResult | null>(null)
-  const [paymentPlaceholderVisible, setPaymentPlaceholderVisible] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [orderNumber, setOrderNumber] = useState<string | null>(null)
+  const [orderError, setOrderError] = useState<string | null>(null)
   const [draftStorageError, setDraftStorageError] = useState<string | null>(null)
 
   const totals = useMemo(() => calculateCartTotals(cart, cdekPickup?.price ?? 0), [cart, cdekPickup])
@@ -195,18 +202,18 @@ export function CheckoutClient({ products }: { products: Product[] }) {
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }))
     setValidation(null)
-    setPaymentPlaceholderVisible(false)
+    setOrderError(null)
   }
 
   function selectPrototypePickup(pickup: CdekPickupPoint) {
     setCdekPickup(pickup)
     setValidation(null)
-    setPaymentPlaceholderVisible(false)
+    setOrderError(null)
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setPaymentPlaceholderVisible(false)
+    setOrderError(null)
 
     const result = validateCheckoutDraft({
       customer,
@@ -215,15 +222,69 @@ export function CheckoutClient({ products }: { products: Product[] }) {
 
     setValidation(result)
 
-    if (!result.valid) return
+    if (!result.valid || !cdekPickup) return
 
-    setPaymentPlaceholderVisible(true)
+    setSubmitting(true)
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer,
+          cdekPickup,
+          items: cart.map((item) => ({
+            productSlug: item.productSlug,
+            size: item.size,
+            quantity: item.quantity
+          }))
+        })
+      })
+
+      const data: { ok?: boolean; orderNumber?: string; error?: string } | null = await response
+        .json()
+        .catch(() => null)
+
+      if (!response.ok || !data?.ok || !data.orderNumber) {
+        setOrderError(data?.error ?? 'Не удалось создать заказ. Попробуйте ещё раз.')
+        return
+      }
+
+      writeCartStorage([])
+      dispatchCartUpdated()
+      setCart([])
+      setOrderNumber(data.orderNumber)
+    } catch {
+      setOrderError('Не удалось связаться с сервером. Попробуйте ещё раз.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (!isReady) {
     return (
       <section className="checkoutLayout" aria-live="polite">
         <p className="formNote">Загружаем оформление.</p>
+      </section>
+    )
+  }
+
+  if (orderNumber) {
+    return (
+      <section className="checkoutLayout">
+        <div className="checkoutPanel">
+          <div className="checkoutPanelHeader">
+            <span className="eyebrow">Готово</span>
+            <h2>Тестовый заказ создан</h2>
+          </div>
+          <p className="formNote" role="status">
+            Номер заказа: <strong>{orderNumber}</strong>. Статус — «ожидает оплаты». Заказ виден в
+            админке в разделе «Заказы». Оплата ЮKassa и списание остатков пока не подключены.
+          </p>
+          <Link className="button" href="/shop">
+            Вернуться в магазин
+          </Link>
+        </div>
       </section>
     )
   }
@@ -398,14 +459,19 @@ export function CheckoutClient({ products }: { products: Product[] }) {
           </p>
         ) : null}
 
-        {paymentPlaceholderVisible ? (
-          <p className="paymentPlaceholder" role="status">
-            Прототип Юкасса: здесь будет создан платеж. Реальный заказ и оплата пока не создаются.
+        {orderError ? (
+          <p className="formError" role="alert">
+            {orderError}
           </p>
         ) : null}
 
-        <button className="button" type="submit">
-          Продолжить к оплате
+        <p className="formNote">
+          Оплата ЮKassa пока не подключена: кнопка создаёт тестовый заказ со статусом «ожидает
+          оплаты» и сохраняет его в админке.
+        </p>
+
+        <button className="button" type="submit" disabled={submitting}>
+          {submitting ? 'Создаём заказ…' : 'Оформить тестовый заказ'}
         </button>
       </form>
 
