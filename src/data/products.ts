@@ -10,7 +10,9 @@ const productFixtures = [
     saleStatus: 'in_stock',
     type: 'sized',
     sizes: [
-      { label: '3', stock: 20 }
+      { label: 'S', stock: 20 },
+      { label: 'M', stock: 20 },
+      { label: 'L', stock: 20 }
     ],
     shortDescription:
       'Кроп-фит, собственно разработанные лекала. 100% хлопок. Без рестоков, ограниченный тираж.',
@@ -32,7 +34,7 @@ const productFixtures = [
         label: 'Спина'
       }
     ],
-    imageTone: 'cream',
+    imageTone: 'black',
     published: true
   },
   {
@@ -44,7 +46,9 @@ const productFixtures = [
     saleStatus: 'in_stock',
     type: 'sized',
     sizes: [
-      { label: '3', stock: 20 }
+      { label: 'S', stock: 20 },
+      { label: 'M', stock: 20 },
+      { label: 'L', stock: 20 }
     ],
     shortDescription:
       'Кроп-фит, собственно разработанные лекала. 100% хлопок. Без рестоков, ограниченный тираж.',

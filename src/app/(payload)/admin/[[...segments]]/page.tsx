@@ -1,6 +1,8 @@
 import config from '@payload-config'
 import { generatePageMetadata, RootPage } from '@payloadcms/next/views'
 
+import { normalizeAdminRouteParams } from '@/payload/adminRouteParams'
+
 import { importMap } from '../importMap'
 
 type SearchParams = {
@@ -19,9 +21,7 @@ type Args = {
 const getParams = async ({ params }: Args) => {
   const resolvedParams = await params
 
-  return {
-    segments: resolvedParams.segments ?? []
-  }
+  return normalizeAdminRouteParams(resolvedParams) as { segments: string[] }
 }
 
 const getSearchParams = async ({ searchParams }: Args): Promise<SearchParams> => {

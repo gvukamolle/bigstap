@@ -34,8 +34,9 @@ export function SiteHeader() {
 
   return (
     <header className="siteHeader">
-      <Link href="/" className="brand" aria-label="BIGSTEP, на главную">
-        BIGSTEP
+      <Link href="/" className="brand" aria-label="Grushko Stepan, на главную">
+        <img src="/logo-mark.png" alt="" aria-hidden="true" className="brandMark" />
+        <span>Grushko Stepan</span>
       </Link>
       <button
         type="button"
@@ -51,7 +52,6 @@ export function SiteHeader() {
         id={menuId}
         className={open ? 'siteNav siteNavOpen' : 'siteNav'}
         aria-label="Основная навигация"
-        aria-hidden={!open}
       >
         {navItems.map((item) => (
           <Link href={item.href} key={item.href} onClick={() => setOpen(false)}>

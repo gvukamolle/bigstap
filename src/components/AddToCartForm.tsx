@@ -2,7 +2,6 @@
 
 import { useId, useState } from 'react'
 
-import { products } from '@/data/products'
 import { addCartItem, type CartError } from '@/domain/cart'
 import { isSelectableSize, type Product } from '@/domain/products'
 import { dispatchCartUpdated, readCartStorage, writeCartStorage } from '@/lib/cartStorage'
@@ -29,7 +28,13 @@ function productCanBeAdded(product: Product): boolean {
   return product.published && product.saleStatus !== 'sold_out' && product.saleStatus !== 'hidden'
 }
 
-export function AddToCartForm({ product }: { product: Product }) {
+export function AddToCartForm({
+  catalogProducts,
+  product
+}: {
+  catalogProducts: Product[]
+  product: Product
+}) {
   const sizeFieldId = useId()
   const [size, setSize] = useState<string | null>(() => getDefaultSize(product))
   const [note, setNote] = useState<string | null>(null)
@@ -56,7 +61,7 @@ export function AddToCartForm({ product }: { product: Product }) {
       return
     }
 
-    const result = addCartItem(readCartStorage(products), product, selectedSize)
+    const result = addCartItem(readCartStorage(catalogProducts), product, selectedSize)
 
     if (!result.ok) {
       setError(cartErrorMessages[result.error])

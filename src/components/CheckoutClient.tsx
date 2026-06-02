@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 
-import { products } from '@/data/products'
 import { calculateCartTotals, formatRubles, type CartItem } from '@/domain/cart'
 import {
   type CdekPickupPoint,
@@ -13,6 +12,7 @@ import {
   type ValidationResult,
   validateCheckoutDraft
 } from '@/domain/checkout'
+import type { Product } from '@/domain/products'
 import { cartUpdatedEvent, readCartStorage, writeCartStorage } from '@/lib/cartStorage'
 
 const checkoutDraftStorageKey = 'bigstep-checkout-draft'
@@ -138,7 +138,7 @@ function getFieldErrorId(field: CheckoutValidationField): string {
   return `checkout-${field}-error`
 }
 
-export function CheckoutClient() {
+export function CheckoutClient({ products }: { products: Product[] }) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [isReady, setIsReady] = useState(false)
   const [customer, setCustomer] = useState<CustomerDetails>(defaultCustomer)
@@ -346,7 +346,17 @@ export function CheckoutClient() {
             const selected = cdekPickup?.code === pickup.code
 
             return (
-              <div className="pickupBox" key={pickup.code}>
+              <label
+                className={selected ? 'pickupBox pickupOption pickupOptionSelected' : 'pickupBox pickupOption'}
+                key={pickup.code}
+              >
+                <input
+                  checked={selected}
+                  className="visuallyHidden"
+                  name="cdekPickup"
+                  onChange={() => selectPrototypePickup(pickup)}
+                  type="radio"
+                />
                 <div>
                   <strong>{pickup.name}</strong>
                   <span>{pickup.address}</span>
@@ -354,16 +364,10 @@ export function CheckoutClient() {
                     {formatRubles(pickup.price)} / ориентир 2-5 дней после передачи в СДЭК
                   </span>
                 </div>
-                <button
-                  role="radio"
-                  aria-checked={selected}
-                  className="buttonSecondary"
-                  onClick={() => selectPrototypePickup(pickup)}
-                  type="button"
-                >
+                <span className="buttonSecondary pickupOptionAction" aria-hidden="true">
                   {selected ? 'Выбрано' : 'Выбрать'}
-                </button>
-              </div>
+                </span>
+              </label>
             )
           })}
         </div>

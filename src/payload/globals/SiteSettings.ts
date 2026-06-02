@@ -17,7 +17,7 @@ export const SiteSettings: GlobalConfig = {
       type: 'text',
       label: 'Название сайта',
       required: true,
-      defaultValue: 'BIGSTEP.RU'
+      defaultValue: 'Grushko Stepan'
     },
     {
       name: 'socialLinks',

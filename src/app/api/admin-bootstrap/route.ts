@@ -2,6 +2,8 @@ import { timingSafeEqual } from 'node:crypto'
 
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { getPublicRequestOrigin } from '@/lib/requestOrigin'
+
 const BOOTSTRAP_COOKIE = 'payload-bootstrap'
 const BOOTSTRAP_MAX_AGE_SECONDS = 30 * 60
 
@@ -12,6 +14,9 @@ const isProductionRuntime = () =>
   process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build'
 
 const notFound = () => new NextResponse(null, { status: 404 })
+
+const getCreateFirstUserUrl = (request: NextRequest) =>
+  new URL('/admin/create-first-user', getPublicRequestOrigin(request.url, request.headers))
 
 const setBootstrapCookie = (response: NextResponse, token: string) => {
   // 303 ensures the browser issues a GET to /admin/create-first-user even though this handler is POST.
@@ -59,7 +64,7 @@ const tokensMatch = (submitted: string, expected: string): boolean => {
 
 export async function POST(request: NextRequest) {
   if (!isProductionRuntime()) {
-    const response = NextResponse.redirect(new URL('/admin/create-first-user', request.url), 303)
+    const response = NextResponse.redirect(getCreateFirstUserUrl(request), 303)
     setBootstrapCookie(response, 'local-development')
 
     return response
@@ -83,7 +88,7 @@ export async function POST(request: NextRequest) {
     return notFound()
   }
 
-  const response = NextResponse.redirect(new URL('/admin/create-first-user', request.url), 303)
+  const response = NextResponse.redirect(getCreateFirstUserUrl(request), 303)
   setBootstrapCookie(response, bootstrapToken)
 
   return response

@@ -8,9 +8,15 @@ export const Users: CollectionConfig = {
     singular: 'Пользователь',
     plural: 'Пользователи'
   },
-  auth: true,
+  auth: {
+    loginWithUsername: {
+      allowEmailLogin: true,
+      requireEmail: false,
+      requireUsername: true
+    }
+  },
   admin: {
-    useAsTitle: 'email'
+    useAsTitle: 'username'
   },
   access: {
     create: admins,

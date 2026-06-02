@@ -1,20 +1,27 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { blogPosts } from '@/data/content'
+import { getSiteBlogPosts } from '@/lib/content'
+import { getCanonicalUrl } from '@/lib/siteUrl'
 
 export const metadata: Metadata = {
   title: 'Журнал',
-  description: 'Заметки о вещах, материалах и спокойном ритме BIGSTEP.'
+  description: 'Заметки о вещах, материалах и спокойном ритме Grushko Stepan.',
+  alternates: { canonical: getCanonicalUrl('/blog') },
+  openGraph: { url: getCanonicalUrl('/blog') }
 }
 
-export default function BlogPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function BlogPage() {
+  const blogPosts = await getSiteBlogPosts()
+
   return (
     <div className="page">
       <section className="shopIntro">
         <span className="eyebrow">Блог</span>
         <h1 className="display">Журнал</h1>
-        <p>Заметки о вещах, материалах и спокойном ритме вокруг первого дропа BIGSTEP.</p>
+        <p>Заметки о вещах, материалах и спокойном ритме вокруг первого дропа Grushko Stepan.</p>
       </section>
 
       <div className="contentList">

@@ -48,18 +48,18 @@ describe('cart domain', () => {
   it('adds sized products with selected size', () => {
     const test00 = productBySlug('test-00')
 
-    const result = addCartItem([], test00, '3')
+    const result = addCartItem([], test00, 'M')
 
     expect(result).toEqual({
       ok: true,
       cart: [
         {
-          id: 'test-00:3',
+          id: 'test-00:M',
           productSlug: 'test-00',
           title: 'ТЕСТ 00',
           price: 7900,
           quantity: 1,
-          size: '3',
+          size: 'M',
           saleStatus: 'in_stock'
         }
       ]
@@ -88,8 +88,8 @@ describe('cart domain', () => {
   it('increments an existing cart line instead of duplicating it', () => {
     const test01 = productBySlug('test-01')
 
-    const first = cartFrom(addCartItem([], test01, '3'))
-    const second = addCartItem(first, test01, '3')
+    const first = cartFrom(addCartItem([], test01, 'M'))
+    const second = addCartItem(first, test01, 'M')
 
     expect(second.ok).toBe(true)
     if (!second.ok) throw new Error(second.error)
@@ -103,11 +103,11 @@ describe('cart domain', () => {
 
     let cart: CartItem[] = []
     for (let count = 0; count < 20; count += 1) {
-      cart = cartFrom(addCartItem(cart, test00, '3'))
+      cart = cartFrom(addCartItem(cart, test00, 'M'))
     }
 
     const beforeLimitAdd = [...cart]
-    const limitResult = addCartItem(cart, test00, '3')
+    const limitResult = addCartItem(cart, test00, 'M')
 
     expect(cart).toEqual(beforeLimitAdd)
     expect(limitResult).toEqual({ ok: false, error: 'OUT_OF_STOCK' })
@@ -134,7 +134,7 @@ describe('cart domain', () => {
     const test01 = productBySlug('test-01')
     const preorderProduct: Product = { ...test01, saleStatus: 'preorder' }
 
-    const cart = cartFrom(addCartItem(cartFrom(addCartItem([], test00, '3')), preorderProduct, '3'))
+    const cart = cartFrom(addCartItem(cartFrom(addCartItem([], test00, 'M')), preorderProduct, 'M'))
     const totals = calculateCartTotals(cart, 650)
 
     expect(totals).toEqual({
@@ -151,12 +151,12 @@ describe('cart domain', () => {
 
     const withOutOfStockSize: Product = {
       ...test00,
-      sizes: [...test00.sizes, { label: '4', stock: 0 }]
+      sizes: [...test00.sizes, { label: 'XL', stock: 0 }]
     }
 
     expect(addCartItem([], test00, null)).toEqual({ ok: false, error: 'SIZE_REQUIRED' })
-    expect(addCartItem([], test00, '4')).toEqual({ ok: false, error: 'SIZE_UNAVAILABLE' })
-    expect(addCartItem([], withOutOfStockSize, '4')).toEqual({
+    expect(addCartItem([], test00, 'XL')).toEqual({ ok: false, error: 'SIZE_UNAVAILABLE' })
+    expect(addCartItem([], withOutOfStockSize, 'XL')).toEqual({
       ok: false,
       error: 'SIZE_UNAVAILABLE'
     })
@@ -172,7 +172,7 @@ describe('cart domain', () => {
     ]
 
     for (const product of unavailableProducts) {
-      expect(addCartItem([], product, '3')).toEqual({ ok: false, error: 'PRODUCT_UNAVAILABLE' })
+      expect(addCartItem([], product, 'M')).toEqual({ ok: false, error: 'PRODUCT_UNAVAILABLE' })
     }
   })
 
@@ -180,7 +180,7 @@ describe('cart domain', () => {
     const sticker = oneSizeProduct()
     const outOfStockSticker = oneSizeProduct(0)
 
-    expect(addCartItem([], sticker, '3')).toEqual({ ok: false, error: 'SIZE_NOT_ALLOWED' })
+    expect(addCartItem([], sticker, 'M')).toEqual({ ok: false, error: 'SIZE_NOT_ALLOWED' })
     expect(addCartItem([], outOfStockSticker, null)).toEqual({ ok: false, error: 'OUT_OF_STOCK' })
   })
 
@@ -252,10 +252,10 @@ describe('cart domain', () => {
 
     const infiniteStockProduct: Product = {
       ...test00,
-      sizes: [{ label: '3', stock: Number.POSITIVE_INFINITY }]
+      sizes: [{ label: 'M', stock: Number.POSITIVE_INFINITY }]
     }
 
-    expect(isSelectableSize(infiniteStockProduct, '3')).toBe(false)
+    expect(isSelectableSize(infiniteStockProduct, 'M')).toBe(false)
   })
 
   it('exports frozen fixtures so consumers cannot mutate shared products', () => {
@@ -289,7 +289,7 @@ describe('cart domain', () => {
           title: 'Tampered',
           price: Number.MAX_SAFE_INTEGER,
           quantity: 999,
-          size: '3',
+          size: 'M',
           saleStatus: 'hidden'
         },
         {
@@ -298,7 +298,7 @@ describe('cart domain', () => {
           title: 'Tampered second',
           price: -1,
           quantity: 2,
-          size: '3',
+          size: 'M',
           saleStatus: 'hidden'
         }
       ],
@@ -307,21 +307,21 @@ describe('cart domain', () => {
 
     expect(sanitized).toEqual([
       {
-        id: 'test-00:3',
+        id: 'test-00:M',
         productSlug: 'test-00',
         title: 'ТЕСТ 00',
         price: 7900,
         quantity: 20,
-        size: '3',
+        size: 'M',
         saleStatus: 'in_stock'
       },
       {
-        id: 'test-01:3',
+        id: 'test-01:M',
         productSlug: 'test-01',
         title: 'ТЕСТ 01',
         price: 7900,
         quantity: 2,
-        size: '3',
+        size: 'M',
         saleStatus: 'in_stock'
       }
     ])
@@ -340,18 +340,18 @@ describe('cart domain', () => {
 
     const sanitized = sanitizeCart(
       [
-        { productSlug: 'missing-product', quantity: 1, size: '3' },
-        { productSlug: 'sold-out-product', quantity: 1, size: '3' },
-        { productSlug: 'hidden-product', quantity: 1, size: '3' },
-        { productSlug: 'unpublished-product', quantity: 1, size: '3' },
-        { productSlug: test00.slug, quantity: 1, size: '4' },
-        { productSlug: sticker.slug, quantity: 1, size: '3' },
-        { productSlug: test00.slug, quantity: 0, size: '3' },
-        { productSlug: test00.slug, quantity: -1, size: '3' },
-        { productSlug: test00.slug, quantity: 1.5, size: '3' },
-        { productSlug: test00.slug, quantity: Number.NaN, size: '3' },
-        { productSlug: test00.slug, quantity: Number.POSITIVE_INFINITY, size: '3' },
-        { productSlug: test00.slug, quantity: '2', size: '3' },
+        { productSlug: 'missing-product', quantity: 1, size: 'M' },
+        { productSlug: 'sold-out-product', quantity: 1, size: 'M' },
+        { productSlug: 'hidden-product', quantity: 1, size: 'M' },
+        { productSlug: 'unpublished-product', quantity: 1, size: 'M' },
+        { productSlug: test00.slug, quantity: 1, size: 'XL' },
+        { productSlug: sticker.slug, quantity: 1, size: 'M' },
+        { productSlug: test00.slug, quantity: 0, size: 'M' },
+        { productSlug: test00.slug, quantity: -1, size: 'M' },
+        { productSlug: test00.slug, quantity: 1.5, size: 'M' },
+        { productSlug: test00.slug, quantity: Number.NaN, size: 'M' },
+        { productSlug: test00.slug, quantity: Number.POSITIVE_INFINITY, size: 'M' },
+        { productSlug: test00.slug, quantity: '2', size: 'M' },
         null
       ],
       [...products, sticker, ...unavailableProducts]

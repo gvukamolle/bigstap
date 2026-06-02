@@ -66,11 +66,11 @@ export const Products: CollectionConfig = {
   slug: 'products',
   labels: {
     singular: 'Товар',
-    plural: 'Товары'
+    plural: 'Товары Grushko Stepan'
   },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'saleStatus', 'productType', 'price', 'published']
+    defaultColumns: ['title', 'dropName', 'saleStatus', 'productType', 'price', 'published']
   },
   access: {
     create: admins,
@@ -105,6 +105,12 @@ export const Products: CollectionConfig = {
       unique: true
     },
     {
+      name: 'dropName',
+      type: 'text',
+      label: 'Дроп',
+      required: true
+    },
+    {
       name: 'category',
       type: 'text',
       label: 'Категория',
@@ -115,6 +121,43 @@ export const Products: CollectionConfig = {
       type: 'relationship',
       label: 'Главное фото',
       relationTo: 'media'
+    },
+    {
+      name: 'imageUrl',
+      type: 'text',
+      label: 'URL главного фото',
+      required: true
+    },
+    {
+      name: 'imageAlt',
+      type: 'text',
+      label: 'Описание главного фото',
+      required: true
+    },
+    {
+      name: 'imageTone',
+      type: 'select',
+      label: 'Фон фото',
+      required: true,
+      defaultValue: 'black',
+      options: [
+        {
+          label: 'Светлый',
+          value: 'cream'
+        },
+        {
+          label: 'Камень',
+          value: 'stone'
+        },
+        {
+          label: 'Темный',
+          value: 'charcoal'
+        },
+        {
+          label: 'Черный',
+          value: 'black'
+        }
+      ]
     },
     {
       name: 'price',

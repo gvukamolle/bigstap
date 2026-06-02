@@ -1,10 +1,19 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { ProductCard } from '@/components/ProductCard'
-import { getPublishedProducts } from '@/data/products'
+import { getCatalogProducts } from '@/lib/catalog'
+import { getCanonicalUrl } from '@/lib/siteUrl'
 
-export default function HomePage() {
-  const featuredProducts = getPublishedProducts().slice(0, 4)
+export const metadata: Metadata = {
+  alternates: { canonical: getCanonicalUrl('/') },
+  openGraph: { url: getCanonicalUrl('/') }
+}
+
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage() {
+  const featuredProducts = (await getCatalogProducts()).slice(0, 4)
 
   return (
     <div className="page">
@@ -12,8 +21,8 @@ export default function HomePage() {
         <div className="homeCopy">
           <h1 className="display">Свой шмот. Тихая сила.</h1>
           <p>
-            BIGSTEP делает собственный шмот для спокойного городского ритма. Сейчас в витрине два
-            отдельных дропа: ТЕСТ 00 и ТЕСТ 01.
+            Grushko Stepan делает собственный шмот для спокойного городского ритма. Витрина
+            собирает вещи из актуальных дропов в один магазин.
           </p>
           <Link className="button" href="/shop">
             Смотреть магазин
@@ -22,14 +31,14 @@ export default function HomePage() {
         <div
           className="homeImage"
           role="img"
-          aria-label="Студийная витрина BIGSTEP с одеждой первого дропа"
+          aria-label="Студийная витрина Grushko Stepan с одеждой первого дропа"
         />
       </section>
 
       <section className="section">
         <div className="sectionHeader">
           <span className="eyebrow">Витрина</span>
-          <h2>Дропы</h2>
+          <h2>Товары</h2>
         </div>
         <div className="grid">
           {featuredProducts.map((product) => (

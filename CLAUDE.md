@@ -2,132 +2,105 @@
 
 Guidance for AI assistants working in this repository.
 
+**Canonical docs (updated):** [docs/README.md](./docs/README.md) (Russian architecture/dev guides) · [AGENTS.md](./AGENTS.md) (short entry point).
+
 ## Project
 
-BIGSTEP.RU — a Russian-language storefront prototype for clothing and accessories. Mobile-first, light-themed. Public pages render from TypeScript fixtures; Payload CMS is wired in as the foundation for the future admin and server layer.
+BIGSTEP.RU — Russian-language storefront prototype for clothing and accessories. Mobile-first, light-themed. Shop catalog reads **Payload CMS first**, falls back to TypeScript fixtures. Blog, events, and founder pages still use fixtures.
 
 Stack:
 - Next.js 16 (App Router, Turbopack) + React 19
 - Payload CMS 3.84 (SQLite by default; PostgreSQL optional)
 - TypeScript 6 strict mode, ESM (`"type": "module"`)
-- Vitest 4 for domain tests
+- Vitest 4 — domain, app utilities, payload helpers
 - ESLint flat config
 
 ## Commands
 
 ```bash
-npm install --legacy-peer-deps   # initial install
-npm run dev                       # next dev (Turbopack)
-npm run build                     # next build
-npm run start                     # next start
-npm run typecheck                 # next typegen && tsc --noEmit
-npm test                          # vitest run
-npm run test:watch                # vitest watch
-npm run lint                      # eslint .
+npm install --legacy-peer-deps
+npm run dev
+npm run build
+npm run start
+npm run typecheck
+npm test
+npm run test:watch
+npm run lint
+npm run admin:seed    # requires PAYLOAD_SEED_ADMIN_USERNAME/PASSWORD in .env
 ```
 
-Codex/sandbox environments may require the explicit npm path `/usr/local/bin/npm` (see README).
+Codex/sandbox may need `/usr/local/bin/npm` (see README).
 
 ## Layout
 
 ```
 src/
   app/
-    (site)/        # public storefront (route group, shares layout/header/footer)
-      page.tsx, shop/, cart/, checkout/, blog/, events/, founder/, bootstrap-admin/
-    (payload)/     # Payload admin and REST/GraphQL handlers
-      admin/[[...segments]]/, api/[...slug]/, api/graphql/, api/graphql-playground/
-    api/
-      admin-bootstrap/route.ts   # token-gated POST that sets the bootstrap cookie
-    globals.css
-  components/      # client/server React components (SiteHeader, CartClient, CheckoutClient, ...)
-  domain/          # pure TS: products, cart, checkout, formatting (no React, no Payload)
-  data/            # TypeScript fixtures (products.ts, content.ts, retail.ts)
-  lib/             # browser-side helpers (cartStorage.ts uses localStorage)
-  payload/
-    access.ts                    # role-based Access helpers (admin, editor)
-    collections/                 # Users, Media, Products, Orders, BlogPosts, Events
-    globals/SiteSettings.ts
-  middleware.ts    # gates Payload create-first-user routes in production
-  types/payload-css.d.ts
-tests/domain/      # vitest specs mirroring src/domain
-docs/
-  research/        # market/competitor notes
-  superpowers/     # plans & specs (long-form planning docs)
-payload.config.ts  # buildConfig: adapters, collections, globals, RU i18n
-next.config.ts     # withPayload + image remote patterns
+    (site)/        # public storefront
+    (payload)/     # Payload admin + REST/GraphQL
+    api/admin-bootstrap/route.ts
+    robots.ts, sitemap.ts
+  components/      # SiteHeader, ProductCatalog, CartClient, CheckoutClient, ...
+  domain/          # pure TS: products, cart, checkout, catalog, formatting
+  data/            # fixtures: products.ts, content.ts, retail.ts
+  lib/
+    catalog.ts     # getCatalogProducts — Payload → Product, fixture fallback
+    cartStorage.ts, siteUrl.ts, requestOrigin.ts
+  payload/         # collections, access, admin UI components, seedAdminCredentials
+  proxy.ts         # Next.js 16 proxy (gates create-first-user in production)
+tests/
+  domain/, app/, payload/
+docs/              # architecture, development, catalog-and-cms, security-bootstrap
+payload.config.ts
+next.config.ts
+scripts/seed-admin.ts
 ```
 
-Path aliases (`tsconfig.json`):
-- `@/*` → `./src/*`
-- `@payload-config` → `./payload.config.ts`
+Aliases: `@/*` → `src/*`, `@payload-config` → `payload.config.ts`
 
 ## Architecture
 
-**Three-layer separation, keep it strict:**
-1. `src/domain/*` — pure TypeScript. No React, no Next, no Payload. Cart math, checkout validation, product types. This is what `tests/domain/*` exercises.
-2. `src/data/*` — typed fixtures that satisfy the domain types. Public pages currently read from here, not Payload.
-3. `src/payload/*` — Payload collection/global configs and Access functions. Schema invariants are enforced in `beforeValidate` hooks (e.g. `Products.ts`, `Orders.ts`) using integer-range checks; mirror this pattern for new collections.
+**Layers (strict):**
+1. `src/domain/*` — no React, Next, or Payload.
+2. `src/data/*` — typed fixtures.
+3. `src/lib/catalog.ts` — server bridge CMS ↔ domain `Product`.
+4. `src/payload/*` — schema, access, `beforeValidate` invariants.
 
-**Cart flow:** `CartClient` (browser) + `lib/cartStorage.ts` (localStorage, versioned payload, custom `bigstep-cart-updated` event) + `domain/cart.ts` (`sanitizeCart`, `addCartItem`, `updateCartItemQuantity`, `calculateCartTotals`). Always sanitize stored carts against canonical products before trusting them — the domain functions already do this; don't bypass them.
+**Catalog:** `getCatalogProducts()` / `getCatalogProductBySlug()`. Client filtering via `domain/catalog.ts` + `ProductCatalog`. See [docs/catalog-and-cms.md](./docs/catalog-and-cms.md).
 
-**Checkout flow:** `CheckoutClient` collects `CustomerDetails` + a CDEK pickup placeholder; `domain/checkout.ts#validateCheckoutDraft` returns structured errors. ЮKassa and CDEK are currently stubs — see "Prototype limits" below.
+**Cart:** `CartClient` + `cartStorage` + `domain/cart.ts` — always sanitize against current catalog products.
 
-**Admin bootstrap (production):** The Payload `create-first-user` page is hidden until the operator POSTs `PAYLOAD_BOOTSTRAP_TOKEN` to `/api/admin-bootstrap`, which sets an httpOnly `payload-bootstrap` cookie. `src/middleware.ts` 404s `/admin/create-first-user` and `/api/users/first-register` without that cookie. The cookie comparison and the form-token comparison are both constant-time. The bootstrap POST is rate-limited (5 attempts / 15 min / IP) via an in-memory `Map` — replace with Redis when scaling beyond a single instance. In development the route auto-issues a `local-development` cookie. Don't weaken these checks; the production guard is `NODE_ENV === 'production' && NEXT_PHASE !== 'phase-production-build'`.
+**Checkout:** `validateCheckoutDraft`; YooKassa and CDEK are stubs; no real Payload order.
 
-**Payload DB selection:** `payload.config.ts` picks `postgresAdapter` if `DATABASE_URI` is set, otherwise `sqliteAdapter` with `SQLITE_DATABASE_URL` (defaults to `file:payload-local.db`). SQLite `push` (auto-sync) is on in dev, off in production runtime — schema changes in prod require manual migrations. `PAYLOAD_SECRET` is required at runtime in production (`requireRuntimeEnv` throws if missing or shorter than 16 chars); the local fallback is only used outside production.
+**Admin bootstrap:** [docs/security-bootstrap.md](./docs/security-bootstrap.md) — `proxy.ts`, `/api/admin-bootstrap`, cookie `payload-bootstrap`.
 
-**Security headers:** `next.config.ts#headers()` ships `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`, and HSTS for every path. No CSP yet — add one once Payload admin's inline script needs are inventoried.
-
-**SEO surface:** `src/app/robots.ts` and `src/app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml` at build time. Product pages emit JSON-LD `Product` schema with `priceCurrency: "RUB"` and a `schema.org` availability mapped from `ProductSaleStatus`. Cart and checkout are `robots: { index: false }`. Site URL is read from `NEXT_PUBLIC_SITE_URL` (used in `metadataBase`, sitemap, robots, and JSON-LD).
+**DB:** Postgres if `DATABASE_URI`; else SQLite. `push` only outside production runtime.
 
 ## Conventions
 
-- **Russian UI strings.** All user-facing copy, labels, validation messages, and Payload field labels are in Russian. Match the existing tone when adding strings.
-- **Russian commit messages** following types like `feat:`, `fix:`, `улучшение:`, `дизайн:`, `контент:`, `безопасность:`, `сборка:`, `доки:`. Look at `git log` for the active style before composing one.
-- **No comments unless they explain a non-obvious WHY** (matches the existing code — files are nearly comment-free).
-- **Integers for money and stock.** Rubles are stored as integers (no kopecks); Payload hooks reject non-`Number.isSafeInteger` values via `isSafeIntegerInRange`. Cap: `MAX_RUB_AMOUNT = 10_000_000`, `MAX_STOCK = 100_000`, `MAX_QUANTITY = 100` (orders).
-- **Validate at boundaries.** Cart sanitization, checkout validation, Payload `beforeValidate` — these are the trust boundaries. Internal domain helpers assume already-validated input.
-- **Server-only by default.** Mark Client Components explicitly (`'use client'`); the components that touch localStorage / form state already do.
-- **Fixtures stay typed.** `src/data/products.ts` must satisfy `Product` from `src/domain/products.ts`. Don't loosen the discriminated union (`type: 'sized' | 'one_size'`).
-- **Generated files are git-ignored:** `payload-types.ts`, `next-env.d.ts`, `.next/`, `*.sqlite`, `*.db`. Don't commit them; don't lint them (ESLint already ignores `payload-types.ts`).
+- Russian UI and Payload labels.
+- Russian commit messages (`feat:`, `fix:`, `улучшение:`, …) — check `git log`.
+- Integer rubles/stock; `MAX_RUB_AMOUNT`, `MAX_STOCK`, `MAX_QUANTITY` in hooks.
+- Validate at boundaries (cart sanitize, checkout, Payload hooks).
+- `'use client'` only where needed (localStorage, forms).
+- Gitignored: `payload-types.ts`, `.next/`, `*.sqlite`, `*.db`.
 
 ## CI
 
-`.github/workflows/ci.yml` runs typecheck + lint + test + build on push/PR to `main`. It seeds a placeholder `PAYLOAD_SECRET` for the build phase. Don't merge a PR while CI is red.
+`.github/workflows/ci.yml` — typecheck, lint, test, build on `main`.
 
-## Testing
+## Environment
 
-- Vitest runs `tests/**/*.test.ts` in a Node environment (`vitest.config.ts`). `passWithNoTests: true`.
-- Current coverage is the domain layer (`tests/domain/cart.test.ts`, `tests/domain/checkout.test.ts`). Add tests there when changing cart/checkout/product logic.
-- No React/component tests are configured. If you add one, set up the test environment first rather than shimming jsdom inline.
+Copy `.env.example`. Notable: `PAYLOAD_SECRET`, `PAYLOAD_BOOTSTRAP_TOKEN`, `PAYLOAD_SEED_ADMIN_*`, `NEXT_PUBLIC_SITE_URL`, `DATABASE_URI` / `SQLITE_DATABASE_URL`.
 
-## Environment variables
+## Prototype limits
 
-Copy `.env.example` to `.env`. Notable keys:
-- `DATABASE_URI` — set to switch Payload to Postgres
-- `SQLITE_DATABASE_URL` — Payload SQLite file (default `file:payload-local.db`)
-- `PAYLOAD_SECRET` — required in production
-- `PAYLOAD_BOOTSTRAP_TOKEN` — required in production to ever reach `create-first-user`
-- `POSTGRES_PASSWORD` — consumed by `docker-compose.yml`
-- `YOOKASSA_*`, `CDEK_*` — placeholders for future integrations
+- Blog, events, founder — fixtures only.
+- Payment, CDEK widget, order creation on checkout — not wired.
+- Confirm scope before production integrations.
 
-## Prototype limits (do not assume these work)
+## Planning references
 
-- Public pages do not read from Payload yet — they use `src/data/*` fixtures.
-- ЮKassa is a checkout stub; no real payment is created.
-- CDEK is a single hard-coded pickup point; no widget/API integration.
-- Order placement validates the flow but doesn't create a real order via Payload.
-
-If a task touches one of these areas, confirm scope before wiring real integrations.
-
-## Working branch
-
-This repository instructs development on `claude/add-claude-documentation-Xoc91` for the current session (see the session brief). Always confirm the active branch before pushing.
-
-## Useful references
-
-- `docs/superpowers/plans/2026-05-19-bigstep-working-prototype.md` — current prototype plan
-- `docs/superpowers/specs/2026-05-19-bigstep-mvp-shop-design.md` — MVP design spec
-- `docs/research/` — market/retail research notes
-- `README.md` — user-facing setup and run instructions (Russian)
+- `docs/superpowers/plans/2026-05-19-bigstep-working-prototype.md`
+- `docs/superpowers/specs/2026-05-19-bigstep-mvp-shop-design.md`
+- `docs/research/`

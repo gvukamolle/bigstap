@@ -1,14 +1,45 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { events } from '@/data/content'
+import { getSiteEventBySlug } from '@/lib/content'
+import { getAbsoluteAssetUrl, getCanonicalUrl } from '@/lib/siteUrl'
 
-export function generateStaticParams() {
-  return events.map((event) => ({ slug: event.slug }))
+export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const event = await getSiteEventBySlug(slug)
+  if (!event) return {}
+
+  const url = getCanonicalUrl(`/events/${event.slug}`)
+  const imageUrl = getAbsoluteAssetUrl(event.image.src)
+
+  return {
+    title: event.title,
+    description: event.description,
+    alternates: { canonical: url },
+    openGraph: {
+      url,
+      title: `${event.title} | Grushko Stepan`,
+      description: event.description,
+      images: [{ url: imageUrl, alt: event.image.alt }]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${event.title} | Grushko Stepan`,
+      description: event.description,
+      images: [imageUrl]
+    }
+  }
 }
 
 export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const event = events.find((item) => item.slug === slug)
+  const event = await getSiteEventBySlug(slug)
 
   if (!event) {
     notFound()

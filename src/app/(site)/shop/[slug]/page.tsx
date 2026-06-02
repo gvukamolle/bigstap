@@ -4,11 +4,10 @@ import { notFound } from 'next/navigation'
 import { AddToCartForm } from '@/components/AddToCartForm'
 import { ProductGallery } from '@/components/ProductGallery'
 import { StatusPill } from '@/components/StatusPill'
-import { getProductBySlug, getPublishedProducts } from '@/data/products'
 import { formatRubles } from '@/domain/formatting'
 import { getDisplayPrice, type Product, type ProductSaleStatus } from '@/domain/products'
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'http://localhost:3000'
+import { getCatalogProductBySlug, getCatalogProducts } from '@/lib/catalog'
+import { getAbsoluteAssetUrl, getCanonicalUrl } from '@/lib/siteUrl'
 
 const availabilityBySaleStatus: Record<ProductSaleStatus, string> = {
   in_stock: 'https://schema.org/InStock',
@@ -17,9 +16,7 @@ const availabilityBySaleStatus: Record<ProductSaleStatus, string> = {
   hidden: 'https://schema.org/Discontinued'
 }
 
-export function generateStaticParams() {
-  return getPublishedProducts().map((product) => ({ slug: product.slug }))
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({
   params
@@ -27,15 +24,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const product = getProductBySlug(slug)
+  const product = await getCatalogProductBySlug(slug)
   if (!product) return {}
 
   const title = product.title
   const description = product.shortDescription
-  const productUrl = `${siteUrl}/shop/${product.slug}`
-  const imageUrl = product.image.src.startsWith('http')
-    ? product.image.src
-    : `${siteUrl}${product.image.src}`
+  const productUrl = getCanonicalUrl(`/shop/${product.slug}`)
+  const imageUrl = getAbsoluteAssetUrl(product.image.src)
 
   return {
     title,
@@ -44,15 +39,15 @@ export async function generateMetadata({
     openGraph: {
       type: 'website',
       url: productUrl,
-      title: `${title} | BIGSTEP.RU`,
+      title: `${title} | Grushko Stepan`,
       description,
       locale: 'ru_RU',
-      siteName: 'BIGSTEP.RU',
+      siteName: 'Grushko Stepan',
       images: [{ url: imageUrl, alt: product.image.alt }]
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} | BIGSTEP.RU`,
+      title: `${title} | Grushko Stepan`,
       description,
       images: [imageUrl]
     }
@@ -60,10 +55,8 @@ export async function generateMetadata({
 }
 
 function buildProductJsonLd(product: Product) {
-  const productUrl = `${siteUrl}/shop/${product.slug}`
-  const imageUrl = product.image.src.startsWith('http')
-    ? product.image.src
-    : `${siteUrl}${product.image.src}`
+  const productUrl = getCanonicalUrl(`/shop/${product.slug}`)
+  const imageUrl = getAbsoluteAssetUrl(product.image.src)
   const displayPrice = getDisplayPrice(product)
 
   return {
@@ -74,7 +67,7 @@ function buildProductJsonLd(product: Product) {
     image: imageUrl,
     sku: product.slug,
     category: product.category,
-    brand: { '@type': 'Brand', name: 'BIGSTEP' },
+    brand: { '@type': 'Brand', name: 'Grushko Stepan' },
     offers: {
       '@type': 'Offer',
       url: productUrl,
@@ -88,7 +81,8 @@ function buildProductJsonLd(product: Product) {
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const product = getProductBySlug(slug)
+  const catalogProducts = await getCatalogProducts()
+  const product = catalogProducts.find((item) => item.slug === slug)
 
   if (!product) {
     notFound()
@@ -117,7 +111,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
           <p>{product.description}</p>
           {product.preorderNote ? <p className="preorderNote">{product.preorderNote}</p> : null}
-          <AddToCartForm product={product} />
+          <AddToCartForm catalogProducts={catalogProducts} product={product} />
         </div>
       </section>
     </div>

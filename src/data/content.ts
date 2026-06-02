@@ -8,7 +8,7 @@ export const blogPosts = [
     dateTime: '2026-05-19',
     image: {
       src: '/images/bigstep/editorial-journal.jpg',
-      alt: 'Рабочий стол редакции BIGSTEP с тканями и заметками'
+      alt: 'Рабочий стол редакции Grushko Stepan с тканями и заметками'
     },
     productSlug: 'test-00',
     eventSlug: 'studio-open-day'
@@ -22,7 +22,7 @@ export const blogPosts = [
     dateTime: '2026-05-19',
     image: {
       src: '/images/bigstep/journal-studio.jpg',
-      alt: 'Материалы и силуэты первого дропа BIGSTEP'
+      alt: 'Материалы и силуэты первого дропа Grushko Stepan'
     },
     productSlug: 'test-01'
   }
@@ -37,18 +37,18 @@ export const events = [
     location: 'Москва',
     image: {
       src: '/images/bigstep/editorial-event.jpg',
-      alt: 'Студийное пространство BIGSTEP для открытой встречи'
+      alt: 'Студийное пространство Grushko Stepan для открытой встречи'
     },
     description: 'Анонс открытой встречи, где можно увидеть вещи и обсудить первый дроп.'
   }
 ]
 
 export const founder = {
-  title: 'Основатель BIGSTEP',
-  text: 'BIGSTEP строится вокруг собственного шмота, спокойной визуальной культуры и аккуратного отношения к деталям.',
+  title: 'Основатель Grushko Stepan',
+  text: 'Grushko Stepan строится вокруг собственного шмота, спокойной визуальной культуры и аккуратного отношения к деталям.',
   image: {
     src: '/images/bigstep/editorial-founder.jpg',
-    alt: 'Студийный угол BIGSTEP с жакетом, блокнотом и чашкой'
+    alt: 'Студийный угол Grushko Stepan с жакетом, блокнотом и чашкой'
   },
   socialLinks: [
     { label: 'Телеграм', href: 'https://t.me/' },

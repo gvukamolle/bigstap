@@ -1,14 +1,21 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { events } from '@/data/content'
+import { getSiteEvents } from '@/lib/content'
+import { getCanonicalUrl } from '@/lib/siteUrl'
 
 export const metadata: Metadata = {
   title: 'Ивенты',
-  description: 'Анонсы открытых встреч и студийных дней BIGSTEP.'
+  description: 'Анонсы открытых встреч и студийных дней Grushko Stepan.',
+  alternates: { canonical: getCanonicalUrl('/events') },
+  openGraph: { url: getCanonicalUrl('/events') }
 }
 
-export default function EventsPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function EventsPage() {
+  const events = await getSiteEvents()
+
   return (
     <div className="page">
       <section className="shopIntro">

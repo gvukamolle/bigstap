@@ -9,7 +9,7 @@ const isProductionRuntime = () =>
 
 const notFound = () => new NextResponse(null, { status: 404 })
 
-// Constant-time equality. Avoids node:crypto so this works on the edge runtime where middleware runs.
+// Constant-time equality. Avoids node:crypto so this works on the edge runtime where proxy runs.
 const constantTimeEqual = (a: string, b: string): boolean => {
   if (a.length !== b.length) return false
   let diff = 0
@@ -28,7 +28,7 @@ const hasBootstrapCookie = (request: NextRequest, token: string) => {
 
 const normalizePath = (path: string) => (path.length > 1 ? path.replace(/\/$/, '') : path)
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   if (!isProductionRuntime()) {
     return NextResponse.next()
   }

@@ -1,32 +1,33 @@
 import type { Metadata } from 'next'
 
-import { ProductCard } from '@/components/ProductCard'
-import { getPublishedProducts } from '@/data/products'
+import { ProductCatalog } from '@/components/ProductCatalog'
+import { getCatalogProducts } from '@/lib/catalog'
+import { getCanonicalUrl } from '@/lib/siteUrl'
 
 export const metadata: Metadata = {
   title: 'Магазин',
-  description: 'Витрина BIGSTEP: ограниченные дропы одежды и аксессуаров.'
+  description: 'Магазин Grushko Stepan: товары, дропы, размеры и наличие.',
+  alternates: { canonical: getCanonicalUrl('/shop') },
+  openGraph: { url: getCanonicalUrl('/shop') }
 }
 
-export default function ShopPage() {
-  const products = getPublishedProducts()
+export const dynamic = 'force-dynamic'
+
+export default async function ShopPage() {
+  const products = await getCatalogProducts()
 
   return (
     <div className="page">
       <section className="shopIntro">
         <span className="eyebrow">Магазин</span>
-        <h1 className="display">Дропы</h1>
+        <h1 className="display">Товары</h1>
         <p>
-          Сейчас на витрине два отдельных дропа: ТЕСТ 00 и ТЕСТ 01. В каждом дропе — одна
-          футболка с видом спереди и со спины.
+          Все вещи Grushko Stepan в одной витрине. Дроп остается меткой внутри товара, а не
+          отдельной страницей вместо магазина.
         </p>
       </section>
 
-      <div className="grid">
-        {products.map((product) => (
-          <ProductCard product={product} key={product.slug} />
-        ))}
-      </div>
+      <ProductCatalog products={products} />
     </div>
   )
 }

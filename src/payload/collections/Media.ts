@@ -8,6 +8,9 @@ export const Media: CollectionConfig = {
     singular: 'Медиа',
     plural: 'Медиа'
   },
+  admin: {
+    hidden: true
+  },
   upload: true,
   access: {
     create: adminsAndEditors,

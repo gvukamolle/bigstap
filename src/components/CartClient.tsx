@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
-import { products } from '@/data/products'
 import { cartFlowNotes } from '@/data/retail'
 import {
   calculateCartTotals,
@@ -13,7 +12,7 @@ import {
   type CartItem,
   updateCartItemQuantity
 } from '@/domain/cart'
-import type { ProductSaleStatus } from '@/domain/products'
+import type { Product, ProductSaleStatus } from '@/domain/products'
 import {
   cartUpdatedEvent,
   dispatchCartUpdated,
@@ -28,7 +27,7 @@ const saleStatusLabels: Record<ProductSaleStatus, string> = {
   hidden: 'Недоступно'
 }
 
-export function CartClient() {
+export function CartClient({ products }: { products: Product[] }) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [isReady, setIsReady] = useState(false)
   const [storageError, setStorageError] = useState<string | null>(null)

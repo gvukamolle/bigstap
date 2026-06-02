@@ -3,37 +3,35 @@ import type { ReactNode } from 'react'
 
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
+import { getSiteUrl } from '@/lib/siteUrl'
 
 import '../globals.css'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'http://localhost:3000'
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(getSiteUrl()),
   title: {
-    default: 'BIGSTEP.RU',
-    template: '%s | BIGSTEP.RU'
+    default: 'Grushko Stepan',
+    template: '%s | Grushko Stepan'
   },
-  description: 'Магазин одежды и аксессуаров BIGSTEP.',
+  description: 'Магазин одежды и аксессуаров Grushko Stepan.',
   openGraph: {
     type: 'website',
     locale: 'ru_RU',
-    siteName: 'BIGSTEP.RU',
-    url: siteUrl
+    siteName: 'Grushko Stepan'
   },
   icons: {
     icon: [
       { url: '/favicon.ico' },
       { url: '/icon.png', type: 'image/png' }
     ],
-    apple: '/icon.png'
+    apple: '/apple-icon.png'
   }
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#f7f5ef'
+  themeColor: '#ffffff'
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

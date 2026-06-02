@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
@@ -49,13 +51,33 @@ const adminRu = {
     general: {
       ...ru.translations.general,
       email: 'Почта',
-      emailAddress: 'Почта'
+      emailAddress: 'Почта',
+      collections: 'Разделы',
+      allCollections: 'Все разделы',
+      globals: 'Настройки',
+      dashboard: 'Панель'
     }
   }
 }
 
 export default buildConfig({
   admin: {
+    components: {
+      beforeDashboard: ['@/payload/admin/BigstepDashboardIntro'],
+      beforeNav: ['@/payload/admin/BigstepNavBrand'],
+      graphics: {
+        Icon: '@/payload/admin/BigstepIcon',
+        Logo: '@/payload/admin/BigstepLogo'
+      },
+      providers: ['@/payload/admin/BigstepAdminProvider']
+    },
+    importMap: {
+      importMapFile: path.resolve(process.cwd(), 'src/app/(payload)/admin/importMap.ts')
+    },
+    meta: {
+      icons: { icon: '/favicon.ico' },
+      titleSuffix: ' | Grushko Stepan'
+    },
     theme: 'light',
     user: Users.slug
   },

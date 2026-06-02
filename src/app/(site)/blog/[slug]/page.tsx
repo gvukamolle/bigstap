@@ -1,28 +1,58 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { ProductCard } from '@/components/ProductCard'
-import { blogPosts, events } from '@/data/content'
-import { getPublishedProducts } from '@/data/products'
+import { getCatalogProducts } from '@/lib/catalog'
+import { getSiteBlogPostBySlug, getSiteEvents } from '@/lib/content'
+import { getAbsoluteAssetUrl, getCanonicalUrl } from '@/lib/siteUrl'
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }))
+export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const post = await getSiteBlogPostBySlug(slug)
+  if (!post) return {}
+
+  const url = getCanonicalUrl(`/blog/${post.slug}`)
+  const imageUrl = getAbsoluteAssetUrl(post.image.src)
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+    alternates: { canonical: url },
+    openGraph: {
+      url,
+      title: `${post.title} | Grushko Stepan`,
+      description: post.excerpt,
+      images: [{ url: imageUrl, alt: post.image.alt }]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${post.title} | Grushko Stepan`,
+      description: post.excerpt,
+      images: [imageUrl]
+    }
+  }
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = blogPosts.find((item) => item.slug === slug)
+  const post = await getSiteBlogPostBySlug(slug)
 
   if (!post) {
     notFound()
   }
 
+  const products = await getCatalogProducts()
   const featuredProduct = post.productSlug
-    ? getPublishedProducts().find((product) => product.slug === post.productSlug)
+    ? products.find((product) => product.slug === post.productSlug)
     : undefined
-  const featuredEvent = post.eventSlug
-    ? events.find((event) => event.slug === post.eventSlug)
-    : undefined
+  const featuredEvent = post.eventSlug ? (await getSiteEvents()).find((event) => event.slug === post.eventSlug) : undefined
 
   return (
     <div className="page">
@@ -42,13 +72,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
         <div className="articleBody">
           <p>
-            Это прототип записи в журнале BIGSTEP. Сейчас текст собран из фикстур, чтобы показать
-            будущую структуру страницы до подключения редактора и медиа-библиотеки.
+            Это прототип записи в журнале Grushko Stepan. Сейчас на сайте выводятся заголовок,
+            анонс и обложка из админки.
           </p>
           <p>
-            После запуска контент-команда сможет добавлять сюда длинные абзацы, фотографии кампании,
-            детали производства, подборки товаров и ссылки на события. Страница уже держит этот
-            сценарий: материал читается как журнал, но может аккуратно вести к витрине и анонсам.
+            Следующий шаг — вывести сам текст из редактора и подключить медиатеку, чтобы статьи
+            полностью управлялись из CMS.
           </p>
 
           <h2>Как будет работать редактор</h2>
