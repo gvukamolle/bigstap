@@ -70,8 +70,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family:
-    "Arial Narrow", "Roboto Condensed", "Helvetica Neue Condensed", Arial, sans-serif;
-  font-stretch: condensed;
+    "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.45;
   letter-spacing: 0;
