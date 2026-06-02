@@ -302,8 +302,7 @@ button:focus-visible {
   min-width: 44px;
   padding: 0 10px;
   border-radius: 6px;
-  color: var(--text);
-  font-weight: 700;
+  color: var(--muted);
   white-space: nowrap;
   transition:
     background-color 160ms ease,
@@ -311,6 +310,10 @@ button:focus-visible {
 }
 
 .navCart:hover,
+.navCart:focus-visible {
+  color: var(--text);
+}
+
 .navCart:focus-visible {
   background: rgba(0, 0, 0, 0.06);
 }
