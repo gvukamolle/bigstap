@@ -635,6 +635,8 @@ button:focus-visible {
 
 .homeHero {
   position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   margin-bottom: 4px;
 }
 
@@ -654,7 +656,6 @@ button:focus-visible {
   height: auto;
   aspect-ratio: 2000 / 952;
   object-fit: cover;
-  border: 1px solid var(--line);
   background: #0a0a0a;
 }
 
