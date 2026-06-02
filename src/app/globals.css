@@ -222,14 +222,13 @@ main {
 
 .button:hover,
 .button:focus-visible {
-  background: #2a2a2a;
-  border-color: #2a2a2a;
+  background: #1f1f1f;
+  border-color: #1f1f1f;
 }
 
 .buttonSecondary:hover,
 .buttonSecondary:focus-visible {
-  background: var(--text);
-  color: var(--bg);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .button:focus-visible,
@@ -313,8 +312,7 @@ button:focus-visible {
 
 .navCart:hover,
 .navCart:focus-visible {
-  background: var(--text);
-  color: var(--bg);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .cartCount {
@@ -331,12 +329,6 @@ button:focus-visible {
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
-}
-
-.navCart:hover .cartCount,
-.navCart:focus-visible .cartCount {
-  background: var(--bg);
-  color: var(--text);
 }
 
 .menuToggle {
@@ -360,15 +352,13 @@ button:focus-visible {
 }
 
 .menuToggle:hover {
-  background: var(--text);
+  background: rgba(0, 0, 0, 0.06);
   border-color: var(--text);
-  color: var(--bg);
 }
 
 .menuToggle[aria-expanded='true'] {
-  background: var(--text);
+  background: rgba(0, 0, 0, 0.06);
   border-color: var(--text);
-  color: var(--bg);
 }
 
 .menuToggle:focus-visible {
@@ -1002,70 +992,6 @@ button:focus-visible {
   background-size: cover;
 }
 
-.founderHero {
-  display: grid;
-  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
-  gap: 44px;
-  min-height: 620px;
-  align-items: center;
-  padding: 46px 0;
-}
-
-.founderHero .display {
-  max-width: 11.5ch;
-  font-size: 74px;
-  line-height: 0.92;
-  overflow-wrap: normal;
-  word-break: normal;
-}
-
-.founderHero > div {
-  min-width: 0;
-}
-
-.founderStory {
-  display: grid;
-  min-width: 0;
-  align-self: center;
-}
-
-.founderMedia {
-  min-height: 520px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  border-bottom-color: var(--line-strong);
-  background-color: #ffffff;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-}
-
-.founderText {
-  display: grid;
-  min-width: 0;
-  gap: 22px;
-}
-
-.founderText p {
-  max-width: 560px;
-  margin: 0;
-  color: var(--muted);
-  font-size: 18px;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-
-.socialLinks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  min-width: 0;
-}
-
-.socialLinks a {
-  min-width: 120px;
-}
-
 .productDetail {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
@@ -1672,33 +1598,6 @@ button:focus-visible {
     min-height: 360px;
   }
 
-  .founderHero {
-    grid-template-columns: 1fr;
-    gap: 30px;
-    min-height: auto;
-    align-items: start;
-    padding: 36px 0;
-  }
-
-  .founderText {
-    align-self: start;
-    padding-bottom: 0;
-  }
-
-  .founderHero .display {
-    max-width: 100%;
-    font-size: 72px;
-    overflow-wrap: anywhere;
-  }
-
-  .founderStory {
-    align-self: start;
-  }
-
-  .founderMedia {
-    min-height: 420px;
-  }
-
   .productDetail {
     grid-template-columns: 1fr;
     min-height: auto;
@@ -1947,22 +1846,8 @@ button:focus-visible {
     max-width: none;
   }
 
-  .founderText p {
-    font-size: 16px;
-    line-height: 1.5;
-  }
-
-  .founderHero .display {
-    font-size: 42px;
-  }
-
-  .founderMedia,
   .checkoutMood {
     min-height: 260px;
-  }
-
-  .socialLinks .buttonSecondary {
-    width: 100%;
   }
 
   .productDetailInfo {
@@ -2070,10 +1955,6 @@ button:focus-visible {
   .contentCard h2,
   .articleBody h2 {
     font-size: 26px;
-  }
-
-  .founderHero .display {
-    font-size: 38px;
   }
 
   .display {

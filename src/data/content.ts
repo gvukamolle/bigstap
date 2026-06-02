@@ -42,16 +42,3 @@ export const events = [
     description: 'Анонс открытой встречи, где можно увидеть вещи и обсудить первый дроп.'
   }
 ]
-
-export const founder = {
-  title: 'Основатель Grushko Stepan',
-  text: 'Grushko Stepan строится вокруг собственного шмота, спокойной визуальной культуры и аккуратного отношения к деталям.',
-  image: {
-    src: '/images/bigstep/editorial-founder.jpg',
-    alt: 'Студийный угол Grushko Stepan с жакетом, блокнотом и чашкой'
-  },
-  socialLinks: [
-    { label: 'Телеграм', href: 'https://t.me/' },
-    { label: 'Инстаграм', href: 'https://instagram.com/' }
-  ]
-}

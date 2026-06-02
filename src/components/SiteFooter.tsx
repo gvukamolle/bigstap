@@ -4,7 +4,6 @@ const footerLinks = [
   { href: '/shop', label: 'Магазин' },
   { href: '/blog', label: 'Блог' },
   { href: '/events', label: 'Ивенты' },
-  { href: '/founder', label: 'Соцсети' },
   { href: '/admin', label: 'Админка' }
 ] as const
 
