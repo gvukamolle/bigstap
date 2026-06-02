@@ -7,9 +7,7 @@ import { useEffect, useId, useState } from 'react'
 const navItems = [
   { href: '/shop', label: 'Магазин' },
   { href: '/blog', label: 'Блог' },
-  { href: '/events', label: 'Ивенты' },
-  { href: '/founder', label: 'Основатель' },
-  { href: '/cart', label: 'Корзина' }
+  { href: '/events', label: 'Ивенты' }
 ] as const
 
 export function SiteHeader() {
@@ -34,31 +32,38 @@ export function SiteHeader() {
 
   return (
     <header className="siteHeader">
+      <div className="headerLeft">
+        <button
+          type="button"
+          className="menuToggle"
+          aria-expanded={open}
+          aria-controls={menuId}
+          aria-label={open ? 'Закрыть меню' : 'Открыть меню'}
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span aria-hidden="true">{open ? '✕' : '☰'}</span>
+        </button>
+        <nav
+          id={menuId}
+          className={open ? 'siteNav siteNavOpen' : 'siteNav'}
+          aria-label="Разделы сайта"
+        >
+          {navItems.map((item) => (
+            <Link href={item.href} key={item.href} onClick={() => setOpen(false)}>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
       <Link href="/" className="brand" aria-label="Grushko Stepan, на главную">
         <img src="/logo-mark.png" alt="" aria-hidden="true" className="brandMark" />
         <span>Grushko Stepan</span>
       </Link>
-      <button
-        type="button"
-        className="menuToggle"
-        aria-expanded={open}
-        aria-controls={menuId}
-        aria-label={open ? 'Закрыть меню' : 'Открыть меню'}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span aria-hidden="true">{open ? '✕' : '☰'}</span>
-      </button>
-      <nav
-        id={menuId}
-        className={open ? 'siteNav siteNavOpen' : 'siteNav'}
-        aria-label="Основная навигация"
-      >
-        {navItems.map((item) => (
-          <Link href={item.href} key={item.href} onClick={() => setOpen(false)}>
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <div className="headerRight">
+        <Link href="/cart" className="navCart">
+          Корзина
+        </Link>
+      </div>
     </header>
   )
 }

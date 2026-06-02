@@ -18,21 +18,19 @@ export default async function HomePage() {
   return (
     <div className="page">
       <section className="homeHero">
-        <div className="homeCopy">
-          <h1 className="display">Свой шмот. Тихая сила.</h1>
-          <p>
-            Grushko Stepan делает собственный шмот для спокойного городского ритма. Витрина
-            собирает вещи из актуальных дропов в один магазин.
-          </p>
-          <Link className="button" href="/shop">
-            Смотреть магазин
-          </Link>
-        </div>
-        <div
-          className="homeImage"
-          role="img"
-          aria-label="Студийная витрина Grushko Stepan с одеждой первого дропа"
-        />
+        <h1 className="visuallyHidden">ТЕСТ 01 — Grushko Stepan. Try Explore Create Try again.</h1>
+        <Link href="/shop" className="heroLink" aria-label="ТЕСТ 01 — смотреть магазин">
+          <picture>
+            <source media="(max-width: 560px)" srcSet="/images/bigstep/hero-look-mobile.jpg" />
+            <img
+              className="heroImage"
+              src="/images/bigstep/hero-look-desktop.jpg"
+              alt="ТЕСТ 01 — Try Explore Create Try again. Grushko Stepan."
+              width={2000}
+              height={952}
+            />
+          </picture>
+        </Link>
       </section>
 
       <section className="section">

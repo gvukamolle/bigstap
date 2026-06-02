@@ -8,12 +8,16 @@ const adminCss = `
     --bigstep-admin-muted: #525252;
     --bigstep-admin-line: #e5e5e5;
     --bigstep-admin-line-strong: #d4d4d4;
+    --font-body: "Arial Narrow", "Roboto Condensed", "Helvetica Neue Condensed", Arial, sans-serif;
   }
 
   body,
   html {
     background: var(--bigstep-admin-bg);
     color: var(--bigstep-admin-text);
+    font-family:
+      "Arial Narrow", "Roboto Condensed", "Helvetica Neue Condensed", Arial, sans-serif;
+    font-stretch: condensed;
   }
 
   .template-default__wrap,

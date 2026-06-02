@@ -11,10 +11,10 @@ const footerLinks = [
 export function SiteFooter() {
   return (
     <footer className="siteFooter">
-      <div className="footerBrand">
-        <img src="/logo-mark.png" alt="" aria-hidden="true" className="footerBrandMark" />
-        <span>Grushko Stepan</span>
-      </div>
+      <nav className="footerLegal" aria-label="Правовая информация">
+        <Link href="/offer">Публичная оферта</Link>
+        <Link href="/privacy">Политика конфиденциальности и обработки персональных данных</Link>
+      </nav>
       <nav className="footerLinks" aria-label="Навигация в подвале">
         {footerLinks.map((item) => (
           <Link

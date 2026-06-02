@@ -12,7 +12,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: getCanonicalUrl('/shop'), lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: getCanonicalUrl('/blog'), lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: getCanonicalUrl('/events'), lastModified: now, changeFrequency: 'weekly', priority: 0.5 },
-    { url: getCanonicalUrl('/founder'), lastModified: now, changeFrequency: 'monthly', priority: 0.4 }
+    { url: getCanonicalUrl('/founder'), lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: getCanonicalUrl('/offer'), lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: getCanonicalUrl('/privacy'), lastModified: now, changeFrequency: 'yearly', priority: 0.2 }
   ]
 
   const productRoutes: MetadataRoute.Sitemap = (await getCatalogProducts()).map((product) => ({
