@@ -65,3 +65,28 @@ export function dispatchCartUpdated() {
 
   window.dispatchEvent(new Event(cartUpdatedEvent))
 }
+
+export function readCartCount(): number {
+  if (typeof window === 'undefined') return 0
+
+  try {
+    const raw = window.localStorage.getItem(cartStorageKey)
+    if (!raw) return 0
+
+    let count = 0
+    for (const item of getStoredItems(JSON.parse(raw) as unknown)) {
+      if (
+        isRecord(item) &&
+        typeof item.quantity === 'number' &&
+        Number.isSafeInteger(item.quantity) &&
+        item.quantity > 0
+      ) {
+        count += item.quantity
+      }
+    }
+
+    return count
+  } catch {
+    return 0
+  }
+}

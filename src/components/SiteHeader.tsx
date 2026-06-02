@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useId, useState } from 'react'
 
+import { cartUpdatedEvent, readCartCount } from '@/lib/cartStorage'
+
 const navItems = [
   { href: '/shop', label: 'Магазин' },
   { href: '/blog', label: 'Блог' },
@@ -12,6 +14,7 @@ const navItems = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
   const pathname = usePathname()
   const menuId = useId()
 
@@ -29,6 +32,19 @@ export function SiteHeader() {
 
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
+
+  useEffect(() => {
+    const update = () => setCartCount(readCartCount())
+    update()
+
+    window.addEventListener(cartUpdatedEvent, update)
+    window.addEventListener('storage', update)
+
+    return () => {
+      window.removeEventListener(cartUpdatedEvent, update)
+      window.removeEventListener('storage', update)
+    }
+  }, [])
 
   return (
     <header className="siteHeader">
@@ -56,12 +72,20 @@ export function SiteHeader() {
         </nav>
       </div>
       <Link href="/" className="brand" aria-label="Grushko Stepan, на главную">
-        <img src="/logo-mark.png" alt="" aria-hidden="true" className="brandMark" />
-        <span>Grushko Stepan</span>
+        Grushko Stepan
       </Link>
       <div className="headerRight">
-        <Link href="/cart" className="navCart">
+        <Link
+          href="/cart"
+          className="navCart"
+          aria-label={cartCount > 0 ? `Корзина, товаров: ${cartCount}` : 'Корзина'}
+        >
           Корзина
+          {cartCount > 0 ? (
+            <span className="cartCount" aria-hidden="true">
+              {cartCount}
+            </span>
+          ) : null}
         </Link>
       </div>
     </header>
