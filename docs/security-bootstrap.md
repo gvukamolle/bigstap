@@ -65,12 +65,14 @@ NODE_ENV === 'production' && NEXT_PHASE !== 'phase-production-build'
 - Не класть сам токен в cookie (только HMAC-тикет) и не передавать его в query string.
 - После создания админа — ротировать или удалить `PAYLOAD_BOOTSTRAP_TOKEN` по runbook хостинга.
 
-## Известные ограничения (усилить перед публичным запуском)
+## Усиление (реализовано) и остаточные ограничения
 
-- **Единая точка гейта.** В окне «ноль пользователей» защиту даёт только `proxy.ts`. Defense-in-depth:
-  добавить серверную проверку bootstrap-тикета в `Users` (запрет создания первого пользователя без
-  валидного тикета). Пока не реализовано — срабатывает только в production и не верифицируется локально.
+- **Двойной гейт create-first-user.** Помимо `proxy.ts`, серверная проверка в `Users.beforeValidate`
+  (`src/payload/collections/Users.ts`): в production первого пользователя нельзя создать без валидного
+  bootstrap-тикета в cookie (`hasValidBootstrapCookie`). Защищает даже при промахе matcher proxy.
+- **CSP админки.** Для `/admin` и `/bootstrap-admin` заданы `frame-ancestors 'self'`, `object-src 'none'`,
+  `base-uri 'self'`; `script/style` — `'unsafe-inline'` (Payload их требует), `'unsafe-eval'` только в dev.
+  Остаётся возможность ужесточить до nonce-based CSP.
 - **Rate-limiter** bootstrap — in-memory и ключуется по `x-forwarded-for` (подделываем при прямом доступе
   к app). Reverse-proxy обязан **переустанавливать** `X-Forwarded-*`, а не проксировать клиентские;
   при масштабировании на несколько инстансов вынести лимит в Redis/Postgres.
-- **CSP для `/admin`** не задана (Payload требует inline-стили) — рассмотреть строгую CSP с nonce.

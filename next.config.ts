@@ -69,6 +69,29 @@ const nextConfig: NextConfig = {
             ].join('; ')
           }
         ]
+      },
+      {
+        // Payload admin (/admin): ужесточаем frame-ancestors/base-uri/object-src.
+        // script/style оставляем 'unsafe-inline' (+ 'unsafe-eval' в dev) — админка их требует;
+        // img/font/connect расширены под превью медиа и API-запросы админки.
+        source: '/admin/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              cspScriptSrc,
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' data:",
+              "connect-src 'self'",
+              "worker-src 'self' blob:",
+              "frame-ancestors 'self'",
+              "base-uri 'self'",
+              "object-src 'none'"
+            ].join('; ')
+          }
+        ]
       }
     ]
   }

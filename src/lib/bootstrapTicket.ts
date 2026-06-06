@@ -64,4 +64,30 @@ export async function verifyBootstrapTicket(
   return constantTimeEqual(signature, expected)
 }
 
+const BOOTSTRAP_COOKIE_NAME = 'payload-bootstrap'
+
+const readCookie = (cookieHeader: string, name: string): string | null => {
+  for (const part of cookieHeader.split(';')) {
+    const eq = part.indexOf('=')
+    if (eq < 0) continue
+    if (part.slice(0, eq).trim() === name) return part.slice(eq + 1).trim()
+  }
+  return null
+}
+
+// Проверка bootstrap-тикета из строки заголовка Cookie — для server-side хука Payload,
+// где доступен req.headers.get('cookie') (в отличие от NextRequest.cookies в proxy.ts).
+export async function hasValidBootstrapCookie(
+  cookieHeader: string | null | undefined,
+  secret: string,
+  now: number
+): Promise<boolean> {
+  if (!cookieHeader) return false
+
+  const ticket = readCookie(cookieHeader, BOOTSTRAP_COOKIE_NAME)
+  if (!ticket) return false
+
+  return verifyBootstrapTicket(secret, ticket, now)
+}
+
 export const BOOTSTRAP_TICKET_TTL_MS = DEFAULT_TTL_MS
