@@ -20,4 +20,32 @@ describe('request origin helpers', () => {
       'http://127.0.0.1:3001'
     )
   })
+
+  it('rejects a forged forwarded host when a site URL is configured', () => {
+    const prev = process.env.NEXT_PUBLIC_SITE_URL
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://bigstep.ru'
+    try {
+      const headers = new Headers({ 'x-forwarded-host': 'evil.example', 'x-forwarded-proto': 'https' })
+      expect(getPublicRequestOrigin('https://bigstep.ru/api/admin-bootstrap', headers)).toBe(
+        'https://bigstep.ru'
+      )
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_SITE_URL
+      else process.env.NEXT_PUBLIC_SITE_URL = prev
+    }
+  })
+
+  it('accepts a forwarded host matching the configured site URL', () => {
+    const prev = process.env.NEXT_PUBLIC_SITE_URL
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://bigstep.ru'
+    try {
+      const headers = new Headers({ 'x-forwarded-host': 'bigstep.ru', 'x-forwarded-proto': 'https' })
+      expect(getPublicRequestOrigin('https://localhost:3000/api/admin-bootstrap', headers)).toBe(
+        'https://bigstep.ru'
+      )
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_SITE_URL
+      else process.env.NEXT_PUBLIC_SITE_URL = prev
+    }
+  })
 })

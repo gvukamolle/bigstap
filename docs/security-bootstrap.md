@@ -27,11 +27,14 @@ NODE_ENV === 'production' && NEXT_PHASE !== 'phase-production-build'
 3. `POST /api/admin-bootstrap` с полем `token`:
    - сравнение с env — **constant-time** (`timingSafeEqual`);
    - не более **5 попыток / 15 мин / IP** (in-memory `Map`; для нескольких инстансов — Redis);
-   - при успехе — redirect 303 на `/admin/create-first-user` + httpOnly cookie (30 мин, `Secure`, `SameSite=strict`).
+   - при успехе — redirect 303 на `/admin/create-first-user` + httpOnly cookie с **HMAC-тикетом**
+     (30 мин, `Secure`, `SameSite=strict`). Сам мастер-токен в cookie НЕ кладётся — только короткоживущий
+     тикет, подписанный токеном (`src/lib/bootstrapTicket.ts`), поэтому токен не оседает в логах прокси.
 4. `proxy.ts` пропускает только:
    - `/admin/create-first-user`
    - `/api/users/first-register`
-   если cookie совпадает с `PAYLOAD_BOOTSTRAP_TOKEN` (сравнение constant-time без `node:crypto` — совместимость с edge/proxy runtime).
+   если cookie содержит **валидный HMAC-тикет** (подпись проверяется `PAYLOAD_BOOTSTRAP_TOKEN`, срок не истёк).
+   Проверка через Web Crypto — совместима с edge/proxy runtime; сам токен с cookie не сравнивается.
 
 Без `PAYLOAD_BOOTSTRAP_TOKEN` в production эти пути отдают **404**.
 
@@ -48,7 +51,9 @@ NODE_ENV === 'production' && NEXT_PHASE !== 'phase-production-build'
 
 ## Заголовки Next
 
-`next.config.ts` отдаёт для всех путей: `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`, HSTS. CSP пока нет.
+`next.config.ts` отдаёт для всех путей: `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`, HSTS. Для `/bootstrap-admin` дополнительно отдаётся CSP (`default-src 'self'`, `form-action 'self'`, `base-uri 'self'`, `frame-ancestors 'self'`, `object-src 'none'`). Строгую CSP для `/admin` (Payload) пока не вводим — требует настройки под inline-стили админки.
+
+`getPublicRequestOrigin` принимает `x-forwarded-host` только если он совпадает с `NEXT_PUBLIC_SITE_URL` (когда задан), иначе берётся настроенный домен — защита от увода редиректа bootstrap подделкой заголовка.
 
 ## Публичный origin за прокси
 
@@ -56,6 +61,16 @@ NODE_ENV === 'production' && NEXT_PHASE !== 'phase-production-build'
 
 ## Что не ослаблять
 
-- Не открывать `create-first-user` без cookie в production.
-- Не передавать bootstrap-токен в query string.
+- Не открывать `create-first-user` без валидного тикета в production.
+- Не класть сам токен в cookie (только HMAC-тикет) и не передавать его в query string.
 - После создания админа — ротировать или удалить `PAYLOAD_BOOTSTRAP_TOKEN` по runbook хостинга.
+
+## Известные ограничения (усилить перед публичным запуском)
+
+- **Единая точка гейта.** В окне «ноль пользователей» защиту даёт только `proxy.ts`. Defense-in-depth:
+  добавить серверную проверку bootstrap-тикета в `Users` (запрет создания первого пользователя без
+  валидного тикета). Пока не реализовано — срабатывает только в production и не верифицируется локально.
+- **Rate-limiter** bootstrap — in-memory и ключуется по `x-forwarded-for` (подделываем при прямом доступе
+  к app). Reverse-proxy обязан **переустанавливать** `X-Forwarded-*`, а не проксировать клиентские;
+  при масштабировании на несколько инстансов вынести лимит в Redis/Postgres.
+- **CSP для `/admin`** не задана (Payload требует inline-стили) — рассмотреть строгую CSP с nonce.

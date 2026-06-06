@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto'
 
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { issueBootstrapTicket } from '@/lib/bootstrapTicket'
 import { getPublicRequestOrigin } from '@/lib/requestOrigin'
 
 const BOOTSTRAP_COOKIE = 'payload-bootstrap'
@@ -18,9 +19,10 @@ const notFound = () => new NextResponse(null, { status: 404 })
 const getCreateFirstUserUrl = (request: NextRequest) =>
   new URL('/admin/create-first-user', getPublicRequestOrigin(request.url, request.headers))
 
-const setBootstrapCookie = (response: NextResponse, token: string) => {
-  // 303 ensures the browser issues a GET to /admin/create-first-user even though this handler is POST.
-  response.cookies.set(BOOTSTRAP_COOKIE, token, {
+const setBootstrapCookie = (response: NextResponse, value: string) => {
+  // Cookie несёт HMAC-тикет (не сам мастер-токен). 303 заставляет браузер сделать GET
+  // на /admin/create-first-user, хотя этот обработчик — POST.
+  response.cookies.set(BOOTSTRAP_COOKIE, value, {
     httpOnly: true,
     maxAge: BOOTSTRAP_MAX_AGE_SECONDS,
     path: '/',
@@ -88,8 +90,11 @@ export async function POST(request: NextRequest) {
     return notFound()
   }
 
+  // В cookie кладём короткоживущий HMAC-тикет, подписанный мастер-токеном, а не сам токен:
+  // мастер-токен не покидает сервер и не оседает в логах прокси/браузера.
+  const ticket = await issueBootstrapTicket(bootstrapToken, Date.now())
   const response = NextResponse.redirect(getCreateFirstUserUrl(request), 303)
-  setBootstrapCookie(response, bootstrapToken)
+  setBootstrapCookie(response, ticket)
 
   return response
 }
