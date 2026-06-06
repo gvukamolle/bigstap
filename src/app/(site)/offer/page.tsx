@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 
+import { LegalDocumentView } from '@/components/LegalDocumentView'
+import { offerDocument } from '@/data/legal'
 import { getCanonicalUrl } from '@/lib/siteUrl'
 
 export const metadata: Metadata = {
@@ -10,18 +12,5 @@ export const metadata: Metadata = {
 }
 
 export default function OfferPage() {
-  return (
-    <div className="page">
-      <article className="article">
-        <h1 className="display">Публичная оферта</h1>
-        <p>
-          Здесь будет размещён полный текст публичной оферты интернет-магазина Grushko Stepan.
-          Раздел находится в подготовке — актуальная редакция появится перед запуском продаж.
-        </p>
-        <p>
-          По вопросам оформления и условий заказа свяжитесь с нами удобным способом.
-        </p>
-      </article>
-    </div>
-  )
+  return <LegalDocumentView document={offerDocument} />
 }

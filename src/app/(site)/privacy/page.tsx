@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 
+import { LegalDocumentView } from '@/components/LegalDocumentView'
+import { privacyDocument } from '@/data/legal'
 import { getCanonicalUrl } from '@/lib/siteUrl'
 
 export const metadata: Metadata = {
@@ -11,20 +13,5 @@ export const metadata: Metadata = {
 }
 
 export default function PrivacyPage() {
-  return (
-    <div className="page">
-      <article className="article">
-        <h1 className="display">Политика конфиденциальности</h1>
-        <p>
-          Здесь будет размещён полный текст политики конфиденциальности и обработки персональных
-          данных Grushko Stepan. Раздел находится в подготовке — актуальная редакция появится перед
-          запуском продаж.
-        </p>
-        <p>
-          Мы обрабатываем персональные данные только для оформления и доставки заказов и не передаём
-          их третьим лицам, кроме служб доставки и платёжного провайдера.
-        </p>
-      </article>
-    </div>
-  )
+  return <LegalDocumentView document={privacyDocument} />
 }
