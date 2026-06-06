@@ -80,6 +80,7 @@ Aliases: `@/*` → `src/*`, `@payload-config` → `payload.config.ts`
 
 - Russian UI and Payload labels.
 - Russian commit messages (`feat:`, `fix:`, `улучшение:`, …) — check `git log`.
+- Single branch — `main` (repo default); work and commit directly on it, no feature branches unless explicitly asked.
 - Integer rubles/stock; `MAX_RUB_AMOUNT`, `MAX_STOCK`, `MAX_QUANTITY` in hooks.
 - Validate at boundaries (cart sanitize, checkout, Payload hooks).
 - `'use client'` only where needed (localStorage, forms).
