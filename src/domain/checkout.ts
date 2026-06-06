@@ -13,12 +13,25 @@ export type CdekPickupPoint = {
   price: number
 }
 
+export type CheckoutConsent = {
+  offerAccepted: boolean
+  privacyAccepted: boolean
+}
+
 export type CheckoutDraft = {
   customer: CustomerDetails
   cdekPickup: CdekPickupPoint | null
+  consent: CheckoutConsent
 }
 
-export type CheckoutValidationField = 'fullName' | 'phone' | 'email' | 'city' | 'cdekPickup'
+export type CheckoutValidationField =
+  | 'fullName'
+  | 'phone'
+  | 'email'
+  | 'city'
+  | 'cdekPickup'
+  | 'privacyConsent'
+  | 'offerConsent'
 
 export type CheckoutValidationError = {
   field: CheckoutValidationField
@@ -98,6 +111,20 @@ export function validateCheckoutDraft(draft: CheckoutDraft): ValidationResult {
       field: 'cdekPickup',
       code: 'invalid_cdek_pickup',
       message: 'Проверьте пункт выдачи СДЭК'
+    })
+  }
+  if (!draft.consent?.privacyAccepted) {
+    errors.push({
+      field: 'privacyConsent',
+      code: 'required_privacy_consent',
+      message: 'Подтвердите согласие на обработку персональных данных'
+    })
+  }
+  if (!draft.consent?.offerAccepted) {
+    errors.push({
+      field: 'offerConsent',
+      code: 'required_offer_consent',
+      message: 'Подтвердите согласие с условиями оферты'
     })
   }
 

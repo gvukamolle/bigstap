@@ -7,6 +7,7 @@ import { calculateCartTotals, sanitizeCart } from '@/domain/cart'
 import {
   validateCheckoutDraft,
   type CdekPickupPoint,
+  type CheckoutConsent,
   type CustomerDetails
 } from '@/domain/checkout'
 import { getCatalogProducts } from '@/lib/catalog'
@@ -76,6 +77,15 @@ function parseItems(value: unknown): IncomingItem[] {
   return items
 }
 
+function parseConsent(value: unknown): CheckoutConsent {
+  if (!isRecord(value)) return { offerAccepted: false, privacyAccepted: false }
+
+  return {
+    offerAccepted: value.offerAccepted === true,
+    privacyAccepted: value.privacyAccepted === true
+  }
+}
+
 export async function POST(request: NextRequest) {
   if (isProductionRuntime()) {
     return json({ ok: false, error: 'Создание заказа доступно только в режиме разработки.' }, 404)
@@ -92,12 +102,13 @@ export async function POST(request: NextRequest) {
 
   const customer = parseCustomer(body.customer)
   const cdekPickup = parsePickup(body.cdekPickup)
+  const consent = parseConsent(body.consent)
   const incomingItems = parseItems(body.items)
 
   if (!customer) return json({ ok: false, error: 'Некорректные контактные данные.' }, 400)
   if (incomingItems.length === 0) return json({ ok: false, error: 'Корзина пуста.' }, 400)
 
-  const validation = validateCheckoutDraft({ customer, cdekPickup })
+  const validation = validateCheckoutDraft({ customer, cdekPickup, consent })
   if (!validation.valid || !cdekPickup) {
     return json({ ok: false, error: 'Проверьте форму оформления.', fields: validation.errors }, 422)
   }
@@ -173,6 +184,8 @@ export async function POST(request: NextRequest) {
         customerPhone: customer.phone.trim(),
         customerEmail: customer.email.trim(),
         customerCity: customer.city.trim(),
+        privacyConsentAt: new Date().toISOString(),
+        offerAcceptedAt: new Date().toISOString(),
         deliveryMethod: 'cdek_pickup',
         cdekPickupCode: cdekPickup.code,
         cdekPickupName: cdekPickup.name,

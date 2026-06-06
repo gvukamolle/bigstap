@@ -188,6 +188,19 @@ export const Orders: CollectionConfig = {
       required: true
     },
     {
+      name: 'privacyConsentAt',
+      type: 'date',
+      label: 'Согласие на обработку ПДн (дата)',
+      admin: {
+        description: 'Фиксация факта и времени согласия покупателя на обработку ПДн (152-ФЗ).'
+      }
+    },
+    {
+      name: 'offerAcceptedAt',
+      type: 'date',
+      label: 'Принятие оферты (дата)'
+    },
+    {
       name: 'deliveryMethod',
       type: 'select',
       label: 'Способ доставки',

@@ -6,6 +6,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { calculateCartTotals, formatRubles, type CartItem } from '@/domain/cart'
 import {
   type CdekPickupPoint,
+  type CheckoutConsent,
   type CheckoutDraft,
   type CustomerDetails,
   type CheckoutValidationField,
@@ -47,10 +48,13 @@ const prototypePickups: readonly CdekPickupPoint[] = [
   }
 ]
 
+// Черновик в localStorage НЕ хранит согласия: consent даётся явно при каждом оформлении.
+type DraftSnapshot = Pick<CheckoutDraft, 'customer' | 'cdekPickup'>
+
 type StoredCheckoutDraft = {
   version: typeof checkoutDraftStorageVersion
   updatedAt: string
-  draft: CheckoutDraft
+  draft: DraftSnapshot
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -80,7 +84,7 @@ function isCdekPickupPoint(value: unknown): value is CdekPickupPoint {
   )
 }
 
-function readCheckoutDraft(): CheckoutDraft | null {
+function readCheckoutDraft(): DraftSnapshot | null {
   if (typeof window === 'undefined') return null
 
   try {
@@ -103,7 +107,7 @@ function readCheckoutDraft(): CheckoutDraft | null {
   }
 }
 
-function writeCheckoutDraft(draft: CheckoutDraft): boolean {
+function writeCheckoutDraft(draft: DraftSnapshot): boolean {
   if (typeof window === 'undefined') return false
 
   try {
@@ -148,6 +152,11 @@ export function CheckoutClient({ products }: { products: Product[] }) {
   const [isReady, setIsReady] = useState(false)
   const [customer, setCustomer] = useState<CustomerDetails>(defaultCustomer)
   const [cdekPickup, setCdekPickup] = useState<CdekPickupPoint | null>(null)
+  // Согласие даётся явно при каждом оформлении и НЕ сохраняется в черновик (юр-требование).
+  const [consent, setConsent] = useState<CheckoutConsent>({
+    offerAccepted: false,
+    privacyAccepted: false
+  })
   const [validation, setValidation] = useState<ValidationResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
@@ -162,6 +171,8 @@ export function CheckoutClient({ products }: { products: Product[] }) {
   const emailError = errorsByField.email?.[0] ?? null
   const cityError = errorsByField.city?.[0] ?? null
   const pickupError = errorsByField.cdekPickup?.[0] ?? null
+  const privacyConsentError = errorsByField.privacyConsent?.[0] ?? null
+  const offerConsentError = errorsByField.offerConsent?.[0] ?? null
 
   useEffect(() => {
     function refreshCart() {
@@ -205,6 +216,12 @@ export function CheckoutClient({ products }: { products: Product[] }) {
     setOrderError(null)
   }
 
+  function updateConsent(field: keyof CheckoutConsent, value: boolean) {
+    setConsent((current) => ({ ...current, [field]: value }))
+    setValidation(null)
+    setOrderError(null)
+  }
+
   function selectPrototypePickup(pickup: CdekPickupPoint) {
     setCdekPickup(pickup)
     setValidation(null)
@@ -217,7 +234,8 @@ export function CheckoutClient({ products }: { products: Product[] }) {
 
     const result = validateCheckoutDraft({
       customer,
-      cdekPickup
+      cdekPickup,
+      consent
     })
 
     setValidation(result)
@@ -233,6 +251,7 @@ export function CheckoutClient({ products }: { products: Product[] }) {
         body: JSON.stringify({
           customer,
           cdekPickup,
+          consent,
           items: cart.map((item) => ({
             productSlug: item.productSlug,
             size: item.size,
@@ -464,6 +483,47 @@ export function CheckoutClient({ products }: { products: Product[] }) {
             {orderError}
           </p>
         ) : null}
+
+        <div className="checkoutPanelHeader">
+          <span className="eyebrow">03</span>
+          <h2>Согласия</h2>
+        </div>
+
+        <label className="checkoutConsent">
+          <input
+            aria-invalid={privacyConsentError ? true : undefined}
+            checked={consent.privacyAccepted}
+            name="privacyConsent"
+            onChange={(event) => updateConsent('privacyAccepted', event.target.checked)}
+            type="checkbox"
+          />
+          <span>
+            Даю согласие на обработку персональных данных в соответствии с{' '}
+            <Link href="/privacy" prefetch={false} target="_blank">
+              Политикой конфиденциальности
+            </Link>
+            .
+          </span>
+        </label>
+        {privacyConsentError ? <span className="fieldError">{privacyConsentError}</span> : null}
+
+        <label className="checkoutConsent">
+          <input
+            aria-invalid={offerConsentError ? true : undefined}
+            checked={consent.offerAccepted}
+            name="offerConsent"
+            onChange={(event) => updateConsent('offerAccepted', event.target.checked)}
+            type="checkbox"
+          />
+          <span>
+            Ознакомлен(а) и согласен(на) с условиями{' '}
+            <Link href="/offer" prefetch={false} target="_blank">
+              Публичной оферты
+            </Link>
+            .
+          </span>
+        </label>
+        {offerConsentError ? <span className="fieldError">{offerConsentError}</span> : null}
 
         <p className="formNote">
           Оплата ЮKassa пока не подключена: кнопка создаёт тестовый заказ со статусом «ожидает

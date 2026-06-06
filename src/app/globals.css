@@ -1666,6 +1666,28 @@ button:focus-visible {
   margin-bottom: 0;
 }
 
+.checkoutConsent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.checkoutConsent input[type='checkbox'] {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--text);
+}
+
+.checkoutConsent a {
+  color: var(--text);
+  text-decoration: underline;
+}
+
 @media (max-width: 900px) {
   :root {
     --page-pad: 18px;
