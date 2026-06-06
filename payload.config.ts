@@ -30,18 +30,25 @@ const requireRuntimeEnv = (name: 'PAYLOAD_SECRET') => {
 }
 
 const usePostgres = Boolean(process.env.DATABASE_URI)
+
+// Drizzle "push" auto-syncs the schema without a migrations workflow. Fine in dev; unsafe in prod
+// (silent schema drift can lose data), so it is OFF in production by default. The first deploy on a
+// clean Postgres has no migrations yet — set PAYLOAD_DB_PUSH=true once to create the schema, then
+// unset it and restart (see docs/deployment.md).
+const allowDbPush = !isProductionRuntime || process.env.PAYLOAD_DB_PUSH === 'true'
+
 const payloadDb = usePostgres
   ? postgresAdapter({
       pool: {
         connectionString: process.env.DATABASE_URI ?? ''
-      }
+      },
+      push: allowDbPush
     })
   : sqliteAdapter({
       client: {
         url: process.env.SQLITE_DATABASE_URL ?? 'file:payload-local.db'
       },
-      // Auto-sync is fine in dev (no migrations workflow), but unsafe in prod: silent schema drift can lose data.
-      push: !isProductionRuntime
+      push: allowDbPush
     })
 
 const adminRu = {

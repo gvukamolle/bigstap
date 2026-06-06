@@ -20,6 +20,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   devIndicators: false,
   poweredByHeader: false,
+  // Self-contained build for Docker: emits .next/standalone with a minimal node_modules + server.js.
+  output: 'standalone',
   turbopack: {
     root: rootDir
   },

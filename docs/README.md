@@ -10,6 +10,7 @@
 | [development.md](./development.md) | Команды, env, сиды, CI, типичные задачи |
 | [catalog-and-cms.md](./catalog-and-cms.md) | Каталог: Payload ↔ витрина ↔ фикстуры |
 | [security-bootstrap.md](./security-bootstrap.md) | Первый пользователь, proxy, bootstrap-токен |
+| [deployment.md](./deployment.md) | Деплой на VPS: Docker, Postgres, reverse-proxy, TLS |
 
 ## Для ассистентов
 

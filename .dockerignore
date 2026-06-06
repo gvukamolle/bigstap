@@ -1,0 +1,39 @@
+# Артефакты сборки и зависимости — ставятся/генерируются внутри образа
+node_modules
+.next
+out
+dist
+build
+coverage
+*.tsbuildinfo
+
+# Git и CI
+.git
+.gitignore
+.github
+
+# Секреты и локальные env (в образ не попадают)
+.env
+.env.*
+
+# Локальные БД (SQLite-режим разработки)
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+
+# Сгенерированные типы (создаются при сборке)
+payload-types.ts
+next-env.d.ts
+
+# Локальные загрузки Payload — в проде это том, не часть образа
+media
+
+# Не нужно для рантайма
+tests
+docs
+README.md
+Dockerfile
+.dockerignore
+.DS_Store
+.superpowers

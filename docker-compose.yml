@@ -8,9 +8,46 @@ services:
       POSTGRES_USER: bigstep
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting Postgres}
     ports:
+      # Только локально на хосте: к БД ходит сервис app по внутренней сети compose.
       - "127.0.0.1:5432:5432"
     volumes:
       - bigstep-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bigstep -d bigstep"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bigstep-app
+    container_name: bigstep-app
+    restart: unless-stopped
+    # Все секреты и настройки — из .env (DATABASE_URI должен указывать на хост postgres).
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      # Слушает только localhost — наружу отдаёт reverse-proxy (Caddy/nginx) с TLS.
+      - "127.0.0.1:3000:3000"
+    volumes:
+      # Загрузки Payload переживают пересборку образа.
+      - bigstep-media:/app/media
+    healthcheck:
+      # Node 22 имеет глобальный fetch; в slim-образе нет curl/wget.
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   bigstep-postgres-data:
+  bigstep-media:

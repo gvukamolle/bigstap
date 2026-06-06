@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "payload generate:types && next build",
     "start": "next start",
     "lint": "eslint .",
     "admin:seed": "tsx scripts/seed-admin.ts",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "payload generate:types && next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
