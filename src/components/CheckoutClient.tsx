@@ -158,6 +158,8 @@ export function CheckoutClient({ products }: { products: Product[] }) {
     privacyAccepted: false
   })
   const [validation, setValidation] = useState<ValidationResult | null>(null)
+  // Реальные ПВЗ CDEK по городу (если интеграция настроена); иначе — прототипные пункты.
+  const [dynamicPickups, setDynamicPickups] = useState<CdekPickupPoint[] | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
   const [orderError, setOrderError] = useState<string | null>(null)
@@ -173,6 +175,7 @@ export function CheckoutClient({ products }: { products: Product[] }) {
   const pickupError = errorsByField.cdekPickup?.[0] ?? null
   const privacyConsentError = errorsByField.privacyConsent?.[0] ?? null
   const offerConsentError = errorsByField.offerConsent?.[0] ?? null
+  const displayedPickups = dynamicPickups ?? prototypePickups
 
   useEffect(() => {
     function refreshCart() {
@@ -209,6 +212,43 @@ export function CheckoutClient({ products }: { products: Product[] }) {
 
     setDraftStorageError(saved ? null : 'Не удалось сохранить черновик оформления.')
   }, [cdekPickup, customer, isReady])
+
+  // Подгрузка пунктов выдачи CDEK по введённому городу (debounce). Если интеграция не настроена
+  // или город не найден — остаёмся на прототипных пунктах (fallback).
+  useEffect(() => {
+    const city = customer.city.trim()
+    if (city.length < 2) {
+      setDynamicPickups(null)
+      return
+    }
+
+    let cancelled = false
+    const timer = setTimeout(() => {
+      void (async () => {
+        try {
+          const response = await fetch(`/api/cdek/pickup-points?city=${encodeURIComponent(city)}`)
+          const data:
+            | { ok?: boolean; points?: Array<{ code: string; name: string; address: string; city: string }> }
+            | null = await response.json().catch(() => null)
+          if (cancelled) return
+
+          const points = data?.ok && Array.isArray(data.points) ? data.points : []
+          setDynamicPickups(
+            points.length > 0
+              ? points.map((point) => ({ ...point, price: 0 }))
+              : null
+          )
+        } catch {
+          if (!cancelled) setDynamicPickups(null)
+        }
+      })()
+    }, 500)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [customer.city])
 
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }))
@@ -428,7 +468,7 @@ export function CheckoutClient({ products }: { products: Product[] }) {
           aria-describedby={pickupError ? getFieldErrorId('cdekPickup') : undefined}
           aria-invalid={pickupError ? true : undefined}
         >
-          {prototypePickups.map((pickup) => {
+          {displayedPickups.map((pickup) => {
             const selected = cdekPickup?.code === pickup.code
 
             return (
@@ -447,7 +487,8 @@ export function CheckoutClient({ products }: { products: Product[] }) {
                   <strong>{pickup.name}</strong>
                   <span>{pickup.address}</span>
                   <span>
-                    {formatRubles(pickup.price)} / ориентир 2-5 дней после передачи в СДЭК
+                    {pickup.price > 0 ? formatRubles(pickup.price) : 'стоимость уточняется'} / ориентир
+                    2-5 дней после передачи в СДЭК
                   </span>
                 </div>
                 <span className="buttonSecondary pickupOptionAction" aria-hidden="true">
