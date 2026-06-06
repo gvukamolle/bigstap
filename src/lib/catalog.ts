@@ -1,6 +1,7 @@
 import { cache } from 'react'
 
 import { getPublishedProducts, products as fixtureProducts } from '@/data/products'
+import { isValidProductSlug } from '@/domain/products'
 import type { Product, ProductSaleStatus, ProductSize } from '@/domain/products'
 
 const productSaleStatuses: readonly ProductSaleStatus[] = [
@@ -80,7 +81,7 @@ function sizesFromDoc(value: unknown): ProductSize[] {
 function mapPayloadProduct(doc: PayloadProductDoc): Product | null {
   const slug = stringField(doc.slug)
   const title = stringField(doc.title)
-  if (!slug || !title) return null
+  if (!slug || !title || !isValidProductSlug(slug)) return null
 
   const fallback = fixtureBySlug(slug)
   const saleStatus =

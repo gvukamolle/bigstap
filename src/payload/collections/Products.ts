@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { isValidProductSlug } from '../../domain/products'
 import { admins, staffOrPublishedProduct } from '../access'
 
 const MAX_RUB_AMOUNT = 10_000_000
@@ -102,7 +103,10 @@ export const Products: CollectionConfig = {
       type: 'text',
       label: 'Адрес',
       required: true,
-      unique: true
+      unique: true,
+      validate: (value: unknown) =>
+        isValidProductSlug(value) ||
+        'Адрес: только строчные латинские буквы, цифры и дефис, например test-01.'
     },
     {
       name: 'dropName',

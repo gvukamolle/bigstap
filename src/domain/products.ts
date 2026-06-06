@@ -41,6 +41,17 @@ export type OneSizeProduct = ProductBase & {
 
 export type Product = SizedProduct | OneSizeProduct
 
+const PRODUCT_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+/**
+ * URL-safe product slug: lowercase latin letters, digits and single hyphens
+ * (kebab-case), no leading/trailing hyphen. Guards storefront links from
+ * broken values like "?" that would produce `/shop/?`.
+ */
+export function isValidProductSlug(value: unknown): value is string {
+  return typeof value === 'string' && PRODUCT_SLUG_PATTERN.test(value)
+}
+
 export function getDisplayPrice(product: Product): number {
   return product.salePrice ?? product.price
 }
