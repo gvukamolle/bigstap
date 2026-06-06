@@ -11,6 +11,8 @@ import {
   type CustomerDetails
 } from '@/domain/checkout'
 import { getCatalogProducts } from '@/lib/catalog'
+import { getSiteUrl } from '@/lib/siteUrl'
+import { createYookassaPayment, isYookassaConfigured } from '@/lib/yookassa'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -87,7 +89,11 @@ function parseConsent(value: unknown): CheckoutConsent {
 }
 
 export async function POST(request: NextRequest) {
-  if (isProductionRuntime()) {
+  const paymentsEnabled = isYookassaConfigured()
+
+  // В production заказы принимаются только при подключённой оплате (ЮKassa). Без неё эндпоинт
+  // отключён, как в прототипе, чтобы не создавать заказы без оплаты.
+  if (isProductionRuntime() && !paymentsEnabled) {
     return json({ ok: false, error: 'Создание заказа доступно только в режиме разработки.' }, 404)
   }
 
@@ -198,7 +204,46 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return json({ ok: true, orderNumber: order.orderNumber, id: order.id })
+    // Без подключённой оплаты (только dev) — это тестовый заказ, как в прототипе.
+    if (!paymentsEnabled) {
+      return json({ ok: true, orderNumber: order.orderNumber, id: order.id })
+    }
+
+    // С ЮKassa: создаём платёж и отдаём confirmationUrl для редиректа покупателя на оплату.
+    // Idempotence-Key = orderNumber (детерминированный) — ретрай формы не плодит платежи.
+    try {
+      const payment = await createYookassaPayment({
+        amountRubles: totals.orderTotal,
+        orderNumber,
+        description: `Заказ ${orderNumber}`,
+        returnUrl: `${getSiteUrl()}/checkout/return?order=${encodeURIComponent(orderNumber)}`,
+        idempotenceKey: orderNumber
+      })
+
+      await payload.update({
+        collection: 'orders',
+        id: order.id,
+        overrideAccess: true,
+        data: { paymentId: payment.id }
+      })
+
+      return json({
+        ok: true,
+        orderNumber: order.orderNumber,
+        confirmationUrl: payment.confirmationUrl ?? null
+      })
+    } catch (paymentError) {
+      // Заказ создан (pending_payment), но платёж не инициирован — оплату можно повторить.
+      return json(
+        {
+          ok: false,
+          orderNumber: order.orderNumber,
+          error:
+            paymentError instanceof Error ? paymentError.message : 'Не удалось создать платёж.'
+        },
+        502
+      )
+    }
   } catch (error) {
     return json(
       { ok: false, error: error instanceof Error ? error.message : 'Не удалось создать заказ.' },

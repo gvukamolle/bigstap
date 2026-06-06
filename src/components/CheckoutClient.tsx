@@ -260,12 +260,18 @@ export function CheckoutClient({ products }: { products: Product[] }) {
         })
       })
 
-      const data: { ok?: boolean; orderNumber?: string; error?: string } | null = await response
-        .json()
-        .catch(() => null)
+      const data:
+        | { ok?: boolean; orderNumber?: string; error?: string; confirmationUrl?: string | null }
+        | null = await response.json().catch(() => null)
 
       if (!response.ok || !data?.ok || !data.orderNumber) {
         setOrderError(data?.error ?? 'Не удалось создать заказ. Попробуйте ещё раз.')
+        return
+      }
+
+      // Подключена оплата ЮKassa — переходим на страницу оплаты (корзину чистим после оплаты).
+      if (data.confirmationUrl) {
+        window.location.href = data.confirmationUrl
         return
       }
 

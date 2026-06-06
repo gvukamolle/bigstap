@@ -236,8 +236,27 @@ export const Orders: CollectionConfig = {
     {
       name: 'paymentId',
       type: 'text',
-      label: 'ID платежа',
+      label: 'ID платежа ЮKassa',
       unique: true
+    },
+    {
+      name: 'npdReceiptStatus',
+      type: 'select',
+      label: 'Чек НПД («Мой налог»)',
+      defaultValue: 'none',
+      admin: {
+        description:
+          'Самозанятый формирует чек НПД отдельно в «Мой налог» — ЮKassa их не делает с 29.12.2025.'
+      },
+      options: [
+        { label: 'Не сформирован', value: 'none' },
+        { label: 'Сформирован', value: 'registered' }
+      ]
+    },
+    {
+      name: 'npdReceiptUrl',
+      type: 'text',
+      label: 'Ссылка на чек НПД'
     },
     {
       name: 'deliveryTotal',
