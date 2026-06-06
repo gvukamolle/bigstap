@@ -1,3 +1,7 @@
+# Имя проекта фиксирует префикс томов (bigstep_bigstep-media, bigstep_bigstep-postgres-data),
+# чтобы он совпадал с командами бэкапа в docs независимо от имени каталога клонирования.
+name: bigstep
+
 services:
   postgres:
     image: postgres:16
@@ -7,9 +11,8 @@ services:
       POSTGRES_DB: bigstep
       POSTGRES_USER: bigstep
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting Postgres}
-    ports:
-      # Только локально на хосте: к БД ходит сервис app по внутренней сети compose.
-      - "127.0.0.1:5432:5432"
+    # Порт НЕ публикуется наружу: app ходит к БД по внутренней сети compose (host=postgres).
+    # Публикация даже на 127.0.0.1 открыла бы 5432 с ПДн любому локальному процессу на VPS.
     volumes:
       - bigstep-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -17,11 +20,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Домен инлайнится в бандл на этапе build; берётся из .env (та же переменная, что в рантайме).
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://bigstep.ru}
     image: bigstep-app
     container_name: bigstep-app
     restart: unless-stopped
@@ -41,12 +52,17 @@ services:
       # Загрузки Payload переживают пересборку образа.
       - bigstep-media:/app/media
     healthcheck:
-      # Node 22 имеет глобальный fetch; в slim-образе нет curl/wget.
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      # Лёгкий liveness /api/health (без БД). В slim-образе нет curl/wget, но Node 22 имеет fetch.
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   bigstep-postgres-data:

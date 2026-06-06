@@ -15,6 +15,11 @@ RUN npm ci --legacy-peer-deps
 FROM node:22-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_SITE_URL инлайнится в бандл на этапе build (sitemap, robots, canonical, OG, JSON-LD).
+# Передаётся build-аргументом из docker-compose (build.args), иначе домен останется дефолтным
+# и sitemap/canonical укажут на чужой адрес для любого домена, кроме bigstep.ru.
+ARG NEXT_PUBLIC_SITE_URL=https://bigstep.ru
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # next build выдаёт .next/standalone (output: 'standalone' в next.config.ts).
@@ -30,8 +35,9 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0
 
 # Непривилегированный пользователь node (uid 1000) уже есть в официальном образе.
-# /app/media — каталог загрузок Payload (upload: true → ./media), монтируется томом.
-RUN mkdir -p /app/media && chown -R node:node /app
+# /app/media — каталог загрузок Payload (upload: true → ./media), монтируется именованным томом.
+# chown только на сам media: код ниже копируется с --chown=node:node, рекурсивный chown /app лишний.
+RUN mkdir -p /app/media && chown node:node /app/media
 
 # standalone тащит только реально используемые зависимости (включая sharp, payload, db-адаптеры).
 COPY --from=builder --chown=node:node /app/.next/standalone ./
@@ -40,6 +46,8 @@ COPY --from=builder --chown=node:node /app/public ./public
 
 USER node
 EXPOSE 3000
-VOLUME ["/app/media"]
+# Персистентность /app/media обеспечивает именованный том в docker-compose.yml.
+# VOLUME в образе намеренно НЕ объявляем: при ручном `docker run` он плодил бы анонимные тома
+# и терял загруженные картинки при каждом пересоздании контейнера.
 
 CMD ["node", "server.js"]

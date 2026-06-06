@@ -18,18 +18,41 @@ import { SiteSettings } from './src/payload/globals/SiteSettings'
 const isProductionRuntime =
   process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build'
 
+// Заглушки секрета, которые НЕЛЬЗЯ принимать в production: они публично известны
+// (лежат в .env.example / коде), поэтому позволили бы подделать админ-сессию JWT.
+const KNOWN_PLACEHOLDER_SECRETS = new Set([
+  'replace-with-a-long-local-secret',
+  'bigstep-local-development-secret'
+])
+
 const requireRuntimeEnv = (name: 'PAYLOAD_SECRET') => {
   const value = process.env[name]
-  if (value && value.length >= 16) return value
+  const isStrong =
+    typeof value === 'string' && value.length >= 16 && !KNOWN_PLACEHOLDER_SECRETS.has(value)
+
+  if (isStrong) return value
 
   if (isProductionRuntime) {
-    throw new Error(`Environment variable ${name} must be set to a strong value in production.`)
+    throw new Error(
+      `Environment variable ${name} must be set to a unique strong value in production. ` +
+        'The placeholder from .env.example is rejected — generate one with: openssl rand -base64 48.'
+    )
   }
 
   return 'bigstep-local-development-secret'
 }
 
 const usePostgres = Boolean(process.env.DATABASE_URI)
+
+// В production без DATABASE_URI приложение молча ушло бы на SQLite внутри контейнера
+// (file:payload-local.db вне тома) — заказы и ПДн покупателей потерялись бы при первой
+// же пересборке образа. Падаем явно.
+if (isProductionRuntime && !usePostgres) {
+  throw new Error(
+    'DATABASE_URI must point to PostgreSQL in production. SQLite is for local development only — ' +
+      'running production on SQLite inside the container would silently lose orders and customer data on rebuild.'
+  )
+}
 
 // Drizzle "push" auto-syncs the schema without a migrations workflow. Fine in dev; unsafe in prod
 // (silent schema drift can lose data), so it is OFF in production by default. The first deploy on a

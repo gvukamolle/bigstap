@@ -15,6 +15,11 @@ coverage
 # Секреты и локальные env (в образ не попадают)
 .env
 .env.*
+*.pem
+*.key
+*.bak
+secrets*
+*credentials*
 
 # Локальные БД (SQLite-режим разработки)
 *.sqlite
