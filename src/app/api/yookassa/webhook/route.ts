@@ -3,8 +3,8 @@ import { getPayload } from 'payload'
 
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { formatYookassaAmount } from '@/lib/yookassa'
-import { getYookassaPayment, isYookassaConfigured, isYookassaWebhookIp } from '@/lib/yookassa'
+import { getYookassaCredentials } from '@/lib/integrationSettings'
+import { formatYookassaAmount, getYookassaPayment, isYookassaWebhookIp } from '@/lib/yookassa'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -23,8 +23,9 @@ function clientIp(request: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
-  // Без кредов вебхук не активен.
-  if (!isYookassaConfigured()) return new NextResponse(null, { status: 404 })
+  // Без кредов (админка или env) вебхук не активен.
+  const creds = await getYookassaCredentials()
+  if (!creds) return new NextResponse(null, { status: 404 })
 
   // Уведомления ЮKassa не подписаны — первый барьер это IP-фильтр по официальным диапазонам.
   if (!isYookassaWebhookIp(clientIp(request))) return new NextResponse(null, { status: 403 })
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
   // ГЛАВНАЯ защита: не доверяем телу. Берём реальный статус платежа из API ЮKassa.
   let payment
   try {
-    payment = await getYookassaPayment(paymentId)
+    payment = await getYookassaPayment(creds, paymentId)
   } catch {
     // Временная ошибка обращения к API — 500, чтобы ЮKassa повторила доставку позже.
     return new NextResponse(null, { status: 500 })

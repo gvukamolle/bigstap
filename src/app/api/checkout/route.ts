@@ -11,8 +11,9 @@ import {
   type CustomerDetails
 } from '@/domain/checkout'
 import { getCatalogProducts } from '@/lib/catalog'
+import { getYookassaCredentials } from '@/lib/integrationSettings'
 import { getSiteUrl } from '@/lib/siteUrl'
-import { createYookassaPayment, isYookassaConfigured } from '@/lib/yookassa'
+import { createYookassaPayment } from '@/lib/yookassa'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -89,7 +90,8 @@ function parseConsent(value: unknown): CheckoutConsent {
 }
 
 export async function POST(request: NextRequest) {
-  const paymentsEnabled = isYookassaConfigured()
+  const yookassaCreds = await getYookassaCredentials()
+  const paymentsEnabled = yookassaCreds !== null
 
   // В production заказы принимаются только при подключённой оплате (ЮKassa). Без неё эндпоинт
   // отключён, как в прототипе, чтобы не создавать заказы без оплаты.
@@ -205,14 +207,14 @@ export async function POST(request: NextRequest) {
     })
 
     // Без подключённой оплаты (только dev) — это тестовый заказ, как в прототипе.
-    if (!paymentsEnabled) {
+    if (!yookassaCreds) {
       return json({ ok: true, orderNumber: order.orderNumber, id: order.id })
     }
 
     // С ЮKassa: создаём платёж и отдаём confirmationUrl для редиректа покупателя на оплату.
     // Idempotence-Key = orderNumber (детерминированный) — ретрай формы не плодит платежи.
     try {
-      const payment = await createYookassaPayment({
+      const payment = await createYookassaPayment(yookassaCreds, {
         amountRubles: totals.orderTotal,
         orderNumber,
         description: `Заказ ${orderNumber}`,

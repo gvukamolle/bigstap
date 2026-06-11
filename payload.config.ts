@@ -13,6 +13,7 @@ import { Media } from './src/payload/collections/Media'
 import { Orders } from './src/payload/collections/Orders'
 import { Products } from './src/payload/collections/Products'
 import { Users } from './src/payload/collections/Users'
+import { IntegrationSettings } from './src/payload/globals/IntegrationSettings'
 import { SiteSettings } from './src/payload/globals/SiteSettings'
 
 const isProductionRuntime =
@@ -112,7 +113,7 @@ export default buildConfig({
     user: Users.slug
   },
   collections: [Users, Media, Products, Orders, BlogPosts, Events],
-  globals: [SiteSettings],
+  globals: [SiteSettings, IntegrationSettings],
   db: payloadDb,
   editor: lexicalEditor(),
   i18n: {

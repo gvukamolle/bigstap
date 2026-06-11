@@ -1,16 +1,15 @@
-// Клиент CDEK Integration API 2.0. Активируется при наличии CDEK_CLIENT_ID + CDEK_CLIENT_SECRET.
-// Секреты и токен — только server-side. CDEK_API_MODE=test переключает на тестовый контур
+// Клиент CDEK Integration API 2.0. Креды приходят из getCdekCredentials()
+// (глобал «Интеграции» в админке с фоллбэком на CDEK_CLIENT_ID + CDEK_CLIENT_SECRET).
+// Секреты и токен — только server-side. Режим test переключает на тестовый контур
 // api.edu.cdek.ru (публичные тестовые креды, заказы реально не едут).
+
+import type { CdekCredentials } from './integrationCredentials'
 
 const CDEK_API_PROD = 'https://api.cdek.ru/v2'
 const CDEK_API_TEST = 'https://api.edu.cdek.ru/v2'
 
-function cdekBase(): string {
-  return process.env.CDEK_API_MODE === 'test' ? CDEK_API_TEST : CDEK_API_PROD
-}
-
-export function isCdekConfigured(): boolean {
-  return Boolean(process.env.CDEK_CLIENT_ID && process.env.CDEK_CLIENT_SECRET)
+function cdekBase(creds: CdekCredentials): string {
+  return creds.apiMode === 'test' ? CDEK_API_TEST : CDEK_API_PROD
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -45,20 +44,24 @@ export function normalizeCdekPoint(raw: unknown): CdekPickupPointDto | null {
   return { code, name, address, city }
 }
 
-// ---- OAuth (кэш токена в памяти процесса) ----
-let tokenCache: { token: string; expiresAt: number } | null = null
+// ---- OAuth (кэш токена в памяти процесса; ключ — креды, чтобы смена ключей в админке
+// сразу инвалидировала токен) ----
+let tokenCache: { key: string; token: string; expiresAt: number } | null = null
 
-async function getCdekToken(): Promise<string> {
+async function getCdekToken(creds: CdekCredentials): Promise<string> {
   const now = Date.now()
-  if (tokenCache && tokenCache.expiresAt > now) return tokenCache.token
+  const cacheKey = `${creds.apiMode}:${creds.clientId}:${creds.clientSecret}`
+  if (tokenCache && tokenCache.key === cacheKey && tokenCache.expiresAt > now) {
+    return tokenCache.token
+  }
 
-  const response = await fetch(`${cdekBase()}/oauth/token`, {
+  const response = await fetch(`${cdekBase(creds)}/oauth/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'client_credentials',
-      client_id: process.env.CDEK_CLIENT_ID ?? '',
-      client_secret: process.env.CDEK_CLIENT_SECRET ?? ''
+      client_id: creds.clientId,
+      client_secret: creds.clientSecret
     })
   })
   if (!response.ok) throw new Error(`CDEK OAuth не удался (${response.status})`)
@@ -67,13 +70,17 @@ async function getCdekToken(): Promise<string> {
   if (!data.access_token) throw new Error('CDEK OAuth: пустой токен')
 
   // Запас 60 секунд до истечения.
-  tokenCache = { token: data.access_token, expiresAt: now + ((data.expires_in ?? 3599) - 60) * 1000 }
+  tokenCache = {
+    key: cacheKey,
+    token: data.access_token,
+    expiresAt: now + ((data.expires_in ?? 3599) - 60) * 1000
+  }
   return tokenCache.token
 }
 
-async function cdekGet(path: string): Promise<unknown> {
-  const token = await getCdekToken()
-  const response = await fetch(`${cdekBase()}${path}`, {
+async function cdekGet(creds: CdekCredentials, path: string): Promise<unknown> {
+  const token = await getCdekToken(creds)
+  const response = await fetch(`${cdekBase(creds)}${path}`, {
     headers: { Authorization: `Bearer ${token}` }
   })
   if (!response.ok) throw new Error(`CDEK ${path}: ${response.status}`)
@@ -81,19 +88,25 @@ async function cdekGet(path: string): Promise<unknown> {
   return response.json()
 }
 
-export async function resolveCdekCityCode(cityName: string): Promise<number | null> {
-  const data = await cdekGet(`/location/cities?size=1&city=${encodeURIComponent(cityName)}`)
+export async function resolveCdekCityCode(
+  creds: CdekCredentials,
+  cityName: string
+): Promise<number | null> {
+  const data = await cdekGet(creds, `/location/cities?size=1&city=${encodeURIComponent(cityName)}`)
   if (!Array.isArray(data) || data.length === 0) return null
 
   const first = data[0]
   return isRecord(first) && typeof first.code === 'number' ? first.code : null
 }
 
-export async function getCdekDeliveryPoints(cityName: string): Promise<CdekPickupPointDto[]> {
-  const cityCode = await resolveCdekCityCode(cityName)
+export async function getCdekDeliveryPoints(
+  creds: CdekCredentials,
+  cityName: string
+): Promise<CdekPickupPointDto[]> {
+  const cityCode = await resolveCdekCityCode(creds, cityName)
   if (cityCode === null) return []
 
-  const data = await cdekGet(`/deliverypoints?type=PVZ&city_code=${cityCode}`)
+  const data = await cdekGet(creds, `/deliverypoints?type=PVZ&city_code=${cityCode}`)
   if (!Array.isArray(data)) return []
 
   return data

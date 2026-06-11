@@ -66,7 +66,6 @@ POSTGRES_PASSWORD=bigstep
 - Оформление заказа: http://localhost:3000/checkout
 - Блог: http://localhost:3000/blog
 - Ивенты: http://localhost:3000/events
-- Основатель: http://localhost:3000/founder
 - Payload-админка: http://localhost:3000/admin
 - Первичная настройка админки: http://localhost:3000/bootstrap-admin
 

@@ -1,14 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { getCdekDeliveryPoints, isCdekConfigured } from '@/lib/cdek'
+import { getCdekDeliveryPoints } from '@/lib/cdek'
+import { getCdekCredentials } from '@/lib/integrationSettings'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // Серверный прокси списка ПВЗ CDEK: токен и client_secret не покидают сервер.
-// Без кредов отвечает configured:false — фронт показывает прототипные пункты выдачи.
+// Креды — из админки (глобал «Интеграции») или env. Без кредов отвечает configured:false —
+// фронт показывает прототипные пункты выдачи.
 export async function GET(request: NextRequest) {
-  if (!isCdekConfigured()) {
+  const creds = await getCdekCredentials()
+  if (!creds) {
     return NextResponse.json({ ok: false, configured: false, points: [] })
   }
 
@@ -21,7 +24,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const points = await getCdekDeliveryPoints(city)
+    const points = await getCdekDeliveryPoints(creds, city)
     return NextResponse.json({ ok: true, configured: true, points })
   } catch (error) {
     return NextResponse.json(

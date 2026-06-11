@@ -5,6 +5,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { issueBootstrapTicket } from '@/lib/bootstrapTicket'
 import { getPublicRequestOrigin } from '@/lib/requestOrigin'
 
+// node:crypto (timingSafeEqual) недоступен на edge-runtime — фиксируем Node.js явно.
+export const runtime = 'nodejs'
+
 const BOOTSTRAP_COOKIE = 'payload-bootstrap'
 const BOOTSTRAP_MAX_AGE_SECONDS = 30 * 60
 

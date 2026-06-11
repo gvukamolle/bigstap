@@ -1,13 +1,12 @@
-// Клиент ЮKassa (Checkout API v3). Активируется при наличии YOOKASSA_SHOP_ID + YOOKASSA_SECRET_KEY.
+// Клиент ЮKassa (Checkout API v3). Креды приходят из getYookassaCredentials()
+// (глобал «Интеграции» в админке с фоллбэком на YOOKASSA_SHOP_ID + YOOKASSA_SECRET_KEY).
 // Секреты — только server-side (никогда не NEXT_PUBLIC_*). Сумму ЮKassa требует строкой "0.00".
 // Вебхук ЮKassa не подписан: защита — IP-фильтр + обязательная перепроверка через getYookassaPayment.
 // Самозанятый: с 29.12.2025 ЮKassa не формирует чеки НПД — receipt не отправляем, чек НПД отдельно.
 
-const YOOKASSA_API = 'https://api.yookassa.ru/v3'
+import type { YookassaCredentials } from './integrationCredentials'
 
-export function isYookassaConfigured(): boolean {
-  return Boolean(process.env.YOOKASSA_SHOP_ID && process.env.YOOKASSA_SECRET_KEY)
-}
+const YOOKASSA_API = 'https://api.yookassa.ru/v3'
 
 export function formatYookassaAmount(rubles: number): string {
   return rubles.toFixed(2)
@@ -56,11 +55,8 @@ export function isYookassaWebhookIp(ip: string): boolean {
 }
 
 // ---- HTTP-клиент ----
-const authHeader = (): string => {
-  const shopId = process.env.YOOKASSA_SHOP_ID ?? ''
-  const secret = process.env.YOOKASSA_SECRET_KEY ?? ''
-  return `Basic ${Buffer.from(`${shopId}:${secret}`).toString('base64')}`
-}
+const authHeader = (creds: YookassaCredentials): string =>
+  `Basic ${Buffer.from(`${creds.shopId}:${creds.secretKey}`).toString('base64')}`
 
 export type YookassaPaymentStatus = 'pending' | 'waiting_for_capture' | 'succeeded' | 'canceled'
 
@@ -96,11 +92,14 @@ function mapPayment(raw: Record<string, unknown>): YookassaPayment {
   }
 }
 
-export async function createYookassaPayment(input: CreatePaymentInput): Promise<YookassaPayment> {
+export async function createYookassaPayment(
+  creds: YookassaCredentials,
+  input: CreatePaymentInput
+): Promise<YookassaPayment> {
   const response = await fetch(`${YOOKASSA_API}/payments`, {
     method: 'POST',
     headers: {
-      Authorization: authHeader(),
+      Authorization: authHeader(creds),
       'Idempotence-Key': input.idempotenceKey,
       'Content-Type': 'application/json'
     },
@@ -121,10 +120,13 @@ export async function createYookassaPayment(input: CreatePaymentInput): Promise<
   return mapPayment((await response.json()) as Record<string, unknown>)
 }
 
-export async function getYookassaPayment(paymentId: string): Promise<YookassaPayment> {
+export async function getYookassaPayment(
+  creds: YookassaCredentials,
+  paymentId: string
+): Promise<YookassaPayment> {
   const response = await fetch(`${YOOKASSA_API}/payments/${encodeURIComponent(paymentId)}`, {
     method: 'GET',
-    headers: { Authorization: authHeader() }
+    headers: { Authorization: authHeader(creds) }
   })
 
   if (!response.ok) {
