@@ -1,10 +1,10 @@
 import Link from 'next/link'
 
+// Ссылки на /admin в публичном UI нет намеренно: вход в админку — только по прямому адресу.
 const footerLinks = [
   { href: '/shop', label: 'Магазин' },
   { href: '/blog', label: 'Блог' },
-  { href: '/events', label: 'Ивенты' },
-  { href: '/admin', label: 'Админка' }
+  { href: '/events', label: 'Ивенты' }
 ] as const
 
 export function SiteFooter() {
@@ -16,11 +16,7 @@ export function SiteFooter() {
       </nav>
       <nav className="footerLinks" aria-label="Навигация в подвале">
         {footerLinks.map((item) => (
-          <Link
-            href={item.href}
-            key={item.href}
-            prefetch={item.href === '/admin' ? false : undefined}
-          >
+          <Link href={item.href} key={item.href}>
             {item.label}
           </Link>
         ))}
