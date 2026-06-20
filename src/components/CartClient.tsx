@@ -12,20 +12,13 @@ import {
   type CartItem,
   updateCartItemQuantity
 } from '@/domain/cart'
-import type { Product, ProductSaleStatus } from '@/domain/products'
+import type { Product } from '@/domain/products'
 import {
   cartUpdatedEvent,
   dispatchCartUpdated,
   readCartStorage,
   writeCartStorage
 } from '@/lib/cartStorage'
-
-const saleStatusLabels: Record<ProductSaleStatus, string> = {
-  in_stock: 'В наличии',
-  preorder: 'Предзаказ',
-  sold_out: 'Нет в наличии',
-  hidden: 'Недоступно'
-}
 
 export function CartClient({ products }: { products: Product[] }) {
   const [cart, setCart] = useState<CartItem[]>([])
@@ -115,7 +108,6 @@ export function CartClient({ products }: { products: Product[] }) {
               </h2>
               <div>
                 <span>{item.size ?? 'Без размера'}</span>
-                <span>{saleStatusLabels[item.saleStatus]}</span>
               </div>
             </div>
 

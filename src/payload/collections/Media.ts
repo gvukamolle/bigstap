@@ -23,7 +23,9 @@ export const Media: CollectionConfig = {
       name: 'alt',
       type: 'text',
       label: 'Описание изображения',
-      required: true
+      admin: {
+        description: 'Необязательно. Если не заполнить — подставится название товара.'
+      }
     }
   ]
 }

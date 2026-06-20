@@ -35,7 +35,6 @@ export default async function HomePage() {
 
       <section className="section">
         <div className="sectionHeader">
-          <span className="eyebrow">Витрина</span>
           <h2>Товары</h2>
         </div>
         <div className="grid">

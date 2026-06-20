@@ -19,6 +19,10 @@ export type ProductBase = {
     alt: string
     label: string
   }>
+  sizeChart?: {
+    src: string
+    alt: string
+  }
   imageTone: 'black' | 'stone' | 'charcoal' | 'cream'
   preorderNote?: string
   published: boolean

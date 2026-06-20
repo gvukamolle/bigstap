@@ -1,6 +1,7 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, PayloadRequest } from 'payload'
 
 import { isValidProductSlug } from '../../domain/products'
+import { slugify } from '../../lib/slug'
 import { admins, staffOrPublishedProduct } from '../access'
 
 const MAX_RUB_AMOUNT = 10_000_000
@@ -13,54 +14,61 @@ type ProductSize = {
 
 type ProductData = {
   price?: number | null
-  productType?: 'one_size' | 'sized' | null
-  salePrice?: number | null
   sizes?: ProductSize[] | null
-  stock?: number | null
 }
 
 const isSafeIntegerInRange = (value: unknown, max: number, min = 0): value is number =>
   typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max
 
 const validateProductInvariants = (product: ProductData) => {
-  const productType = product.productType ?? 'sized'
-
   if (!isSafeIntegerInRange(product.price, MAX_RUB_AMOUNT)) {
     throw new Error('Цена товара должна быть целым числом в рублях.')
   }
 
-  if (product.salePrice != null && !isSafeIntegerInRange(product.salePrice, MAX_RUB_AMOUNT)) {
-    throw new Error('Цена со скидкой должна быть целым числом в рублях.')
+  if (!Array.isArray(product.sizes) || product.sizes.length === 0) {
+    throw new Error('Добавьте минимум один размер.')
   }
 
-  if (
-    typeof product.salePrice === 'number' &&
-    typeof product.price === 'number' &&
-    product.salePrice > product.price
-  ) {
-    throw new Error('Цена со скидкой не может быть выше основной цены.')
+  const invalidSize = product.sizes.some(
+    (size) =>
+      typeof size.label !== 'string' ||
+      !size.label.trim() ||
+      !isSafeIntegerInRange(size.stock, MAX_STOCK)
+  )
+
+  if (invalidSize) {
+    throw new Error('У каждого размера должны быть название и целый остаток от 0 до 100000.')
+  }
+}
+
+// Адрес генерируется из названия и больше не вводится вручную. Существующий адрес
+// сохраняется при редактировании, чтобы не ломать ссылки на уже опубликованные товары.
+const generateUniqueSlug = async (
+  req: PayloadRequest,
+  title: string,
+  currentId: string | number | undefined
+): Promise<string> => {
+  const base = slugify(title) || 'tovar'
+  let candidate = base
+  let suffix = 2
+
+  // Перебираем base, base-2, base-3… пока не найдём свободный адрес.
+  for (let guard = 0; guard < 1000; guard += 1) {
+    const existing = await req.payload.find({
+      collection: 'products',
+      where: { slug: { equals: candidate } },
+      limit: 1,
+      depth: 0
+    })
+
+    const taken = existing.docs.some((doc) => doc.id !== currentId)
+    if (!taken) return candidate
+
+    candidate = `${base}-${suffix}`
+    suffix += 1
   }
 
-  if (productType === 'one_size' && !isSafeIntegerInRange(product.stock, MAX_STOCK)) {
-    throw new Error('Безразмерные товары требуют целый остаток от 0 до 100000.')
-  }
-
-  if (productType === 'sized') {
-    if (!Array.isArray(product.sizes) || product.sizes.length === 0) {
-      throw new Error('Товарам с размерами нужен минимум один размер.')
-    }
-
-    const invalidSize = product.sizes.some(
-      (size) =>
-        typeof size.label !== 'string' ||
-        !size.label.trim() ||
-        !isSafeIntegerInRange(size.stock, MAX_STOCK)
-    )
-
-    if (invalidSize) {
-      throw new Error('У каждого размера должны быть название и целый остаток от 0 до 100000.')
-    }
-  }
+  return `${base}-${Date.now()}`
 }
 
 export const Products: CollectionConfig = {
@@ -71,7 +79,7 @@ export const Products: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'dropName', 'saleStatus', 'productType', 'price', 'published']
+    defaultColumns: ['title', 'price', 'saleStatus', 'published']
   },
   access: {
     create: admins,
@@ -81,11 +89,28 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [
-      ({ data, originalDoc }) => {
+      async ({ data, originalDoc, req }) => {
+        if (!data) return data
+
         validateProductInvariants({
           ...(originalDoc as ProductData | undefined),
           ...(data as ProductData | undefined)
         })
+
+        if (!data.slug) {
+          const existingSlug =
+            originalDoc && typeof (originalDoc as { slug?: unknown }).slug === 'string'
+              ? (originalDoc as { slug: string }).slug
+              : null
+
+          data.slug =
+            existingSlug ??
+            (await generateUniqueSlug(
+              req,
+              String(data.title ?? (originalDoc as { title?: unknown } | undefined)?.title ?? ''),
+              (originalDoc as { id?: string | number } | undefined)?.id
+            ))
+        }
 
         return data
       }
@@ -99,107 +124,35 @@ export const Products: CollectionConfig = {
       required: true
     },
     {
+      // Адрес ссылки на товар. Заполняется автоматически из названия (хук beforeValidate),
+      // скрыт из формы, чтобы владельцу не приходилось его придумывать.
       name: 'slug',
       type: 'text',
       label: 'Адрес',
       required: true,
       unique: true,
+      admin: { hidden: true },
       validate: (value: unknown) =>
         isValidProductSlug(value) ||
         'Адрес: только строчные латинские буквы, цифры и дефис, например test-01.'
     },
     {
-      name: 'dropName',
-      type: 'text',
-      label: 'Дроп',
-      required: true
-    },
-    {
-      name: 'category',
-      type: 'text',
-      label: 'Категория',
-      required: true
-    },
-    {
       name: 'image',
-      type: 'relationship',
+      type: 'upload',
+      relationTo: 'media',
       label: 'Главное фото',
-      relationTo: 'media'
-    },
-    {
-      name: 'imageUrl',
-      type: 'text',
-      label: 'URL главного фото',
       required: true
-    },
-    {
-      name: 'imageAlt',
-      type: 'text',
-      label: 'Описание главного фото',
-      required: true
-    },
-    {
-      name: 'imageTone',
-      type: 'select',
-      label: 'Фон фото',
-      required: true,
-      defaultValue: 'black',
-      options: [
-        {
-          label: 'Светлый',
-          value: 'cream'
-        },
-        {
-          label: 'Камень',
-          value: 'stone'
-        },
-        {
-          label: 'Темный',
-          value: 'charcoal'
-        },
-        {
-          label: 'Черный',
-          value: 'black'
-        }
-      ]
     },
     {
       name: 'price',
       type: 'number',
-      label: 'Цена',
+      label: 'Цена, ₽',
       required: true,
       min: 0,
       max: MAX_RUB_AMOUNT,
       admin: {
         step: 1
       }
-    },
-    {
-      name: 'salePrice',
-      type: 'number',
-      label: 'Цена со скидкой',
-      min: 0,
-      max: MAX_RUB_AMOUNT,
-      admin: {
-        step: 1
-      }
-    },
-    {
-      name: 'productType',
-      type: 'select',
-      label: 'Тип размера',
-      required: true,
-      defaultValue: 'sized',
-      options: [
-        {
-          label: 'Размерная сетка',
-          value: 'sized'
-        },
-        {
-          label: 'Без размера',
-          value: 'one_size'
-        }
-      ]
     },
     {
       name: 'sizes',
@@ -209,9 +162,8 @@ export const Products: CollectionConfig = {
         singular: 'Размер',
         plural: 'Размеры'
       },
-      admin: {
-        condition: (_, siblingData) => siblingData.productType === 'sized'
-      },
+      required: true,
+      minRows: 1,
       fields: [
         {
           name: 'label',
@@ -233,14 +185,12 @@ export const Products: CollectionConfig = {
       ]
     },
     {
-      name: 'stock',
-      type: 'number',
-      label: 'Остаток',
-      min: 0,
-      max: MAX_STOCK,
+      name: 'sizeChart',
+      type: 'upload',
+      relationTo: 'media',
+      label: 'Размерная сетка (картинка)',
       admin: {
-        condition: (_, siblingData) => siblingData.productType === 'one_size',
-        step: 1
+        description: 'Необязательно. Картинка с таблицей размеров — покажется на странице товара.'
       }
     },
     {
@@ -277,16 +227,13 @@ export const Products: CollectionConfig = {
       }
     },
     {
-      name: 'shortDescription',
-      type: 'textarea',
-      label: 'Короткое описание',
-      required: true
-    },
-    {
       name: 'description',
       type: 'textarea',
       label: 'Описание',
-      required: true
+      required: true,
+      admin: {
+        description: 'Показывается на странице товара после клика по карточке.'
+      }
     },
     {
       name: 'published',

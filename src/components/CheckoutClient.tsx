@@ -388,24 +388,17 @@ export function CheckoutClient({ products }: { products: Product[] }) {
         <label className="checkoutField">
           <span>Имя и фамилия</span>
           <input
-            aria-describedby={fullNameError ? getFieldErrorId('fullName') : undefined}
             aria-invalid={fullNameError ? true : undefined}
             autoComplete="name"
             name="fullName"
             onChange={(event) => updateCustomer('fullName', event.target.value)}
             value={customer.fullName}
           />
-          {fullNameError ? (
-            <span className="fieldError" id={getFieldErrorId('fullName')}>
-              {fullNameError}
-            </span>
-          ) : null}
         </label>
 
         <label className="checkoutField">
           <span>Телефон</span>
           <input
-            aria-describedby={phoneError ? getFieldErrorId('phone') : undefined}
             aria-invalid={phoneError ? true : undefined}
             autoComplete="tel"
             inputMode="tel"
@@ -414,17 +407,11 @@ export function CheckoutClient({ products }: { products: Product[] }) {
             type="tel"
             value={customer.phone}
           />
-          {phoneError ? (
-            <span className="fieldError" id={getFieldErrorId('phone')}>
-              {phoneError}
-            </span>
-          ) : null}
         </label>
 
         <label className="checkoutField">
           <span>Почта</span>
           <input
-            aria-describedby={emailError ? getFieldErrorId('email') : undefined}
             aria-invalid={emailError ? true : undefined}
             autoComplete="email"
             name="email"
@@ -432,28 +419,17 @@ export function CheckoutClient({ products }: { products: Product[] }) {
             type="email"
             value={customer.email}
           />
-          {emailError ? (
-            <span className="fieldError" id={getFieldErrorId('email')}>
-              {emailError}
-            </span>
-          ) : null}
         </label>
 
         <label className="checkoutField">
           <span>Город</span>
           <input
-            aria-describedby={cityError ? getFieldErrorId('city') : undefined}
             aria-invalid={cityError ? true : undefined}
             autoComplete="address-level2"
             name="city"
             onChange={(event) => updateCustomer('city', event.target.value)}
             value={customer.city}
           />
-          {cityError ? (
-            <span className="fieldError" id={getFieldErrorId('city')}>
-              {cityError}
-            </span>
-          ) : null}
         </label>
 
         <div className="checkoutPanelHeader">

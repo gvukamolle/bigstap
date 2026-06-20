@@ -2,11 +2,7 @@
 
 import { useId, useMemo, useState } from 'react'
 
-import {
-  filterAndSortProducts,
-  getCatalogFacets,
-  type CatalogSort
-} from '@/domain/catalog'
+import { filterAndSortProducts, type CatalogSort } from '@/domain/catalog'
 import type { Product } from '@/domain/products'
 
 import { CustomSelect } from './CustomSelect'
@@ -14,19 +10,12 @@ import { ProductCard } from './ProductCard'
 
 const sortOptions = [
   { value: 'featured', label: 'По умолчанию' },
-  { value: 'drop-asc', label: 'По дропу' },
   { value: 'price-asc', label: 'Сначала дешевле' },
   { value: 'price-desc', label: 'Сначала дороже' },
   { value: 'title-asc', label: 'По названию' }
 ] as const
 
-const catalogSorts: readonly CatalogSort[] = [
-  'featured',
-  'drop-asc',
-  'price-asc',
-  'price-desc',
-  'title-asc'
-]
+const catalogSorts: readonly CatalogSort[] = ['featured', 'price-asc', 'price-desc', 'title-asc']
 
 function toCatalogSort(value: string): CatalogSort {
   return catalogSorts.includes(value as CatalogSort) ? (value as CatalogSort) : 'featured'
@@ -34,20 +23,15 @@ function toCatalogSort(value: string): CatalogSort {
 
 export function ProductCatalog({ products }: { products: Product[] }) {
   const searchId = useId()
-  const dropId = useId()
-  const categoryId = useId()
   const sortId = useId()
   const [search, setSearch] = useState('')
-  const [dropName, setDropName] = useState('')
-  const [category, setCategory] = useState('')
   const [sort, setSort] = useState<CatalogSort>('featured')
 
-  const facets = useMemo(() => getCatalogFacets(products), [products])
   const visibleProducts = useMemo(
-    () => filterAndSortProducts(products, { category, dropName, search, sort }),
-    [category, dropName, products, search, sort]
+    () => filterAndSortProducts(products, { category: '', dropName: '', search, sort }),
+    [products, search, sort]
   )
-  const hasActiveFilters = Boolean(search.trim() || dropName || category || sort !== 'featured')
+  const hasActiveFilters = Boolean(search.trim() || sort !== 'featured')
 
   return (
     <section className="catalog" aria-label="Товары">
@@ -57,35 +41,9 @@ export function ProductCatalog({ products }: { products: Product[] }) {
           <input
             id={searchId}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Название, дроп, материал"
+            placeholder="Название товара"
             type="search"
             value={search}
-          />
-        </label>
-
-        <label className="catalogField" htmlFor={dropId}>
-          <span>Дроп</span>
-          <CustomSelect
-            id={dropId}
-            onChange={setDropName}
-            options={[
-              { value: '', label: 'Все дропы' },
-              ...facets.drops.map((drop) => ({ value: drop, label: drop }))
-            ]}
-            value={dropName}
-          />
-        </label>
-
-        <label className="catalogField" htmlFor={categoryId}>
-          <span>Тип</span>
-          <CustomSelect
-            id={categoryId}
-            onChange={setCategory}
-            options={[
-              { value: '', label: 'Все товары' },
-              ...facets.categories.map((item) => ({ value: item, label: item }))
-            ]}
-            value={category}
           />
         </label>
 
@@ -104,8 +62,6 @@ export function ProductCatalog({ products }: { products: Product[] }) {
             className="buttonSecondary catalogReset"
             onClick={() => {
               setSearch('')
-              setDropName('')
-              setCategory('')
               setSort('featured')
             }}
             type="button"

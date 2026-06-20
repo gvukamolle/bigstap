@@ -62,6 +62,15 @@ function productImageFromDoc(doc: PayloadProductDoc, title: string) {
   return null
 }
 
+function uploadImageFromDoc(value: unknown, fallbackAlt: string): { src: string; alt: string } | null {
+  if (!isRecord(value)) return null
+
+  const src = stringField(value.url)
+  if (!src) return null
+
+  return { src, alt: stringField(value.alt) ?? fallbackAlt }
+}
+
 function sizesFromDoc(value: unknown): ProductSize[] {
   if (!Array.isArray(value)) return []
 
@@ -101,7 +110,8 @@ function mapPayloadProduct(doc: PayloadProductDoc): Product | null {
     stringField(doc.shortDescription) ?? fallback?.shortDescription ?? `${title} от Grushko Stepan.`
   const description = stringField(doc.description) ?? fallback?.description ?? shortDescription
   const type = enumField(doc.productType, productTypes) ?? fallback?.type ?? 'sized'
-  const imageTone = enumField(doc.imageTone, productImageTones) ?? fallback?.imageTone ?? 'black'
+  const imageTone = enumField(doc.imageTone, productImageTones) ?? fallback?.imageTone ?? 'cream'
+  const sizeChart = uploadImageFromDoc(doc.sizeChart, `${title} — размерная сетка`) ?? fallback?.sizeChart
 
   const base = {
     slug,
@@ -115,6 +125,7 @@ function mapPayloadProduct(doc: PayloadProductDoc): Product | null {
     description,
     image,
     gallery: fallback?.gallery ?? [{ ...image, label: 'Фото' }],
+    sizeChart,
     imageTone,
     preorderNote: stringField(doc.preorderNote) ?? fallback?.preorderNote,
     published

@@ -1,8 +1,9 @@
+import path from 'node:path'
 import process from 'node:process'
 
 import { createClient } from '@libsql/client'
 import nextEnv from '@next/env'
-import { getPayload } from 'payload'
+import { getPayload, type Payload } from 'payload'
 
 import { products } from '../src/data/products'
 import type { Product } from '../src/domain/products'
@@ -84,35 +85,49 @@ const ensureLocalSqliteProductColumns = async (): Promise<boolean> => {
   }
 }
 
-function productData(product: Product) {
-  const base = {
-    category: product.category,
-    description: product.description,
-    dropName: product.dropName,
-    imageAlt: product.image.alt,
-    imageTone: product.imageTone,
-    imageUrl: product.image.src,
-    preorderNote: product.preorderNote,
-    price: product.price,
-    productType: product.type,
-    published: product.published,
-    salePrice: product.salePrice,
-    saleStatus: product.saleStatus,
-    shortDescription: product.shortDescription,
-    slug: product.slug,
-    title: product.title
-  }
+// Главное фото теперь — загрузка (relationTo media), поэтому из локального файла
+// фикстуры создаём (или переиспользуем) документ media и подставляем его id.
+async function ensureMediaId(payload: Payload, src: string, alt: string): Promise<number> {
+  const filename = src.split('/').pop() ?? src
 
-  if (product.type === 'one_size') {
-    return {
-      ...base,
-      stock: product.stock
-    }
-  }
+  const found = await payload.find({
+    collection: 'media',
+    limit: 1,
+    overrideAccess: true,
+    where: { filename: { equals: filename } }
+  })
+
+  if (found.docs[0]) return found.docs[0].id as number
+
+  const created = await payload.create({
+    collection: 'media',
+    data: { alt },
+    filePath: path.join(process.cwd(), 'public', src),
+    overrideAccess: true
+  })
+
+  return created.id as number
+}
+
+async function productData(payload: Payload, product: Product) {
+  const sizes =
+    product.type === 'sized'
+      ? product.sizes.map((size) => ({ label: size.label, stock: size.stock }))
+      : [{ label: 'Без размера', stock: product.stock }]
 
   return {
-    ...base,
-    sizes: product.sizes.map((size) => ({ label: size.label, stock: size.stock }))
+    description: product.description,
+    image: await ensureMediaId(payload, product.image.src, product.image.alt),
+    preorderNote: product.preorderNote,
+    price: product.price,
+    published: product.published,
+    saleStatus: product.saleStatus,
+    sizeChart: product.sizeChart
+      ? await ensureMediaId(payload, product.sizeChart.src, product.sizeChart.alt)
+      : undefined,
+    sizes,
+    slug: product.slug,
+    title: product.title
   }
 }
 
@@ -172,7 +187,7 @@ const seedAdmin = async () => {
       where: { slug: { equals: product.slug } }
     })
 
-    const data = productData(product)
+    const data = await productData(payload, product)
 
     if (existingProduct.docs[0]) {
       await payload.update({
@@ -212,10 +227,6 @@ const seedAdmin = async () => {
     await payload.update({
       collection: 'products',
       data: {
-        dropName: product.title,
-        imageAlt: `${product.title} Grushko Stepan`,
-        imageTone: 'black',
-        imageUrl: '/images/bigstep/test-00-front.jpg',
         published: false
       },
       id: product.id,

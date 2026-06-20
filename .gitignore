@@ -18,3 +18,9 @@ payload-local.db-*
 *.db
 *.db-*
 *.tsbuildinfo
+
+# Локальные загрузки Payload (в проде — docker-том bigstep-media)
+media/
+
+# Локальная конфигурация Claude Code
+.claude/

@@ -1,10 +1,8 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { RichText } from '@payloadcms/richtext-lexical/react'
 
-import { ProductCard } from '@/components/ProductCard'
-import { getCatalogProducts } from '@/lib/catalog'
-import { getSiteBlogPostBySlug, getSiteEvents } from '@/lib/content'
+import { getSiteBlogPostBySlug } from '@/lib/content'
 import { getAbsoluteAssetUrl, getCanonicalUrl } from '@/lib/siteUrl'
 
 export const dynamic = 'force-dynamic'
@@ -48,77 +46,32 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     notFound()
   }
 
-  const products = await getCatalogProducts()
-  const featuredProduct = post.productSlug
-    ? products.find((product) => product.slug === post.productSlug)
-    : undefined
-  const featuredEvent = post.eventSlug ? (await getSiteEvents()).find((event) => event.slug === post.eventSlug) : undefined
-
   return (
     <div className="page">
       <article>
         <header className="article">
-          <span className="eyebrow">{post.category}</span>
           <h1 className="display">{post.title}</h1>
           <time dateTime={post.dateTime}>{post.date}</time>
-          <p>{post.excerpt}</p>
+          {post.externalUrl ? (
+            <a
+              className="buttonSecondary articleExternalLink"
+              href={post.externalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Читать по ссылке →
+            </a>
+          ) : null}
         </header>
-        <div
-          className="articleHeroImage"
-          role="img"
-          aria-label={post.image.alt}
-          style={{ backgroundImage: `url(${post.image.src})` }}
-        />
 
-        <div className="articleBody">
-          <p>
-            Это прототип записи в журнале Grushko Stepan. Сейчас на сайте выводятся заголовок,
-            анонс и обложка из админки.
-          </p>
-          <p>
-            Следующий шаг — вывести сам текст из редактора и подключить медиатеку, чтобы статьи
-            полностью управлялись из CMS.
-          </p>
+        {/* Обложка в исходном формате, без обрезки. */}
+        <img className="articleHeroImage" src={post.image.src} alt={post.image.alt} loading="lazy" />
 
-          <h2>Как будет работать редактор</h2>
-          <p>
-            В будущем редактор сможет вставлять текстовые блоки, изображения, связанные товары и
-            ивенты между абзацами. Для покупателя это останется спокойной лентой без лишней
-            перегрузки: сначала история, затем предмет или событие, если они действительно помогают
-            продолжить материал.
-          </p>
-
-          {featuredProduct ? (
-            <>
-              <h2>Товар в материале</h2>
-              <div className="contentList">
-                <ProductCard product={featuredProduct} />
-              </div>
-            </>
-          ) : null}
-
-          {featuredEvent ? (
-            <>
-              <h2>Ивент в материале</h2>
-              <div className="contentList">
-                <Link className="contentCard" href={`/events/${featuredEvent.slug}`}>
-                  <div
-                    className="contentCardImage"
-                    role="img"
-                    aria-label={featuredEvent.image.alt}
-                    style={{ backgroundImage: `url(${featuredEvent.image.src})` }}
-                  />
-                  <p className="contentCardMeta">
-                    <time dateTime={featuredEvent.dateTime}>{featuredEvent.date}</time>
-                    <span>{featuredEvent.location}</span>
-                  </p>
-                  <h2>{featuredEvent.title}</h2>
-                  <p>{featuredEvent.description}</p>
-                </Link>
-              </div>
-            </>
-          ) : null}
-        </div>
+        {post.content ? (
+          <div className="articleBody">
+            <RichText data={post.content} />
+          </div>
+        ) : null}
       </article>
     </div>
   )

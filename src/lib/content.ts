@@ -1,5 +1,7 @@
 import { cache } from 'react'
 
+import type { SerializedEditorState } from 'lexical'
+
 import { blogPosts as fixtureBlogPosts, events as fixtureEvents } from '@/data/content'
 
 type PayloadMediaDoc = Record<string, unknown>
@@ -13,8 +15,11 @@ export type SiteBlogPost = {
   date: string
   dateTime: string
   image: { src: string; alt: string }
+  /** Текст статьи из редактора (Lexical). Рендерится на странице статьи. */
+  content?: SerializedEditorState
   productSlug?: string
   eventSlug?: string
+  externalUrl?: string
 }
 
 export type SiteEvent = {
@@ -33,6 +38,46 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function stringField(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+/**
+ * Внешняя ссылка приходит из CMS, поэтому пропускаем только http(s)-адреса —
+ * чтобы из админки нельзя было подсунуть javascript:/data: ссылку в href.
+ */
+export function sanitizeExternalUrl(value: unknown): string | null {
+  const raw = stringField(value)
+  if (!raw) return null
+
+  try {
+    const url = new URL(raw)
+    return url.protocol === 'http:' || url.protocol === 'https:' ? raw : null
+  } catch {
+    return null
+  }
+}
+
+function parseRichText(value: unknown): SerializedEditorState | undefined {
+  if (isRecord(value) && isRecord((value as { root?: unknown }).root)) {
+    return value as unknown as SerializedEditorState
+  }
+
+  return undefined
+}
+
+/** Достаёт чистый текст из Lexical-документа — для SEO-описания статьи. */
+export function lexicalToPlainText(value: unknown): string {
+  const root = isRecord(value) ? (value as { root?: unknown }).root : null
+  if (!isRecord(root)) return ''
+
+  const parts: string[] = []
+  const walk = (node: unknown) => {
+    if (!isRecord(node)) return
+    if (typeof node.text === 'string') parts.push(node.text)
+    if (Array.isArray(node.children)) node.children.forEach(walk)
+  }
+
+  walk(root)
+  return parts.join(' ').replace(/\s+/g, ' ').trim()
 }
 
 function formatRuDate(isoDateTime: string): { date: string; dateTime: string } {
@@ -84,16 +129,19 @@ function mapPayloadEvent(doc: PayloadDoc): SiteEvent | null {
 function mapPayloadBlogPost(doc: PayloadDoc): SiteBlogPost | null {
   const slug = stringField(doc.slug)
   const title = stringField(doc.title)
-  const excerpt = stringField(doc.excerpt)
   const published = doc.published === true
 
-  if (!published || !slug || !title || !excerpt) return null
+  if (!published || !slug || !title) return null
 
   const fallback = fixtureBlogPosts.find((post) => post.slug === slug) ?? fixtureBlogPosts[0]
 
   const createdAt = stringField(doc.createdAt) ?? new Date().toISOString()
   const { date, dateTime } = formatRuDate(createdAt)
 
+  const content = parseRichText(doc.content)
+  // Анонс больше не вводится вручную: берём его из текста статьи (для SEO-описания).
+  const excerpt =
+    stringField(doc.excerpt) ?? (lexicalToPlainText(content).slice(0, 200).trim() || title)
   const category = stringField(doc.category) ?? fallback.category
   const image = mediaFromDoc(doc.image, fallback.image)
 
@@ -119,8 +167,12 @@ function mapPayloadBlogPost(doc: PayloadDoc): SiteBlogPost | null {
     image
   }
 
+  if (content) base.content = content
   if (productSlug) base.productSlug = productSlug
   if (eventSlug) base.eventSlug = eventSlug
+
+  const externalUrl = sanitizeExternalUrl(doc.externalUrl)
+  if (externalUrl) base.externalUrl = externalUrl
 
   return base
 }

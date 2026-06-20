@@ -103,8 +103,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         />
 
         <div className="productDetailInfo">
-          <span className="eyebrow">Дроп / {product.category}</span>
-          <h1>{product.dropName}</h1>
+          <h1>{product.title}</h1>
           <div className="productDetailMeta">
             <strong>{formatRubles(getDisplayPrice(product))}</strong>
             <StatusPill status={product.saleStatus} />
@@ -112,6 +111,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <p>{product.description}</p>
           {product.preorderNote ? <p className="preorderNote">{product.preorderNote}</p> : null}
           <AddToCartForm catalogProducts={catalogProducts} product={product} />
+          {product.sizeChart ? (
+            <div className="sizeChart">
+              <h2>Размерная сетка</h2>
+              {/* Обычный img — таблица размеров целиком, без обрезки. */}
+              <img src={product.sizeChart.src} alt={product.sizeChart.alt} loading="lazy" />
+            </div>
+          ) : null}
         </div>
       </section>
     </div>

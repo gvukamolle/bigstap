@@ -5,7 +5,7 @@ import { getSiteBlogPosts } from '@/lib/content'
 import { getCanonicalUrl } from '@/lib/siteUrl'
 
 export const metadata: Metadata = {
-  title: 'Журнал',
+  title: 'Блог',
   description: 'Заметки о вещах, материалах и спокойном ритме Grushko Stepan.',
   alternates: { canonical: getCanonicalUrl('/blog') },
   openGraph: { url: getCanonicalUrl('/blog') }
@@ -19,27 +19,35 @@ export default async function BlogPage() {
   return (
     <div className="page">
       <section className="shopIntro">
-        <span className="eyebrow">Блог</span>
-        <h1 className="display">Журнал</h1>
-        <p>Заметки о вещах, материалах и спокойном ритме вокруг первого дропа Grushko Stepan.</p>
+        <h1 className="display">Блог</h1>
       </section>
 
-      <div className="contentList">
+      <div className="contentList contentListBlog">
         {blogPosts.map((post) => (
-          <Link className="contentCard" href={`/blog/${post.slug}`} key={post.slug}>
-            <div
-              className="contentCardImage"
-              role="img"
-              aria-label={post.image.alt}
-              style={{ backgroundImage: `url(${post.image.src})` }}
-            />
-            <p className="contentCardMeta">
-              <span>{post.category}</span>
-              <span>{post.date}</span>
-            </p>
-            <h2>{post.title}</h2>
-            <p>{post.excerpt}</p>
-          </Link>
+          <article className="contentCard" key={post.slug}>
+            {/* Обычный img — фото в исходных пропорциях, без обрезки под фиксированную высоту. */}
+            <img className="contentCardPhoto" src={post.image.src} alt={post.image.alt} loading="lazy" />
+            <div className="contentCardBody">
+              <p className="contentCardMeta">
+                <span>{post.date}</span>
+              </p>
+              <h2>
+                <Link className="contentCardLink" href={`/blog/${post.slug}`}>
+                  {post.title}
+                </Link>
+              </h2>
+              {post.externalUrl ? (
+                <a
+                  className="contentCardExternal"
+                  href={post.externalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Читать по ссылке →
+                </a>
+              ) : null}
+            </div>
+          </article>
         ))}
       </div>
     </div>
