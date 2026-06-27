@@ -36,30 +36,25 @@ function fixtureBySlug(slug: string): Product | undefined {
   return fixtureProducts.find((product) => product.slug === slug)
 }
 
-function productImageFromDoc(doc: PayloadProductDoc, title: string) {
-  const imageUrl = stringField(doc.imageUrl)
-  const imageAlt = stringField(doc.imageAlt) ?? title
+type GalleryImage = { src: string; alt: string; label: string }
 
-  if (imageUrl) {
-    return {
-      src: imageUrl,
-      alt: imageAlt
-    }
-  }
+// Фото товара берём из поля `images` (upload hasMany). При depth:1 каждый элемент —
+// populated media-документ с `url`. Первое фото считается главным (каталог),
+// весь список — галереей на странице товара. alt больше не хранится в Media —
+// подставляем название товара.
+function galleryFromDoc(value: unknown, title: string): GalleryImage[] {
+  if (!Array.isArray(value)) return []
 
-  if (isRecord(doc.image)) {
-    const relationUrl = stringField(doc.image.url)
-    const relationAlt = stringField(doc.image.alt) ?? imageAlt
+  return value
+    .map((item, index): GalleryImage | null => {
+      if (!isRecord(item)) return null
 
-    if (relationUrl) {
-      return {
-        src: relationUrl,
-        alt: relationAlt
-      }
-    }
-  }
+      const src = stringField(item.url)
+      if (!src) return null
 
-  return null
+      return { src, alt: stringField(item.alt) ?? title, label: `Фото ${index + 1}` }
+    })
+    .filter((image): image is GalleryImage => image !== null)
 }
 
 function uploadImageFromDoc(value: unknown, fallbackAlt: string): { src: string; alt: string } | null {
@@ -99,7 +94,9 @@ function mapPayloadProduct(doc: PayloadProductDoc): Product | null {
 
   if (!published || saleStatus === 'hidden') return null
 
-  const image = productImageFromDoc(doc, title) ?? fallback?.image
+  const cmsGallery = galleryFromDoc(doc.images, title)
+  const firstImage = cmsGallery[0]
+  const image = firstImage ? { src: firstImage.src, alt: firstImage.alt } : fallback?.image
   const price = numberField(doc.price) ?? fallback?.price
 
   if (!image || price === undefined) return null
@@ -124,7 +121,7 @@ function mapPayloadProduct(doc: PayloadProductDoc): Product | null {
     shortDescription,
     description,
     image,
-    gallery: fallback?.gallery ?? [{ ...image, label: 'Фото' }],
+    gallery: cmsGallery.length > 0 ? cmsGallery : (fallback?.gallery ?? [{ ...image, label: 'Фото' }]),
     sizeChart,
     imageTone,
     preorderNote: stringField(doc.preorderNote) ?? fallback?.preorderNote,

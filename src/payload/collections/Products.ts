@@ -137,11 +137,17 @@ export const Products: CollectionConfig = {
         'Адрес: только строчные латинские буквы, цифры и дефис, например test-01.'
     },
     {
-      name: 'image',
+      name: 'images',
       type: 'upload',
       relationTo: 'media',
-      label: 'Главное фото',
-      required: true
+      label: 'Фото',
+      hasMany: true,
+      required: true,
+      minRows: 1,
+      admin: {
+        description:
+          'Первое фото — главное, оно показывается в каталоге. Можно загрузить несколько — остальные станут галереей на странице товара. Форматы: JPEG, PNG или WebP (HEIC с айфона не поддерживается).'
+      }
     },
     {
       name: 'price',

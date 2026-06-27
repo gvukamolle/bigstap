@@ -1239,6 +1239,12 @@ button:focus-visible {
   -webkit-hyphens: auto;
 }
 
+/* Описание товара вводится в админке как обычный текст с переносами строк.
+   pre-line сохраняет переводы строк автора, схлопывая лишние пробелы. */
+.productDescription {
+  white-space: pre-line;
+}
+
 .sizeChart {
   display: grid;
   gap: 12px;

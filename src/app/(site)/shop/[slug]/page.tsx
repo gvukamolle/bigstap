@@ -108,7 +108,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <strong>{formatRubles(getDisplayPrice(product))}</strong>
             <StatusPill status={product.saleStatus} />
           </div>
-          <p>{product.description}</p>
+          <p className="productDescription">{product.description}</p>
           {product.preorderNote ? <p className="preorderNote">{product.preorderNote}</p> : null}
           <AddToCartForm catalogProducts={catalogProducts} product={product} />
           {product.sizeChart ? (

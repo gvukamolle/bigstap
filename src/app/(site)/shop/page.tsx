@@ -19,12 +19,7 @@ export default async function ShopPage() {
   return (
     <div className="page">
       <section className="shopIntro">
-        <span className="eyebrow">Магазин</span>
         <h1 className="display">Товары</h1>
-        <p>
-          Все вещи Grushko Stepan в одной витрине. Дроп остается меткой внутри товара, а не
-          отдельной страницей вместо магазина.
-        </p>
       </section>
 
       <ProductCatalog products={products} />

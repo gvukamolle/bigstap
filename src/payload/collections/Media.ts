@@ -11,21 +11,22 @@ export const Media: CollectionConfig = {
   admin: {
     hidden: true
   },
-  upload: true,
+  upload: {
+    // HEIC (формат фото с iPhone) браузеры не отображают, а sharp в пребилд-сборке
+    // умеет декодировать из HEIF только AVIF — серверная конвертация HEIC невозможна.
+    // Поэтому принимаем лишь то, что реально рендерится в браузере. Фото с айфона
+    // нужно сохранять как JPEG («Самый совместимый» в Настройки → Камера → Форматы).
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
+    // Ужимаем оригинал до разумного размера через sharp — чтобы большие фото с телефона
+    // быстро грузились и в админке, и в каталоге. Превью в админке Payload строит из
+    // самого файла (для JPEG/PNG/WebP работает «из коробки»).
+    resizeOptions: { width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true }
+  },
   access: {
     create: adminsAndEditors,
     read: anyone,
     update: adminsAndEditors,
     delete: adminsAndEditors
   },
-  fields: [
-    {
-      name: 'alt',
-      type: 'text',
-      label: 'Описание изображения',
-      admin: {
-        description: 'Необязательно. Если не заполнить — подставится название товара.'
-      }
-    }
-  ]
+  fields: []
 }

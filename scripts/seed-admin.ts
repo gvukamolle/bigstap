@@ -87,7 +87,7 @@ const ensureLocalSqliteProductColumns = async (): Promise<boolean> => {
 
 // Главное фото теперь — загрузка (relationTo media), поэтому из локального файла
 // фикстуры создаём (или переиспользуем) документ media и подставляем его id.
-async function ensureMediaId(payload: Payload, src: string, alt: string): Promise<number> {
+async function ensureMediaId(payload: Payload, src: string): Promise<number> {
   const filename = src.split('/').pop() ?? src
 
   const found = await payload.find({
@@ -101,7 +101,7 @@ async function ensureMediaId(payload: Payload, src: string, alt: string): Promis
 
   const created = await payload.create({
     collection: 'media',
-    data: { alt },
+    data: {},
     filePath: path.join(process.cwd(), 'public', src),
     overrideAccess: true
   })
@@ -115,15 +115,20 @@ async function productData(payload: Payload, product: Product) {
       ? product.sizes.map((size) => ({ label: size.label, stock: size.stock }))
       : [{ label: 'Без размера', stock: product.stock }]
 
+  const imageSources =
+    product.gallery && product.gallery.length > 0
+      ? product.gallery.map((image) => image.src)
+      : [product.image.src]
+
   return {
     description: product.description,
-    image: await ensureMediaId(payload, product.image.src, product.image.alt),
+    images: await Promise.all(imageSources.map((src) => ensureMediaId(payload, src))),
     preorderNote: product.preorderNote,
     price: product.price,
     published: product.published,
     saleStatus: product.saleStatus,
     sizeChart: product.sizeChart
-      ? await ensureMediaId(payload, product.sizeChart.src, product.sizeChart.alt)
+      ? await ensureMediaId(payload, product.sizeChart.src)
       : undefined,
     sizes,
     slug: product.slug,
