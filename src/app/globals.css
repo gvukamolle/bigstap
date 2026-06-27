@@ -2301,6 +2301,36 @@ button:focus-visible {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
+.paymentBanks {
+  display: grid;
+  gap: 8px;
+}
+.paymentBanksLabel {
+  font-size: 14px;
+  color: var(--muted);
+}
+.paymentBankButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
+  padding: 0 18px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: uppercase;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+.paymentBankButton:hover,
+.paymentBankButton:focus-visible {
+  background: var(--text);
+  color: var(--bg);
+}
 .buttonPrimary {
   display: inline-flex;
   min-height: 44px;

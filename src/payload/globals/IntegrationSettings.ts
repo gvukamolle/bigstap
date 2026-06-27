@@ -48,7 +48,10 @@ export const IntegrationSettings: GlobalConfig = {
         { name: 'qrImage', type: 'upload', relationTo: 'media', label: 'QR СБП (картинка)' },
         { name: 'recipientHint', type: 'text', label: 'Подпись получателя в окне оплаты', admin: { placeholder: 'Степан Г., Т-Банк' } },
         { name: 'expectedRecipientName', type: 'text', label: 'Эталон имени получателя (для сверки чека)' },
-        { name: 'expectedPhoneTail', type: 'text', label: 'Последние цифры телефона/счёта (для сверки)' }
+        { name: 'expectedPhoneTail', type: 'text', label: 'Последние цифры телефона/счёта (для сверки)' },
+        { name: 'alfaLink', type: 'text', label: 'Ссылка на оплату — Альфа Банк', admin: { placeholder: 'https://…' } },
+        { name: 'tbankLink', type: 'text', label: 'Ссылка на оплату — Т-Банк', admin: { placeholder: 'https://…' } },
+        { name: 'sberLink', type: 'text', label: 'Ссылка на оплату — Сбер', admin: { placeholder: 'https://…' } }
       ]
     }
   ]

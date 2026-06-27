@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { getPayload } from 'payload'
 
 import { CheckoutClient } from '@/components/CheckoutClient'
+import type { PaymentLink } from '@/components/PaymentModal'
 import { getCatalogProducts } from '@/lib/catalog'
 
 export const metadata: Metadata = {
@@ -17,10 +18,19 @@ type SbpSettings = {
   sbp?: {
     qrImage?: { url?: string | null } | string | number | null
     recipientHint?: string | null
+    alfaLink?: string | null
+    tbankLink?: string | null
+    sberLink?: string | null
   } | null
 }
 
-async function readSbpDisplay(): Promise<{ qrImageUrl: string | null; recipientHint: string | null }> {
+type SbpDisplay = {
+  qrImageUrl: string | null
+  recipientHint: string | null
+  paymentLinks: PaymentLink[]
+}
+
+async function readSbpDisplay(): Promise<SbpDisplay> {
   try {
     const payload = await getPayload({ config })
     const settings = (await payload.findGlobal({
@@ -32,9 +42,16 @@ async function readSbpDisplay(): Promise<{ qrImageUrl: string | null; recipientH
     const qrImageUrl =
       qrImage && typeof qrImage === 'object' && typeof qrImage.url === 'string' ? qrImage.url : null
     const recipientHint = typeof sbp?.recipientHint === 'string' ? sbp.recipientHint : null
-    return { qrImageUrl, recipientHint }
+    const paymentLinks = [
+      { label: 'Альфа Банк', url: sbp?.alfaLink },
+      { label: 'Т-Банк', url: sbp?.tbankLink },
+      { label: 'Сбер', url: sbp?.sberLink }
+    ]
+      .map((bank) => ({ label: bank.label, url: typeof bank.url === 'string' ? bank.url.trim() : '' }))
+      .filter((bank): bank is PaymentLink => bank.url.length > 0)
+    return { qrImageUrl, recipientHint, paymentLinks }
   } catch {
-    return { qrImageUrl: null, recipientHint: null }
+    return { qrImageUrl: null, recipientHint: null, paymentLinks: [] }
   }
 }
 
@@ -51,6 +68,7 @@ export default async function CheckoutPage() {
         products={products}
         qrImageUrl={sbp.qrImageUrl}
         recipientHint={sbp.recipientHint}
+        paymentLinks={sbp.paymentLinks}
       />
     </div>
   )

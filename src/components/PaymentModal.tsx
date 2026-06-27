@@ -4,10 +4,13 @@ import { useRef, useState } from 'react'
 
 import { formatRubles } from '@/domain/formatting'
 
+export type PaymentLink = { label: string; url: string }
+
 type PaymentModalProps = {
   total: number
   qrImageUrl: string | null
   recipientHint: string | null
+  paymentLinks: PaymentLink[]
   submitting: boolean
   onConfirm: (receipt: File) => void
   onClose: () => void
@@ -19,6 +22,7 @@ export function PaymentModal({
   total,
   qrImageUrl,
   recipientHint,
+  paymentLinks,
   submitting,
   onConfirm,
   onClose
@@ -60,6 +64,23 @@ export function PaymentModal({
           Отсканируйте QR в приложении банка. Сумму <strong>введите вручную — ровно {formatRubles(total)}</strong>{' '}
           (статический QR не подставляет сумму). После оплаты прикрепите PDF-чек ниже.
         </p>
+
+        {paymentLinks.length > 0 ? (
+          <div className="paymentBanks">
+            <span className="paymentBanksLabel">Или откройте оплату в приложении банка:</span>
+            {paymentLinks.map((bank) => (
+              <a
+                className="paymentBankButton"
+                href={bank.url}
+                key={bank.label}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                {bank.label}
+              </a>
+            ))}
+          </div>
+        ) : null}
 
         <div className="paymentUpload">
           <input

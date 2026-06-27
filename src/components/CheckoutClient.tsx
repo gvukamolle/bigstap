@@ -26,7 +26,7 @@ import {
   writeCartStorage
 } from '@/lib/cartStorage'
 
-import { PaymentModal } from './PaymentModal'
+import { PaymentModal, type PaymentLink } from './PaymentModal'
 
 // v2: старый драфт со city/email больше не подставляется (другая форма).
 const checkoutDraftStorageKey = 'bigstep-checkout-draft-v2'
@@ -57,6 +57,7 @@ type CheckoutClientProps = {
   products: Product[]
   qrImageUrl: string | null
   recipientHint: string | null
+  paymentLinks: PaymentLink[]
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -139,7 +140,7 @@ function getFieldErrorId(field: CheckoutValidationField): string {
   return `checkout-${field}-error`
 }
 
-export function CheckoutClient({ products, qrImageUrl, recipientHint }: CheckoutClientProps) {
+export function CheckoutClient({ products, qrImageUrl, recipientHint, paymentLinks }: CheckoutClientProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [isReady, setIsReady] = useState(false)
   const [customer, setCustomer] = useState<CustomerDetails>(defaultCustomer)
@@ -577,6 +578,7 @@ export function CheckoutClient({ products, qrImageUrl, recipientHint }: Checkout
           total={totals.orderTotal}
           qrImageUrl={qrImageUrl}
           recipientHint={recipientHint}
+          paymentLinks={paymentLinks}
           submitting={submitting}
           onConfirm={submitOrder}
           onClose={() => setShowPayment(false)}
