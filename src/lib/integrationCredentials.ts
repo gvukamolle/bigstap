@@ -25,6 +25,10 @@ export type IntegrationSettingsData = {
     clientSecret?: string | null
     apiMode?: string | null
   } | null
+  make?: {
+    webhookUrl?: string | null
+    webhookSecret?: string | null
+  } | null
 }
 
 // process.env без жёсткой привязки к NodeJS.ProcessEnv — удобнее подставлять в тестах.
@@ -72,6 +76,28 @@ export function resolveCdekCredentials(
       clientSecret: envSecret,
       apiMode: env.CDEK_API_MODE === 'test' ? 'test' : 'prod'
     }
+  }
+
+  return null
+}
+
+export type MakeConfig = {
+  webhookUrl: string
+  webhookSecret: string | null
+}
+
+export function resolveMakeConfig(
+  settings: IntegrationSettingsData | null,
+  env: EnvVars = process.env
+): MakeConfig | null {
+  const cmsUrl = clean(settings?.make?.webhookUrl)
+  if (cmsUrl) {
+    return { webhookUrl: cmsUrl, webhookSecret: clean(settings?.make?.webhookSecret) }
+  }
+
+  const envUrl = clean(env.MAKE_WEBHOOK_URL)
+  if (envUrl) {
+    return { webhookUrl: envUrl, webhookSecret: clean(env.MAKE_WEBHOOK_SECRET) }
   }
 
   return null

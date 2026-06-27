@@ -3,9 +3,11 @@ import { getPayload } from 'payload'
 
 import {
   resolveCdekCredentials,
+  resolveMakeConfig,
   resolveYookassaCredentials,
   type CdekCredentials,
   type IntegrationSettingsData,
+  type MakeConfig,
   type YookassaCredentials
 } from './integrationCredentials'
 
@@ -41,4 +43,8 @@ export async function getYookassaCredentials(): Promise<YookassaCredentials | nu
 
 export async function getCdekCredentials(): Promise<CdekCredentials | null> {
   return resolveCdekCredentials(await readIntegrationSettings())
+}
+
+export async function getMakeConfig(): Promise<MakeConfig | null> {
+  return resolveMakeConfig(await readIntegrationSettings())
 }
