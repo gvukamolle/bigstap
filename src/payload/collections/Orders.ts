@@ -119,23 +119,19 @@ export const Orders: CollectionConfig = {
       type: 'select',
       label: 'Статус',
       required: true,
-      defaultValue: 'pending_payment',
+      defaultValue: 'payment_review',
       options: [
         {
           label: 'Черновик',
           value: 'draft'
         },
         {
-          label: 'Ожидает оплаты',
-          value: 'pending_payment'
+          label: 'Проверка оплаты',
+          value: 'payment_review'
         },
         {
           label: 'Оплачен',
           value: 'paid'
-        },
-        {
-          label: 'Ошибка оплаты',
-          value: 'payment_failed'
         },
         {
           label: 'В обработке',
@@ -176,16 +172,57 @@ export const Orders: CollectionConfig = {
       required: true
     },
     {
-      name: 'customerEmail',
-      type: 'email',
-      label: 'Почта клиента',
+      name: 'customerTelegram',
+      type: 'text',
+      label: 'Telegram клиента',
       required: true
     },
     {
-      name: 'customerCity',
+      name: 'deliveryRegion',
+      type: 'select',
+      label: 'Регион доставки',
+      required: true,
+      options: [
+        { label: 'Москва', value: 'moscow' },
+        { label: 'Россия', value: 'russia' }
+      ]
+    },
+    {
+      name: 'cdekPickupRaw',
       type: 'text',
-      label: 'Город клиента',
+      label: 'Пункт выдачи СДЭК',
       required: true
+    },
+    {
+      name: 'notificationSent',
+      type: 'checkbox',
+      label: 'Отправлено в Make/Telegram',
+      defaultValue: false
+    },
+    {
+      name: 'receiptCheck',
+      type: 'group',
+      label: 'Авто-проверка чека',
+      admin: { description: 'Результат разбора PDF-чека. Не подтверждает оплату — сверь по факту поступления.' },
+      fields: [
+        { name: 'parsedAmount', type: 'number', label: 'Сумма из чека' },
+        { name: 'amountMatches', type: 'checkbox', label: 'Сумма совпала', defaultValue: false },
+        { name: 'parsedDate', type: 'text', label: 'Дата из чека' },
+        { name: 'dateFresh', type: 'checkbox', label: 'Чек свежий', defaultValue: false },
+        {
+          name: 'recipientMatches',
+          type: 'select',
+          label: 'Получатель',
+          defaultValue: 'unknown',
+          options: [
+            { label: 'Совпал', value: 'yes' },
+            { label: 'Не совпал', value: 'no' },
+            { label: 'Не распознан', value: 'unknown' }
+          ]
+        },
+        { name: 'operationId', type: 'text', label: 'ID операции СБП' },
+        { name: 'rawSummary', type: 'textarea', label: 'Итог проверки' }
+      ]
     },
     {
       name: 'privacyConsentAt',
@@ -199,45 +236,6 @@ export const Orders: CollectionConfig = {
       name: 'offerAcceptedAt',
       type: 'date',
       label: 'Принятие оферты (дата)'
-    },
-    {
-      name: 'deliveryMethod',
-      type: 'select',
-      label: 'Способ доставки',
-      required: true,
-      defaultValue: 'cdek_pickup',
-      options: [
-        {
-          label: 'СДЭК ПВЗ',
-          value: 'cdek_pickup'
-        }
-      ]
-    },
-    {
-      name: 'cdekPickupCode',
-      type: 'text',
-      label: 'Код пункта СДЭК'
-    },
-    {
-      name: 'cdekPickupName',
-      type: 'text',
-      label: 'Название пункта СДЭК'
-    },
-    {
-      name: 'cdekPickupCity',
-      type: 'text',
-      label: 'Город пункта СДЭК'
-    },
-    {
-      name: 'cdekPickupAddress',
-      type: 'text',
-      label: 'Адрес пункта СДЭК'
-    },
-    {
-      name: 'paymentId',
-      type: 'text',
-      label: 'ID платежа ЮKassa',
-      unique: true
     },
     {
       name: 'npdReceiptStatus',

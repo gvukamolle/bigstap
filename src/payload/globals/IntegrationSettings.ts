@@ -4,7 +4,7 @@ import { admins } from '../access'
 
 // Ключи платёжных и логистических API. Только для админов (не редакторов): это секреты,
 // равные по силе доступу к деньгам магазина. Значения из админки имеют приоритет над
-// переменными окружения (YOOKASSA_*, CDEK_*) — пустое поле означает «брать из env».
+// переменными окружения (MAKE_*, CDEK_*) — пустое поле означает «брать из env».
 export const IntegrationSettings: GlobalConfig = {
   slug: 'integration-settings',
   label: 'Интеграции: оплата и доставка',
@@ -14,34 +14,32 @@ export const IntegrationSettings: GlobalConfig = {
   },
   admin: {
     description:
-      'Ключи ЮKassa и СДЭК. Заполненные здесь значения имеют приоритет над переменными окружения; ' +
+      'Make, СБП и СДЭК. Заполненные здесь значения имеют приоритет над переменными окружения; ' +
       'пустые поля — используются переменные окружения с сервера. Изменения применяются без перезапуска (до 30 секунд).'
   },
   fields: [
     {
-      name: 'yookassa',
+      name: 'make',
       type: 'group',
-      label: 'ЮKassa (приём оплаты)',
+      label: 'Make (уведомление о заказе)',
       admin: {
         description:
-          'Личный кабинет ЮKassa → Интеграции → Ключи API. Нужны shopId магазина и боевой секретный ключ.'
+          'Custom webhook сценария Make: получает заказ + PDF-чек и пересылает в Telegram. Бот и чат настраиваются внутри Make.'
       },
       fields: [
-        {
-          name: 'shopId',
-          type: 'text',
-          label: 'shopId магазина',
-          admin: { placeholder: 'например 123456' }
-        },
-        {
-          name: 'secretKey',
-          type: 'text',
-          label: 'Секретный ключ',
-          admin: {
-            placeholder: 'live_…',
-            description: 'Боевой ключ начинается с live_, тестовый — с test_.'
-          }
-        }
+        { name: 'webhookUrl', type: 'text', label: 'URL вебхука Make', admin: { placeholder: 'https://hook.eu2.make.com/…' } },
+        { name: 'webhookSecret', type: 'text', label: 'Секрет вебхука (опц.)', admin: { description: 'Шлём заголовком X-Bigstep-Secret; проверь его в сценарии Make.' } }
+      ]
+    },
+    {
+      name: 'sbp',
+      type: 'group',
+      label: 'СБП (приём оплаты)',
+      fields: [
+        { name: 'qrImage', type: 'upload', relationTo: 'media', label: 'QR СБП (картинка)' },
+        { name: 'recipientHint', type: 'text', label: 'Подпись получателя в окне оплаты', admin: { placeholder: 'Степан Г., Т-Банк' } },
+        { name: 'expectedRecipientName', type: 'text', label: 'Эталон имени получателя (для сверки чека)' },
+        { name: 'expectedPhoneTail', type: 'text', label: 'Последние цифры телефона/счёта (для сверки)' }
       ]
     },
     {

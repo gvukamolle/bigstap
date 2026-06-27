@@ -1,16 +1,9 @@
+import { isDeliveryRegion, type DeliveryRegion } from './delivery'
+
 export type CustomerDetails = {
   fullName: string
   phone: string
-  email: string
-  city: string
-}
-
-export type CdekPickupPoint = {
-  code: string
-  name: string
-  address: string
-  city: string
-  price: number
+  telegram: string
 }
 
 export type CheckoutConsent = {
@@ -20,16 +13,17 @@ export type CheckoutConsent = {
 
 export type CheckoutDraft = {
   customer: CustomerDetails
-  cdekPickup: CdekPickupPoint | null
+  deliveryRegion: DeliveryRegion | null
+  cdekPickupRaw: string
   consent: CheckoutConsent
 }
 
 export type CheckoutValidationField =
   | 'fullName'
   | 'phone'
-  | 'email'
-  | 'city'
-  | 'cdekPickup'
+  | 'telegram'
+  | 'deliveryRegion'
+  | 'cdekPickupRaw'
   | 'privacyConsent'
   | 'offerConsent'
 
@@ -58,59 +52,41 @@ function isValidPhone(phone: string): boolean {
   )
 }
 
-function isValidPickupPoint(pickup: CdekPickupPoint): boolean {
-  return (
-    pickup.code.trim().length > 0 &&
-    pickup.name.trim().length > 0 &&
-    pickup.address.trim().length > 0 &&
-    pickup.city.trim().length > 0 &&
-    Number.isFinite(pickup.price) &&
-    pickup.price >= 0
-  )
+// Telegram: @username (5–32 символа, буквы/цифры/_) или ссылка t.me/username.
+function isValidTelegram(value: string): boolean {
+  const trimmed = value.trim().replace(/^https?:\/\/(t\.me|telegram\.me)\//i, '@')
+  const handle = trimmed.startsWith('@') ? trimmed.slice(1) : trimmed
+  return /^[A-Za-z0-9_]{5,32}$/.test(handle)
 }
 
 export function validateCheckoutDraft(draft: CheckoutDraft): ValidationResult {
   const errors: CheckoutValidationError[] = []
 
   if (draft.customer.fullName.trim().length < 2) {
-    errors.push({
-      field: 'fullName',
-      code: 'required_full_name',
-      message: 'Укажите имя и фамилию'
-    })
+    errors.push({ field: 'fullName', code: 'required_full_name', message: 'Укажите имя и фамилию' })
   }
   if (!isValidPhone(draft.customer.phone)) {
+    errors.push({ field: 'phone', code: 'invalid_phone', message: 'Укажите телефон' })
+  }
+  if (!isValidTelegram(draft.customer.telegram)) {
     errors.push({
-      field: 'phone',
-      code: 'invalid_phone',
-      message: 'Укажите телефон'
+      field: 'telegram',
+      code: 'invalid_telegram',
+      message: 'Укажите Telegram в формате @username'
     })
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.customer.email.trim())) {
+  if (!isDeliveryRegion(draft.deliveryRegion)) {
     errors.push({
-      field: 'email',
-      code: 'invalid_email',
-      message: 'Укажите email'
+      field: 'deliveryRegion',
+      code: 'required_delivery_region',
+      message: 'Выберите регион доставки'
     })
   }
-  if (draft.customer.city.trim().length < 2) {
+  if (draft.cdekPickupRaw.trim().length < 5) {
     errors.push({
-      field: 'city',
-      code: 'required_city',
-      message: 'Укажите город'
-    })
-  }
-  if (!draft.cdekPickup) {
-    errors.push({
-      field: 'cdekPickup',
+      field: 'cdekPickupRaw',
       code: 'required_cdek_pickup',
-      message: 'Выберите пункт выдачи СДЭК'
-    })
-  } else if (!isValidPickupPoint(draft.cdekPickup)) {
-    errors.push({
-      field: 'cdekPickup',
-      code: 'invalid_cdek_pickup',
-      message: 'Проверьте пункт выдачи СДЭК'
+      message: 'Укажите пункт выдачи СДЭК'
     })
   }
   if (!draft.consent?.privacyAccepted) {
@@ -128,9 +104,5 @@ export function validateCheckoutDraft(draft: CheckoutDraft): ValidationResult {
     })
   }
 
-  return {
-    valid: errors.length === 0,
-    errors,
-    messages: errors.map((error) => error.message)
-  }
+  return { valid: errors.length === 0, errors, messages: errors.map((e) => e.message) }
 }

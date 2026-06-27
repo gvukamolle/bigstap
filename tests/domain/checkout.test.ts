@@ -1,127 +1,59 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CdekPickupPoint, CustomerDetails } from '../../src/domain/checkout'
+import type { CheckoutDraft, CustomerDetails } from '../../src/domain/checkout'
 import { validateCheckoutDraft } from '../../src/domain/checkout'
 
 const validCustomer: CustomerDetails = {
   fullName: 'Иван Иванов',
   phone: '+79990000000',
-  email: 'client@example.com',
-  city: 'Москва'
+  telegram: '@ivanov'
 }
 
-const validPickup: CdekPickupPoint = {
-  code: 'MSK123',
-  name: 'СДЭК Тверская',
-  address: 'Москва, Тверская 1',
-  city: 'Москва',
-  price: 650
+const baseDraft: CheckoutDraft = {
+  customer: validCustomer,
+  deliveryRegion: 'moscow',
+  cdekPickupRaw: 'Москва, бул. Адмирала Ушакова, 18Б',
+  consent: { offerAccepted: true, privacyAccepted: true }
 }
-
-const fullConsent = { offerAccepted: true, privacyAccepted: true }
 
 describe('checkout domain', () => {
-  it('requires customer fullName and CDEK pickup before payment', () => {
+  it('requires fullName, telegram, region and pickup', () => {
     const result = validateCheckoutDraft({
-      customer: { ...validCustomer, fullName: '' },
-      cdekPickup: null,
-      consent: fullConsent
+      ...baseDraft,
+      customer: { ...validCustomer, fullName: '', telegram: 'no' },
+      deliveryRegion: null,
+      cdekPickupRaw: ''
     })
-
     expect(result.valid).toBe(false)
     expect(result.messages).toContain('Укажите имя и фамилию')
-    expect(result.messages).toContain('Выберите пункт выдачи СДЭК')
-    expect(result.errors).toEqual(
-      expect.arrayContaining([
-        { field: 'fullName', code: 'required_full_name', message: 'Укажите имя и фамилию' },
-        { field: 'cdekPickup', code: 'required_cdek_pickup', message: 'Выберите пункт выдачи СДЭК' }
-      ])
-    )
+    expect(result.messages).toContain('Укажите Telegram в формате @username')
+    expect(result.messages).toContain('Выберите регион доставки')
+    expect(result.messages).toContain('Укажите пункт выдачи СДЭК')
   })
 
-  it('returns structured errors for invalid phone and email', () => {
-    const result = validateCheckoutDraft({
-      customer: { ...validCustomer, phone: '+7', email: '@' },
-      cdekPickup: validPickup,
-      consent: fullConsent
-    })
-
-    expect(result.valid).toBe(false)
-    expect(result.errors).toEqual([
-      { field: 'phone', code: 'invalid_phone', message: 'Укажите телефон' },
-      { field: 'email', code: 'invalid_email', message: 'Укажите email' }
-    ])
-    expect(result.messages).toEqual(['Укажите телефон', 'Укажите email'])
+  it('accepts @username and t.me link forms of telegram', () => {
+    expect(validateCheckoutDraft({ ...baseDraft, customer: { ...validCustomer, telegram: 'ivanov_99' } }).valid).toBe(true)
+    expect(validateCheckoutDraft({ ...baseDraft, customer: { ...validCustomer, telegram: 'https://t.me/ivanov_99' } }).valid).toBe(true)
   })
 
-  it('rejects phone values with invalid characters even when digit count is valid', () => {
+  it('rejects invalid phone characters', () => {
     const result = validateCheckoutDraft({
-      customer: { ...validCustomer, phone: 'abc+79990000000<script>' },
-      cdekPickup: validPickup,
-      consent: fullConsent
+      ...baseDraft,
+      customer: { ...validCustomer, phone: 'abc<script>' }
     })
-
-    expect(result.valid).toBe(false)
-    expect(result.errors).toEqual([
-      { field: 'phone', code: 'invalid_phone', message: 'Укажите телефон' }
-    ])
+    expect(result.errors).toEqual([{ field: 'phone', code: 'invalid_phone', message: 'Укажите телефон' }])
   })
 
-  it('rejects incomplete CDEK pickup details', () => {
+  it('requires privacy and offer consent', () => {
     const result = validateCheckoutDraft({
-      customer: validCustomer,
-      cdekPickup: { code: '', name: ' ', address: '', city: '', price: Number.POSITIVE_INFINITY },
-      consent: fullConsent
+      ...baseDraft,
+      consent: { offerAccepted: false, privacyAccepted: false }
     })
-
-    expect(result.valid).toBe(false)
-    expect(result.errors).toEqual([
-      { field: 'cdekPickup', code: 'invalid_cdek_pickup', message: 'Проверьте пункт выдачи СДЭК' }
-    ])
-    expect(result.messages).toEqual(['Проверьте пункт выдачи СДЭК'])
+    expect(result.messages).toContain('Подтвердите согласие на обработку персональных данных')
+    expect(result.messages).toContain('Подтвердите согласие с условиями оферты')
   })
 
-  it('requires consent to personal data processing (152-ФЗ)', () => {
-    const result = validateCheckoutDraft({
-      customer: validCustomer,
-      cdekPickup: validPickup,
-      consent: { offerAccepted: true, privacyAccepted: false }
-    })
-
-    expect(result.valid).toBe(false)
-    expect(result.errors).toEqual([
-      {
-        field: 'privacyConsent',
-        code: 'required_privacy_consent',
-        message: 'Подтвердите согласие на обработку персональных данных'
-      }
-    ])
-  })
-
-  it('requires acceptance of the public offer', () => {
-    const result = validateCheckoutDraft({
-      customer: validCustomer,
-      cdekPickup: validPickup,
-      consent: { offerAccepted: false, privacyAccepted: true }
-    })
-
-    expect(result.valid).toBe(false)
-    expect(result.errors).toEqual([
-      {
-        field: 'offerConsent',
-        code: 'required_offer_consent',
-        message: 'Подтвердите согласие с условиями оферты'
-      }
-    ])
-  })
-
-  it('accepts complete checkout draft with consent', () => {
-    const result = validateCheckoutDraft({
-      customer: validCustomer,
-      cdekPickup: validPickup,
-      consent: fullConsent
-    })
-
-    expect(result).toEqual({ valid: true, errors: [], messages: [] })
+  it('accepts a complete draft', () => {
+    expect(validateCheckoutDraft(baseDraft)).toEqual({ valid: true, errors: [], messages: [] })
   })
 })

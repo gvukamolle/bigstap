@@ -5,7 +5,6 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 
 import { calculateCartTotals, formatRubles, type CartItem } from '@/domain/cart'
 import {
-  type CdekPickupPoint,
   type CheckoutConsent,
   type CheckoutDraft,
   type CustomerDetails,
@@ -13,6 +12,12 @@ import {
   type ValidationResult,
   validateCheckoutDraft
 } from '@/domain/checkout'
+import {
+  DELIVERY_COSTS,
+  getDeliveryCost,
+  isDeliveryRegion,
+  type DeliveryRegion
+} from '@/domain/delivery'
 import type { Product } from '@/domain/products'
 import {
   cartUpdatedEvent,
@@ -21,40 +26,37 @@ import {
   writeCartStorage
 } from '@/lib/cartStorage'
 
-const checkoutDraftStorageKey = 'bigstep-checkout-draft'
-const checkoutDraftStorageVersion = 1
+import { PaymentModal } from './PaymentModal'
+
+// v2: старый драфт со city/email больше не подставляется (другая форма).
+const checkoutDraftStorageKey = 'bigstep-checkout-draft-v2'
+const checkoutDraftStorageVersion = 2
 
 const defaultCustomer: CustomerDetails = {
   fullName: '',
   phone: '',
-  email: '',
-  city: 'Москва'
+  telegram: ''
 }
 
-const prototypePickups: readonly CdekPickupPoint[] = [
-  {
-    code: 'MSK123',
-    name: 'СДЭК Тверская',
-    address: 'Москва, Тверская 1',
-    city: 'Москва',
-    price: 650
-  },
-  {
-    code: 'SPB021',
-    name: 'СДЭК Лиговский',
-    address: 'Санкт-Петербург, Лиговский проспект 50',
-    city: 'Санкт-Петербург',
-    price: 790
-  }
-]
+type DeliveryRegionChoice = DeliveryRegion | ''
 
 // Черновик в localStorage НЕ хранит согласия: consent даётся явно при каждом оформлении.
-type DraftSnapshot = Pick<CheckoutDraft, 'customer' | 'cdekPickup'>
+type DraftSnapshot = {
+  customer: CustomerDetails
+  deliveryRegion: DeliveryRegionChoice
+  cdekPickupRaw: string
+}
 
 type StoredCheckoutDraft = {
   version: typeof checkoutDraftStorageVersion
   updatedAt: string
   draft: DraftSnapshot
+}
+
+type CheckoutClientProps = {
+  products: Product[]
+  qrImageUrl: string | null
+  recipientHint: string | null
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -66,22 +68,12 @@ function isCustomerDetails(value: unknown): value is CustomerDetails {
     isRecord(value) &&
     typeof value.fullName === 'string' &&
     typeof value.phone === 'string' &&
-    typeof value.email === 'string' &&
-    typeof value.city === 'string'
+    typeof value.telegram === 'string'
   )
 }
 
-function isCdekPickupPoint(value: unknown): value is CdekPickupPoint {
-  return (
-    isRecord(value) &&
-    typeof value.code === 'string' &&
-    typeof value.name === 'string' &&
-    typeof value.address === 'string' &&
-    typeof value.city === 'string' &&
-    typeof value.price === 'number' &&
-    Number.isFinite(value.price) &&
-    value.price >= 0
-  )
+function isDeliveryRegionChoice(value: unknown): value is DeliveryRegionChoice {
+  return value === '' || isDeliveryRegion(value)
 }
 
 function readCheckoutDraft(): DraftSnapshot | null {
@@ -94,13 +86,13 @@ function readCheckoutDraft(): DraftSnapshot | null {
     const parsed: unknown = JSON.parse(raw)
     if (!isRecord(parsed) || parsed.version !== checkoutDraftStorageVersion) return null
     if (!isRecord(parsed.draft) || !isCustomerDetails(parsed.draft.customer)) return null
-
-    const cdekPickup = parsed.draft.cdekPickup
-    if (cdekPickup !== null && !isCdekPickupPoint(cdekPickup)) return null
+    if (!isDeliveryRegionChoice(parsed.draft.deliveryRegion)) return null
+    if (typeof parsed.draft.cdekPickupRaw !== 'string') return null
 
     return {
       customer: parsed.draft.customer,
-      cdekPickup
+      deliveryRegion: parsed.draft.deliveryRegion,
+      cdekPickupRaw: parsed.draft.cdekPickupRaw
     }
   } catch {
     return null
@@ -147,35 +139,38 @@ function getFieldErrorId(field: CheckoutValidationField): string {
   return `checkout-${field}-error`
 }
 
-export function CheckoutClient({ products }: { products: Product[] }) {
+export function CheckoutClient({ products, qrImageUrl, recipientHint }: CheckoutClientProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [isReady, setIsReady] = useState(false)
   const [customer, setCustomer] = useState<CustomerDetails>(defaultCustomer)
-  const [cdekPickup, setCdekPickup] = useState<CdekPickupPoint | null>(null)
+  const [deliveryRegion, setDeliveryRegion] = useState<DeliveryRegionChoice>('')
+  const [cdekPickupRaw, setCdekPickupRaw] = useState('')
   // Согласие даётся явно при каждом оформлении и НЕ сохраняется в черновик (юр-требование).
   const [consent, setConsent] = useState<CheckoutConsent>({
     offerAccepted: false,
     privacyAccepted: false
   })
   const [validation, setValidation] = useState<ValidationResult | null>(null)
-  // Реальные ПВЗ CDEK по городу (если интеграция настроена); иначе — прототипные пункты.
-  const [dynamicPickups, setDynamicPickups] = useState<CdekPickupPoint[] | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [showPayment, setShowPayment] = useState(false)
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
   const [orderError, setOrderError] = useState<string | null>(null)
   const [draftStorageError, setDraftStorageError] = useState<string | null>(null)
 
-  const totals = useMemo(() => calculateCartTotals(cart, cdekPickup?.price ?? 0), [cart, cdekPickup])
+  const deliveryTotal = isDeliveryRegion(deliveryRegion) ? getDeliveryCost(deliveryRegion) : 0
+  const totals = useMemo(
+    () => calculateCartTotals(cart, deliveryTotal),
+    [cart, deliveryTotal]
+  )
   const validationMessages = getValidationMessages(validation)
   const errorsByField = useMemo(() => getErrorsByField(validation), [validation])
   const fullNameError = errorsByField.fullName?.[0] ?? null
   const phoneError = errorsByField.phone?.[0] ?? null
-  const emailError = errorsByField.email?.[0] ?? null
-  const cityError = errorsByField.city?.[0] ?? null
-  const pickupError = errorsByField.cdekPickup?.[0] ?? null
+  const telegramError = errorsByField.telegram?.[0] ?? null
+  const regionError = errorsByField.deliveryRegion?.[0] ?? null
+  const pickupError = errorsByField.cdekPickupRaw?.[0] ?? null
   const privacyConsentError = errorsByField.privacyConsent?.[0] ?? null
   const offerConsentError = errorsByField.offerConsent?.[0] ?? null
-  const displayedPickups = dynamicPickups ?? prototypePickups
 
   useEffect(() => {
     function refreshCart() {
@@ -189,7 +184,8 @@ export function CheckoutClient({ products }: { products: Product[] }) {
     const storedDraft = readCheckoutDraft()
     if (storedDraft) {
       setCustomer(storedDraft.customer)
-      setCdekPickup(storedDraft.cdekPickup)
+      setDeliveryRegion(storedDraft.deliveryRegion)
+      setCdekPickupRaw(storedDraft.cdekPickupRaw)
     }
 
     refreshCart()
@@ -207,48 +203,12 @@ export function CheckoutClient({ products }: { products: Product[] }) {
 
     const saved = writeCheckoutDraft({
       customer,
-      cdekPickup
+      deliveryRegion,
+      cdekPickupRaw
     })
 
     setDraftStorageError(saved ? null : 'Не удалось сохранить черновик оформления.')
-  }, [cdekPickup, customer, isReady])
-
-  // Подгрузка пунктов выдачи CDEK по введённому городу (debounce). Если интеграция не настроена
-  // или город не найден — остаёмся на прототипных пунктах (fallback).
-  useEffect(() => {
-    const city = customer.city.trim()
-    if (city.length < 2) {
-      setDynamicPickups(null)
-      return
-    }
-
-    let cancelled = false
-    const timer = setTimeout(() => {
-      void (async () => {
-        try {
-          const response = await fetch(`/api/cdek/pickup-points?city=${encodeURIComponent(city)}`)
-          const data:
-            | { ok?: boolean; points?: Array<{ code: string; name: string; address: string; city: string }> }
-            | null = await response.json().catch(() => null)
-          if (cancelled) return
-
-          const points = data?.ok && Array.isArray(data.points) ? data.points : []
-          setDynamicPickups(
-            points.length > 0
-              ? points.map((point) => ({ ...point, price: 0 }))
-              : null
-          )
-        } catch {
-          if (!cancelled) setDynamicPickups(null)
-        }
-      })()
-    }, 500)
-
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [customer.city])
+  }, [customer, deliveryRegion, cdekPickupRaw, isReady])
 
   function updateCustomer(field: keyof CustomerDetails, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }))
@@ -262,56 +222,61 @@ export function CheckoutClient({ products }: { products: Product[] }) {
     setOrderError(null)
   }
 
-  function selectPrototypePickup(pickup: CdekPickupPoint) {
-    setCdekPickup(pickup)
+  function selectRegion(region: DeliveryRegion) {
+    setDeliveryRegion(region)
     setValidation(null)
     setOrderError(null)
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function buildDraft(): CheckoutDraft {
+    return {
+      customer,
+      deliveryRegion: isDeliveryRegion(deliveryRegion) ? deliveryRegion : null,
+      cdekPickupRaw,
+      consent
+    }
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setOrderError(null)
 
-    const result = validateCheckoutDraft({
-      customer,
-      cdekPickup,
-      consent
-    })
+    const result = validateCheckoutDraft(buildDraft())
 
     setValidation(result)
 
-    if (!result.valid || !cdekPickup) return
+    if (!result.valid) return
 
+    setShowPayment(true)
+  }
+
+  async function submitOrder(receipt: File) {
     setSubmitting(true)
+    setOrderError(null)
+
+    const payload = {
+      customer,
+      deliveryRegion,
+      cdekPickupRaw,
+      consent,
+      items: cart.map((item) => ({
+        productSlug: item.productSlug,
+        size: item.size,
+        quantity: item.quantity
+      }))
+    }
+    const form = new FormData()
+    form.set('payload', JSON.stringify(payload))
+    form.set('receipt', receipt, receipt.name)
 
     try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer,
-          cdekPickup,
-          consent,
-          items: cart.map((item) => ({
-            productSlug: item.productSlug,
-            size: item.size,
-            quantity: item.quantity
-          }))
-        })
-      })
-
+      const response = await fetch('/api/checkout', { method: 'POST', body: form })
       const data:
-        | { ok?: boolean; orderNumber?: string; error?: string; confirmationUrl?: string | null }
+        | { ok?: boolean; orderNumber?: string; error?: string }
         | null = await response.json().catch(() => null)
 
       if (!response.ok || !data?.ok || !data.orderNumber) {
-        setOrderError(data?.error ?? 'Не удалось создать заказ. Попробуйте ещё раз.')
-        return
-      }
-
-      // Подключена оплата ЮKassa — переходим на страницу оплаты (корзину чистим после оплаты).
-      if (data.confirmationUrl) {
-        window.location.href = data.confirmationUrl
+        setOrderError(data?.error ?? 'Не удалось оформить заказ. Попробуйте ещё раз.')
         return
       }
 
@@ -319,6 +284,7 @@ export function CheckoutClient({ products }: { products: Product[] }) {
       dispatchCartUpdated()
       setCart([])
       setOrderNumber(data.orderNumber)
+      setShowPayment(false)
     } catch {
       setOrderError('Не удалось связаться с сервером. Попробуйте ещё раз.')
     } finally {
@@ -340,11 +306,10 @@ export function CheckoutClient({ products }: { products: Product[] }) {
         <div className="checkoutPanel">
           <div className="checkoutPanelHeader">
             <span className="eyebrow">Готово</span>
-            <h2>Тестовый заказ создан</h2>
+            <h2>Заказ принят</h2>
           </div>
           <p className="formNote" role="status">
-            Номер заказа: <strong>{orderNumber}</strong>. Статус — «ожидает оплаты». Заказ виден в
-            админке в разделе «Заказы». Оплата ЮKassa и списание остатков пока не подключены.
+            Заказ <strong>{orderNumber}</strong> принят. Проверю оплату и напишу тебе в Telegram.
           </p>
           <Link className="button" href="/shop">
             Вернуться в магазин
@@ -381,8 +346,8 @@ export function CheckoutClient({ products }: { products: Product[] }) {
           <h2>Контакты</h2>
         </div>
         <p className="formNote">
-          Личный кабинет не нужен. Контакты и выбранный пункт СДЭК сохраняются на этом устройстве
-          как черновик оформления.
+          Личный кабинет не нужен. Контакты и регион доставки сохраняются на этом устройстве как
+          черновик оформления.
         </p>
 
         <label className="checkoutField">
@@ -410,62 +375,47 @@ export function CheckoutClient({ products }: { products: Product[] }) {
         </label>
 
         <label className="checkoutField">
-          <span>Почта</span>
+          <span>Telegram</span>
           <input
-            aria-invalid={emailError ? true : undefined}
-            autoComplete="email"
-            name="email"
-            onChange={(event) => updateCustomer('email', event.target.value)}
-            type="email"
-            value={customer.email}
-          />
-        </label>
-
-        <label className="checkoutField">
-          <span>Город</span>
-          <input
-            aria-invalid={cityError ? true : undefined}
-            autoComplete="address-level2"
-            name="city"
-            onChange={(event) => updateCustomer('city', event.target.value)}
-            value={customer.city}
+            aria-invalid={telegramError ? true : undefined}
+            name="telegram"
+            onChange={(event) => updateCustomer('telegram', event.target.value)}
+            placeholder="@username"
+            value={customer.telegram}
           />
         </label>
 
         <div className="checkoutPanelHeader">
           <span className="eyebrow">02</span>
-          <h2>СДЭК</h2>
+          <h2>Доставка</h2>
         </div>
 
         <div
           className="pickupList"
           role="radiogroup"
-          aria-label="Пункты выдачи СДЭК"
-          aria-describedby={pickupError ? getFieldErrorId('cdekPickup') : undefined}
-          aria-invalid={pickupError ? true : undefined}
+          aria-label="Регион доставки"
+          aria-describedby={regionError ? getFieldErrorId('deliveryRegion') : undefined}
+          aria-invalid={regionError ? true : undefined}
         >
-          {displayedPickups.map((pickup) => {
-            const selected = cdekPickup?.code === pickup.code
+          {(Object.keys(DELIVERY_COSTS) as DeliveryRegion[]).map((region) => {
+            const selected = deliveryRegion === region
+            const label = region === 'moscow' ? 'Москва' : 'Россия'
 
             return (
               <label
                 className={selected ? 'pickupBox pickupOption pickupOptionSelected' : 'pickupBox pickupOption'}
-                key={pickup.code}
+                key={region}
               >
                 <input
                   checked={selected}
                   className="visuallyHidden"
-                  name="cdekPickup"
-                  onChange={() => selectPrototypePickup(pickup)}
+                  name="deliveryRegion"
+                  onChange={() => selectRegion(region)}
                   type="radio"
                 />
                 <div>
-                  <strong>{pickup.name}</strong>
-                  <span>{pickup.address}</span>
-                  <span>
-                    {pickup.price > 0 ? formatRubles(pickup.price) : 'стоимость уточняется'} / ориентир
-                    2-5 дней после передачи в СДЭК
-                  </span>
+                  <strong>{label}</strong>
+                  <span>Доставка СДЭК — {formatRubles(DELIVERY_COSTS[region])}</span>
                 </div>
                 <span className="buttonSecondary pickupOptionAction" aria-hidden="true">
                   {selected ? 'Выбрано' : 'Выбрать'}
@@ -475,15 +425,37 @@ export function CheckoutClient({ products }: { products: Product[] }) {
           })}
         </div>
 
-        {pickupError ? (
-          <p className="fieldError" id={getFieldErrorId('cdekPickup')}>
-            {pickupError}
+        {regionError ? (
+          <p className="fieldError" id={getFieldErrorId('deliveryRegion')}>
+            {regionError}
           </p>
         ) : null}
 
-        {cdekPickup ? (
-          <p className="formNote" role="status">
-            Выбран пункт {cdekPickup.code}: {cdekPickup.name}, {cdekPickup.address}
+        <label className="checkoutField">
+          <span>Пункт выдачи СДЭК</span>
+          <input
+            aria-invalid={pickupError ? true : undefined}
+            name="cdekPickupRaw"
+            onChange={(event) => {
+              setCdekPickupRaw(event.target.value)
+              setValidation(null)
+              setOrderError(null)
+            }}
+            placeholder="Город, адрес пункта выдачи"
+            value={cdekPickupRaw}
+          />
+        </label>
+        <p className="formNote">
+          Найдите ближайший пункт на{' '}
+          <Link href="https://www.cdek.ru/ru/offices" prefetch={false} target="_blank">
+            карте СДЭК
+          </Link>{' '}
+          и впишите его адрес.
+        </p>
+
+        {pickupError ? (
+          <p className="fieldError" id={getFieldErrorId('cdekPickupRaw')}>
+            {pickupError}
           </p>
         ) : null}
 
@@ -549,12 +521,12 @@ export function CheckoutClient({ products }: { products: Product[] }) {
         {offerConsentError ? <span className="fieldError">{offerConsentError}</span> : null}
 
         <p className="formNote">
-          Оплата ЮKassa пока не подключена: кнопка создаёт тестовый заказ со статусом «ожидает
-          оплаты» и сохраняет его в админке.
+          Оплата по СБП: на следующем шаге откроется QR. После перевода приложите PDF-чек — заказ
+          уйдёт на проверку, и я напишу тебе в Telegram.
         </p>
 
         <button className="button" type="submit" disabled={submitting}>
-          {submitting ? 'Создаём заказ…' : 'Оформить тестовый заказ'}
+          Перейти к оплате
         </button>
       </form>
 
@@ -580,7 +552,7 @@ export function CheckoutClient({ products }: { products: Product[] }) {
 
         <ul className="summaryNotes">
           <li>В наличии и предзаказы оформляются одним заказом.</li>
-          <li>Оплата будет через ЮKassa после проверки формы.</li>
+          <li>Оплата по СБП: статичный QR, сумму вводите вручную.</li>
           <li>Возврат дистанционной покупки: памятка и адрес будут в заказе.</li>
         </ul>
 
@@ -590,13 +562,26 @@ export function CheckoutClient({ products }: { products: Product[] }) {
         </div>
         <div className="summaryRow">
           <span>СДЭК</span>
-          <strong>{cdekPickup ? formatRubles(totals.deliveryTotal) : 'Выберите пункт'}</strong>
+          <strong>
+            {isDeliveryRegion(deliveryRegion) ? formatRubles(totals.deliveryTotal) : 'Выберите регион'}
+          </strong>
         </div>
         <div className="summaryRow summaryRowTotal">
           <span>Итого</span>
           <strong>{formatRubles(totals.orderTotal)}</strong>
         </div>
       </aside>
+
+      {showPayment ? (
+        <PaymentModal
+          total={totals.orderTotal}
+          qrImageUrl={qrImageUrl}
+          recipientHint={recipientHint}
+          submitting={submitting}
+          onConfirm={submitOrder}
+          onClose={() => setShowPayment(false)}
+        />
+      ) : null}
     </section>
   )
 }

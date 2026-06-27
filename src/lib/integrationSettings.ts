@@ -4,11 +4,9 @@ import { getPayload } from 'payload'
 import {
   resolveCdekCredentials,
   resolveMakeConfig,
-  resolveYookassaCredentials,
   type CdekCredentials,
   type IntegrationSettingsData,
-  type MakeConfig,
-  type YookassaCredentials
+  type MakeConfig
 } from './integrationCredentials'
 
 // Глобал читается на каждый запрос чекаута/вебхука — кэшируем ненадолго, чтобы вставленные
@@ -35,10 +33,6 @@ async function readIntegrationSettings(): Promise<IntegrationSettingsData | null
 
   cache = { data, expiresAt: now + CACHE_TTL_MS }
   return data
-}
-
-export async function getYookassaCredentials(): Promise<YookassaCredentials | null> {
-  return resolveYookassaCredentials(await readIntegrationSettings())
 }
 
 export async function getCdekCredentials(): Promise<CdekCredentials | null> {
