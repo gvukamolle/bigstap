@@ -86,12 +86,14 @@ export function checkReceipt(
   let recipientMatches: RecipientMatch = 'unknown'
   if (parsed.recipientRaw) {
     const haystack = parsed.recipientRaw.toLowerCase()
+    const expectedName = expectation.expectedRecipientName
+    const expectedTail = expectation.expectedPhoneTail
     const nameOk =
-      Boolean(expectation.expectedRecipientName) &&
-      haystack.includes(expectation.expectedRecipientName.toLowerCase())
+      expectedName != null && expectedName !== '' && haystack.includes(expectedName.toLowerCase())
     const tailOk =
-      Boolean(expectation.expectedPhoneTail) &&
-      parsed.recipientRaw.replace(/\D/g, '').endsWith(expectation.expectedPhoneTail)
+      expectedTail != null &&
+      expectedTail !== '' &&
+      parsed.recipientRaw.replace(/\D/g, '').endsWith(expectedTail)
     recipientMatches = nameOk || tailOk ? 'yes' : 'no'
   }
 
