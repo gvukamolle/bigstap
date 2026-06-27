@@ -1,8 +1,8 @@
-// Парсер банковского PDF-чека (L1). ВАЖНО: unpdf отдаёт текст одной строкой через пробелы
-// (без переводов строк), поэтому ни один регекс не должен полагаться на \n. Суммы ищем по
-// ключевому слову («Сумма»/«Итого»), а не только по знаку валюты — символ ₽ у некоторых
-// шрифтов извлекается как мусор. Форматы банков различаются — регексы рассчитаны на типовые
-// (Сбер/Т-Банк/Альфа) и при необходимости донастраиваются по реальным образцам.
+// Парсер банковского PDF-чека (L1). ВАЖНО: unpdf отдаёт текст ОДНОЙ строкой через пробелы
+// (без переводов строк), поэтому ни один регекс не должен полагаться на \n. Регексы откалиброваны
+// по реальным чекам Альфа-Банка и Сбера (СБП): суммы — по слову «Сумма/Итого» (знак валюты у
+// некоторых шрифтов извлекается мусором), дата — dd.mm.yyyy / «25 июня 2026» / yyyy-mm-dd,
+// получатель — «ФИО получателя» либо «Получатель», ID — «Номер/Идентификатор операции [в СБП]».
 
 export type ReceiptParseResult = {
   amounts: number[] // все найденные рублёвые суммы (кандидаты)
@@ -33,15 +33,53 @@ export type ReceiptCheck = {
 
 const FRESH_WINDOW_MS = 24 * 60 * 60 * 1000
 
-// Денежный токен: «8 300», «8 300,00», «8300.50» (пробелы — обычный/nbsp/узкий nbsp).
+// Денежный токен: «8 300», «33756.00», «8 300,00» (пробелы — обычный/nbsp/узкий nbsp).
 const AMOUNT = '\\d[\\d \\u00a0\\u202f]*(?:[.,]\\d{1,2})?'
 
-// Нормализуем «1 200,50» / «1 200.50» / «1 200» → 1200 (целые рубли; копейки округляем).
+// Метки-границы, на которых обрезаем захват имени получателя (в любом падеже).
+const BOUNDARY =
+  '(?:отправител|номер|банк|дата|статус|карт|сч[её]т|наименовани|код|сумма|комисси|телефон|сбп|фио|получател|операци)'
+
+const MONTH_NUM: Record<string, string> = {
+  январ: '01',
+  феврал: '02',
+  март: '03',
+  апрел: '04',
+  мая: '05',
+  май: '05',
+  июн: '06',
+  июл: '07',
+  август: '08',
+  сентябр: '09',
+  октябр: '10',
+  ноябр: '11',
+  декабр: '12'
+}
+
+// Нормализуем «1 200,50» / «33756.00» / «1 200» → целые рубли (копейки округляем).
 function normaliseAmount(raw: string): number | null {
-  const cleaned = raw.replace(/[\s  ]/g, '').replace(',', '.')
+  const cleaned = raw.replace(/\s/g, '').replace(',', '.')
   const value = Number.parseFloat(cleaned)
   if (!Number.isFinite(value)) return null
   return Math.round(value)
+}
+
+function parseDate(text: string): string | null {
+  const dmy = text.match(/(\d{2})\.(\d{2})\.(\d{4})/)
+  if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`
+
+  const textual = text.match(
+    /(\d{1,2})\s+(январ|феврал|март|апрел|мая|май|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-яё]*\s+(\d{4})/i
+  )
+  if (textual) {
+    const month = MONTH_NUM[textual[2].toLowerCase()]
+    if (month) return `${textual[3]}-${month}-${textual[1].padStart(2, '0')}`
+  }
+
+  const ymd = text.match(/(\d{4})-(\d{2})-(\d{2})/)
+  if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`
+
+  return null
 }
 
 const emptyResult: ReceiptParseResult = {
@@ -66,33 +104,42 @@ export function parseReceipt(text: string): ReceiptParseResult {
     const value = normaliseAmount(m[1])
     if (value !== null && value > 0) amounts.add(value)
   }
-  // 2) Число перед знаком валюты — если символ извлёкся корректно.
-  const currencyRe = new RegExp('(' + AMOUNT + ')\\s*(?:₽|руб|RUB|р\\.)', 'gi')
+  // 2) Число перед знаком валюты (₽/руб/RUB/RUR/р.) — если символ извлёкся корректно.
+  // Lookbehind (?<![\d.:,]) не даёт сумме «прилипнуть» к хвосту даты/времени (напр. «27.06.26 480»).
+  const currencyRe = new RegExp('(?<![\\d.:,])(' + AMOUNT + ')\\s*(?:₽|руб|RUB|RUR|р\\.)', 'gi')
   for (const m of text.matchAll(currencyRe)) {
     const value = normaliseAmount(m[1])
     if (value !== null && value > 0) amounts.add(value)
   }
   const amountList = [...amounts]
 
-  // Дата dd.mm.yyyy → ISO.
-  const dateMatch = text.match(/(\d{2})\.(\d{2})\.(\d{4})/)
-  const dateISO = dateMatch ? `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}` : null
+  const dateISO = parseDate(text)
 
-  // Имя получателя — ограниченный фрагмент после «Получатель», до следующей метки/цифры.
-  const recipientMatch = text.match(
-    /Получател[ья][:\s]+([^\d\n]{2,40}?)(?=\s*(?:сч[её]т|телефон|идентификатор|номер|банк|дата|комисси|сбп)|[\d+]|$)/i
+  // Имя получателя: приоритет «ФИО получателя [перевода]», затем «Получатель» (точное, с ь).
+  let recipientRaw: string | null = null
+  const fio = text.match(
+    new RegExp(
+      'ФИО\\s+получател[ья](?:\\s+перевода)?[:\\s]+([^\\d\\n]{2,40}?)(?=\\s*' + BOUNDARY + '|[\\d]|$)',
+      'i'
+    )
   )
-  const recipientRaw = recipientMatch ? recipientMatch[1].trim() : null
+  if (fio) recipientRaw = fio[1].trim()
+  if (recipientRaw === null) {
+    const rec = text.match(
+      new RegExp('Получатель[:\\s]+([^\\d\\n]{2,40}?)(?=\\s*' + BOUNDARY + '|[\\d]|$)', 'i')
+    )
+    if (rec) recipientRaw = rec[1].trim()
+  }
 
-  // Счёт/телефон получателя — до следующей метки (чтобы не захватить цифры ID/даты).
+  // Счёт/телефон получателя — захватываем телефонно-карточный токен.
   const accountMatch = text.match(
-    /(?:сч[её]т|телефон)\s+получател[ья][:\s]*([^\n]{2,40}?)(?=\s*(?:идентификатор|номер|дата|сумма|банк|комисси)|$)/i
+    /(?:телефона?|сч[её]та?|карты?)\s+получател[ья][:\s]*([\d+()•*\s-]{4,40})/i
   )
   const recipientAccount = accountMatch ? accountMatch[1].trim() : null
 
-  // ID/номер операции — по конкретной метке, а не по слову «операция» в заголовке.
+  // ID/номер операции — по конкретной метке (допускаем «в СБП» между меткой и значением).
   const opMatch = text.match(
-    /(?:идентификатор\s+операции|номер\s+операции|код\s+операции|идентификатор\s+платежа|номер\s+документа)[:\s№]*([A-Za-z0-9][A-Za-z0-9-]{5,})/i
+    /(?:номер|идентификатор|код|наименование)\s+операции(?:\s+в\s+сбп)?[:\s№]*([A-Za-z0-9][A-Za-z0-9-]{5,})/i
   )
   const operationId = opMatch ? opMatch[1] : null
 
