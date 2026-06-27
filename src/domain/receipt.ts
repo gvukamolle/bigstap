@@ -87,10 +87,10 @@ export function checkReceipt(
   if (parsed.recipientRaw) {
     const haystack = parsed.recipientRaw.toLowerCase()
     const nameOk =
-      !!expectation.expectedRecipientName &&
+      Boolean(expectation.expectedRecipientName) &&
       haystack.includes(expectation.expectedRecipientName.toLowerCase())
     const tailOk =
-      !!expectation.expectedPhoneTail &&
+      Boolean(expectation.expectedPhoneTail) &&
       parsed.recipientRaw.replace(/\D/g, '').endsWith(expectation.expectedPhoneTail)
     recipientMatches = nameOk || tailOk ? 'yes' : 'no'
   }

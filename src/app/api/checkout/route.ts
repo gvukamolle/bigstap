@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         overrideAccess: true
       })
       .catch(() => null)
-    duplicateOperation = !!prior && prior.docs.length > 0
+    duplicateOperation = Boolean(prior) && prior.docs.length > 0
   }
 
   const rawSummary = [
