@@ -2,9 +2,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 
 import {
-  resolveCdekCredentials,
   resolveMakeConfig,
-  type CdekCredentials,
   type IntegrationSettingsData,
   type MakeConfig
 } from './integrationCredentials'
@@ -33,10 +31,6 @@ async function readIntegrationSettings(): Promise<IntegrationSettingsData | null
 
   cache = { data, expiresAt: now + CACHE_TTL_MS }
   return data
-}
-
-export async function getCdekCredentials(): Promise<CdekCredentials | null> {
-  return resolveCdekCredentials(await readIntegrationSettings())
 }
 
 export async function getMakeConfig(): Promise<MakeConfig | null> {
