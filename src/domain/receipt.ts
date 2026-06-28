@@ -137,9 +137,9 @@ export function parseReceipt(text: string): ReceiptParseResult {
   )
   const recipientAccount = accountMatch ? accountMatch[1].trim() : null
 
-  // ID/номер операции — по конкретной метке (допускаем «в СБП» между меткой и значением).
+  // ID/номер операции — по конкретной метке (допускаем «в СБП» / «СБП» между меткой и значением).
   const opMatch = text.match(
-    /(?:номер|идентификатор|код|наименование)\s+операции(?:\s+в\s+сбп)?[:\s№]*([A-Za-z0-9][A-Za-z0-9-]{5,})/i
+    /(?:номер|идентификатор|код|наименование)\s+операции(?:\s+(?:в\s+)?сбп)?[:\s№]*([A-Za-z0-9][A-Za-z0-9-]{5,})/i
   )
   const operationId = opMatch ? opMatch[1] : null
 
