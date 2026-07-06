@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { ProductCard } from '@/components/ProductCard'
 import { getCatalogProducts } from '@/lib/catalog'
+import { getHeroLink } from '@/lib/siteSettings'
 import { getCanonicalUrl } from '@/lib/siteUrl'
 
 export const metadata: Metadata = {
@@ -13,13 +14,16 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const featuredProducts = (await getCatalogProducts()).slice(0, 4)
+  const [featuredProducts, heroLink] = await Promise.all([
+    getCatalogProducts().then((products) => products.slice(0, 4)),
+    getHeroLink()
+  ])
 
   return (
     <div className="page">
       <section className="homeHero">
         <h1 className="visuallyHidden">ТЕСТ 01 — Grushko Stepan. Try Explore Create Try again.</h1>
-        <Link href="/shop" className="heroLink" aria-label="ТЕСТ 01 — смотреть магазин">
+        <Link href={heroLink} className="heroLink" prefetch={false}>
           <picture>
             <source media="(max-width: 560px)" srcSet="/images/bigstep/hero-look-mobile.jpg" />
             <img

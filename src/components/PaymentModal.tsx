@@ -122,7 +122,7 @@ export function PaymentModal({
 
         {paymentLinks.length > 0 ? (
           <div className="paymentBanks">
-            <span className="paymentBanksLabel">Или откройте оплату в приложении банка:</span>
+            <span className="paymentBanksLabel">Откройте оплату в приложении банка:</span>
             {paymentLinks.map((bank) => (
               <a
                 className="paymentBankButton"

@@ -20,6 +20,16 @@ export const SiteSettings: GlobalConfig = {
       defaultValue: 'Grushko Stepan'
     },
     {
+      name: 'heroLink',
+      type: 'text',
+      label: 'Ссылка с фото на главной',
+      defaultValue: '/shop',
+      admin: {
+        description:
+          'Куда ведёт клик по большому фото на главной. Внутренний путь («/shop/test-01») или полный URL. Пусто или некорректно — откроется магазин.'
+      }
+    },
+    {
       name: 'socialLinks',
       type: 'array',
       label: 'Ссылки на соцсети',
