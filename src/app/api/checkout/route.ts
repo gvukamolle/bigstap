@@ -1,3 +1,6 @@
+import { mkdir, writeFile } from 'node:fs/promises'
+import path from 'node:path'
+
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
@@ -19,6 +22,15 @@ export const dynamic = 'force-dynamic'
 type IncomingItem = { productSlug: string; size: string | null; quantity: number }
 
 const json = (data: unknown, status = 200) => NextResponse.json(data, { status })
+
+// Чеки лежат рядом с медиа: в проде это docker-том bigstep-media (переживает
+// пересборку образа и попадает в ночной бэкап), в БД — ни одного нового поля.
+const receiptsDir = path.resolve(process.cwd(), 'media', 'receipts')
+
+async function storeReceiptPdf(orderNumber: string, pdf: Buffer): Promise<void> {
+  await mkdir(receiptsDir, { recursive: true })
+  await writeFile(path.join(receiptsDir, `${orderNumber}.pdf`), pdf)
+}
 
 function parseCustomer(value: unknown): CustomerDetails | null {
   if (typeof value !== 'object' || value === null) return null
@@ -200,6 +212,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return json({ ok: false, error: error instanceof Error ? error.message : 'Не удалось создать заказ.' }, 500)
   }
+
+  // Best-effort: копия чека на диск для админки. Сбой не валит заказ — PDF уйдёт и в Make.
+  await storeReceiptPdf(orderNumber, pdf).catch(() => null)
 
   // Best-effort: уведомление в Make. Сбой не теряет заказ — он уже в базе.
   if (makeConfig) {

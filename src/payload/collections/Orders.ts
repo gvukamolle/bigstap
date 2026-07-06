@@ -200,6 +200,17 @@ export const Orders: CollectionConfig = {
       defaultValue: false
     },
     {
+      // ui-поле живёт только в админке — колонок в БД не создаёт (миграция не нужна).
+      name: 'receiptPdf',
+      type: 'ui',
+      label: 'PDF-чек',
+      admin: {
+        components: {
+          Field: '@/payload/admin/OrderReceiptLink'
+        }
+      }
+    },
+    {
       name: 'receiptCheck',
       type: 'group',
       label: 'Авто-проверка чека',

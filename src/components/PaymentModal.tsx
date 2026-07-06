@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { formatRubles } from '@/domain/formatting'
 
@@ -29,7 +29,56 @@ export function PaymentModal({
 }: PaymentModalProps) {
   const [receipt, setReceipt] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
+    }
+  }, [])
+
+  // Фолбэк на execCommand: clipboard API недоступен без https/user activation
+  // (например, во встроенном браузере Telegram, откуда приходят покупатели).
+  function copyViaExecCommand(text: string): boolean {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.setAttribute('readonly', '')
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    let ok = false
+    try {
+      ok = document.execCommand('copy')
+    } catch {
+      ok = false
+    }
+    textarea.remove()
+    return ok
+  }
+
+  async function copyAmount() {
+    const text = String(total)
+    let ok = false
+    try {
+      await navigator.clipboard.writeText(text)
+      ok = true
+    } catch {
+      ok = copyViaExecCommand(text)
+    }
+
+    if (!ok) {
+      setError('Не удалось скопировать сумму. Введите её вручную.')
+      return
+    }
+
+    setError(null)
+    setCopied(true)
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
+    copiedTimerRef.current = setTimeout(() => setCopied(false), 2000)
+  }
 
   function pickFile(file: File | null) {
     setError(null)
@@ -55,15 +104,21 @@ export function PaymentModal({
 
         {qrImageUrl ? (
           <img className="paymentQr" src={qrImageUrl} alt="QR для оплаты по СБП" />
-        ) : (
-          <p className="formError">QR оплаты не настроен. Напишите нам в Telegram.</p>
-        )}
+        ) : null}
         {recipientHint ? <p className="paymentHint">Получатель: {recipientHint}</p> : null}
 
-        <p className="paymentInstruction">
-          Отсканируйте QR в приложении банка. Сумму <strong>введите вручную — ровно {formatRubles(total)}</strong>{' '}
-          (статический QR не подставляет сумму). После оплаты прикрепите PDF-чек ниже.
-        </p>
+        <button
+          className="paymentAmountCopy"
+          type="button"
+          onClick={copyAmount}
+          aria-live="polite"
+        >
+          <span className="paymentAmountLabel">Сумма перевода</span>
+          <strong className="paymentAmountValue">{formatRubles(total)}</strong>
+          <span className="paymentAmountAction">
+            {copied ? 'Скопировано ✓' : 'Нажмите, чтобы скопировать'}
+          </span>
+        </button>
 
         {paymentLinks.length > 0 ? (
           <div className="paymentBanks">
@@ -83,6 +138,7 @@ export function PaymentModal({
         ) : null}
 
         <div className="paymentUpload">
+          <span className="paymentUploadLabel">После оплаты прикрепите PDF-чек:</span>
           <input
             ref={inputRef}
             type="file"

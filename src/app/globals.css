@@ -1412,13 +1412,23 @@ button:focus-visible {
 
 .cartLine {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(96px, 120px) minmax(116px, auto) auto;
+  grid-template-columns: auto minmax(0, 1fr) minmax(96px, 120px) minmax(116px, auto) auto;
   gap: 16px;
   align-items: center;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
   padding: 16px;
+}
+
+.cartLineImage {
+  display: block;
+  width: 72px;
+  aspect-ratio: 3 / 4;
+  border-radius: calc(var(--radius) - 2px);
+  background-color: var(--line);
+  background-size: cover;
+  background-position: center;
 }
 
 .cartLineMeta {
@@ -1996,7 +2006,11 @@ button:focus-visible {
   }
 
   .cartLine {
-    grid-template-columns: minmax(0, 1fr) minmax(88px, 112px);
+    grid-template-columns: auto minmax(0, 1fr) minmax(88px, 112px);
+  }
+
+  .cartLineImage {
+    width: 64px;
   }
 
   .cartLineTotal {
@@ -2203,6 +2217,10 @@ button:focus-visible {
     width: 100%;
   }
 
+  .cartLineImage {
+    width: 96px;
+  }
+
   .checkoutItem,
   .summaryRow {
     flex-direction: column;
@@ -2286,15 +2304,41 @@ button:focus-visible {
   margin: 0;
   font-weight: 600;
 }
-.paymentInstruction {
-  margin: 0;
+.paymentAmountCopy {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 160ms ease;
+}
+.paymentAmountCopy:hover,
+.paymentAmountCopy:focus-visible {
+  border-color: var(--text);
+}
+.paymentAmountLabel {
+  font-size: 12px;
   color: var(--muted);
-  font-size: 15px;
-  line-height: 1.5;
+  text-transform: uppercase;
+}
+.paymentAmountValue {
+  font-size: 24px;
+  line-height: 1.2;
+}
+.paymentAmountAction {
+  font-size: 13px;
+  color: var(--muted);
 }
 .paymentUpload {
   display: grid;
   gap: 8px;
+}
+.paymentUploadLabel {
+  font-size: 14px;
+  color: var(--muted);
 }
 .paymentFileName {
   font-size: 14px;

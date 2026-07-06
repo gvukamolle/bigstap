@@ -25,6 +25,10 @@ export function CartClient({ products }: { products: Product[] }) {
   const [isReady, setIsReady] = useState(false)
   const [storageError, setStorageError] = useState<string | null>(null)
   const totals = useMemo(() => calculateCartTotals(cart), [cart])
+  const productsBySlug = useMemo(
+    () => new Map(products.map((product) => [product.slug, product])),
+    [products]
+  )
 
   useEffect(() => {
     function refreshCart() {
@@ -100,8 +104,23 @@ export function CartClient({ products }: { products: Product[] }) {
   return (
     <section className="cartLayout">
       <div className="cartLines" aria-label="Товары в корзине">
-        {cart.map((item) => (
+        {cart.map((item) => {
+          const product = productsBySlug.get(item.productSlug)
+
+          return (
           <article className="cartLine" key={item.id}>
+            {product ? (
+              <Link
+                aria-label={`${item.title} — открыть страницу товара`}
+                className={`cartLineImage tone-${product.imageTone}`}
+                href={`/shop/${item.productSlug}`}
+                role="img"
+                style={{ backgroundImage: `url(${product.image.src})` }}
+              />
+            ) : (
+              <span aria-hidden="true" className="cartLineImage" />
+            )}
+
             <div className="cartLineMeta">
               <h2>
                 <Link href={`/shop/${item.productSlug}`}>{item.title}</Link>
@@ -149,7 +168,8 @@ export function CartClient({ products }: { products: Product[] }) {
               Удалить
             </button>
           </article>
-        ))}
+          )
+        })}
       </div>
 
       <aside className="cartSummary" aria-label="Итого">
