@@ -2314,6 +2314,9 @@ button:focus-visible {
   padding: 14px 16px;
   cursor: pointer;
   transition: border-color 160ms ease;
+  /* Safari/iOS даёт кнопкам системный синий текст — фиксируем цвет и шрифт сайта. */
+  font: inherit;
+  color: var(--text);
 }
 .paymentAmountCopy:hover,
 .paymentAmountCopy:focus-visible {
