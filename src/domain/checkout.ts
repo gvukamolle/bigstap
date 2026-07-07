@@ -63,7 +63,7 @@ export function validateCheckoutDraft(draft: CheckoutDraft): ValidationResult {
   const errors: CheckoutValidationError[] = []
 
   if (draft.customer.fullName.trim().length < 2) {
-    errors.push({ field: 'fullName', code: 'required_full_name', message: 'Укажите имя и фамилию' })
+    errors.push({ field: 'fullName', code: 'required_full_name', message: 'Укажите ФИО' })
   }
   if (!isValidPhone(draft.customer.phone)) {
     errors.push({ field: 'phone', code: 'invalid_phone', message: 'Укажите телефон' })

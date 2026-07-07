@@ -352,7 +352,7 @@ export function CheckoutClient({ products, qrImageUrl, recipientHint, paymentLin
         </p>
 
         <label className="checkoutField">
-          <span>Имя и фамилия</span>
+          <span>ФИО</span>
           <input
             aria-invalid={fullNameError ? true : undefined}
             autoComplete="name"

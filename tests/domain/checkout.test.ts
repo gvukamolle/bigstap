@@ -25,7 +25,7 @@ describe('checkout domain', () => {
       cdekPickupRaw: ''
     })
     expect(result.valid).toBe(false)
-    expect(result.messages).toContain('Укажите имя и фамилию')
+    expect(result.messages).toContain('Укажите ФИО')
     expect(result.messages).toContain('Укажите Telegram в формате @username')
     expect(result.messages).toContain('Выберите регион доставки')
     expect(result.messages).toContain('Укажите пункт выдачи СДЭК')

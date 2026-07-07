@@ -162,7 +162,7 @@ export const Orders: CollectionConfig = {
     {
       name: 'customerName',
       type: 'text',
-      label: 'Имя клиента',
+      label: 'ФИО клиента',
       required: true
     },
     {
